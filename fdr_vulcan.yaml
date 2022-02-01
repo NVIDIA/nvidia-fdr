@@ -1,0 +1,149 @@
+GeneralConfig:
+  LogsBasePath: "/tmp/logs/fdr"
+
+Sections:
+  - ID: GPU
+    Components:
+      - &gpu0
+        ID: GPU0
+        Params:
+          - name: gpuid
+            value: 0
+        InfoGroups:
+          - ID: Inventory
+            InfoList:
+              - ID: Model
+                FetchMethod: Command #WIP: add support for DBUS|SysFS|IPMI|RF etc.
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
+                FetchFreqSecs: 10
+                StoreFreq: OnChange|everytime
+              - ID: Serial
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=serial"
+                FetchFreqSecs: 10
+              - ID: UUID
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=uuid"
+                FetchFreqSecs: 10
+          - ID: Versions
+            InfoList:
+              - ID: Driver
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=driver_version"
+                FetchFreqSecs: 10
+              - ID: VBIOS
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=vbios_version"
+                FetchFreqSecs: 10
+              - ID: Inforom
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=inforom.oem,inforom.ecc,inforom.pwr"
+                FetchFreqSecs: 10
+          - ID: Config
+            InfoList:
+              - ID: PowerManagementEnabled
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.management"
+                FetchFreqSecs: 10
+              - ID: MIGMode
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=mig.mode.current"
+                FetchFreqSecs: 10
+              - ID: UserConfiguredGraphicsClock
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.gr"
+                FetchFreqSecs: 10
+              - ID: UserConfiguredMemoryClock
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.mem"
+                FetchFreqSecs: 10
+          - ID: Errors
+            InfoList:
+              - ID: L1CacheErrorsCorrected
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l1_cache"
+                FetchFreqSecs: 10
+              - ID: L2CacheErrorsCorrected
+                FetchMethod: Command
+                FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
+                FetchFreqSecs: 10
+      - <<: *gpu0     #Everything same as gpu0
+        ID: GPU1      #except ID
+        Params:       #And params
+          - name: gpuid
+            value: 1
+      - <<: *gpu0
+        ID: GPU2
+        Params:
+          - name: gpuid
+            value: 2
+      - <<: *gpu0
+        ID: GPU3
+        Params:
+          - name: gpuid
+            value: 3
+  - ID: Rectangles
+    Components:
+      - ID: Rectangles1
+        Params:
+          - name: length
+            value: 2
+          - name: breadth
+            value: 3
+        InfoGroups:
+          - ID: Size
+            InfoList:
+              - ID: Area
+                FetchMethod: Command
+                FetchPath: "echo -n $(($length * $breadth))"
+                FetchFreqSecs: 10
+              - ID: Perimeter
+                FetchMethod: Command
+                FetchPath: "echo -n $((2 * $length + 2 * $breadth))"
+                FetchFreqSecs: 10
+  - ID: RoundObjects
+    Components:
+      - &circ1
+        ID: Circle1
+        Params:
+          - name: radius
+            value: 20
+        InfoGroups:
+          - ID: Size
+            InfoList:
+              - ID: Area
+                FetchMethod: Command
+                FetchPath: "echo 3.14*$radius*$radius | bc -l"
+                FetchFreqSecs: 10
+              - ID: Circumference
+                FetchMethod: Command
+                FetchPath: "echo 2*3.14*$radius | bc -l"
+                FetchFreqSecs: 10
+      - <<: *circ1
+        ID: Circle2
+        Params:
+          - name: radius
+            value: 40
+#
+#          - ID: Stats
+#            Command: "nvidia-smi"
+#            Deletion:
+#              Policy: OlderThan
+#              Args: ["10", "days"]
+#            Compaction:
+#              Policy: MinMaxAvg
+#          - ID: Snapshots
+#            Command: "nvidia-smi"
+#            Deletion:
+#              Policy: OlderThan
+#              Args: ["10", "entries"]
+#          - ID: Logs
+#            Command: "nvidia-smi"
+
+#NVSwitch:
+#PCIeSwitch:
+#FPGA:
+#Retimer:
+#HSC:
+#VR:
+#EROT:
