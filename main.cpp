@@ -8,8 +8,8 @@
 #include "yaml-cpp/yaml.h"	 //yaml-cpp lib used for parsing input (yaml) files
 #include <nlohmann/json.hpp> //nlohmann lib used to output data (json) to logfiles
 
-#include "fdr_profile.h"
-#include "fdr_record.h"
+#include "fdr_profile.hpp"
+#include "fdr_record.hpp"
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
@@ -125,9 +125,13 @@ PlatformProfile_c::~PlatformProfile_c()
 
 int main(void)
 {
-	exec("cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.json"); // Convert yaml to json(which is still yaml) to resolve all internal references (anchors and aliases)
 
+#if 0
+	PlatformProfile_c platform("fdr_vulcan.yaml");
+#else
+	exec("cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.json"); // Convert yaml to json(which is still yaml) to resolve all internal references (anchors and aliases)
 	PlatformProfile_c platform("fdr_vulcan.json");
+#endif
 
 	while (true)
 	{
