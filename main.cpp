@@ -5,38 +5,32 @@
 #include <fstream>
 #include <ctime>
 
-#include "yaml-cpp/yaml.h"	 //yaml-cpp lib used for parsing input (yaml) files
-#include <nlohmann/json.hpp> //nlohmann lib used to output data (json) to logfiles
+#include "yaml-cpp/yaml.h" //yaml-cpp lib used for parsing input (yaml) files
 
-#include "fdr_profile.hpp"
+#include "fdr_policy.hpp"
 #include "fdr_record.hpp"
+#include "fdr_store.hpp"
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
+#include <systemd/sd-bus.h>
 
-using nlohmann::json;
-
-class PlatformProfile_c
+class FlightDataRecorder_c
 {
 private:
 	/* data */
+	std::vector<Record *> RecList;
+
 public:
 	Profile_t profile;
-	PlatformProfile_c(const char *filename);
-	~PlatformProfile_c();
-	void Process(void);
+	FlightDataRecorder_c(const std::string filename);
+	~FlightDataRecorder_c();
+	void CreateRecords(void);
+	void ReadOldRecords(void);
+	void RefreshAndRecord(void);
+	void Averager(void);
 };
 
-PlatformProfile_c::PlatformProfile_c(const char *filename)
-{
-	YAML::Node PlatformProfile = YAML::LoadFile(filename);
-
-	// profile = PlatformProfile.as<Profile_t>;
-	profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();
-	profile.Sections = PlatformProfile["Sections"].as<std::vector<Section_t>>();
-}
-
-// TODO: find own implementation
 std::string exec(const char *cmd)
 {
 	std::array<char, 128> buffer;
@@ -53,92 +47,204 @@ std::string exec(const char *cmd)
 	return result;
 }
 
-void to_json(json &j, const fdr_record &rec)
+FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 {
-	j = json{{"TimeStamp", rec.TimeStamp}, {"InfoName", rec.InfoName}, {"InfoValue", rec.InfoValue}};
+#if 0
+	YAML::Node PlatformProfile = YAML::LoadFile(filename);
+#else
+	// HACK: yaml-cpp lib seems to have trouble parsing yaml with anchors and aliases, so need to convert to json first
+	std::string yamltojson = "cat " + filename + " | yaml2json - > " + filename + ".json"; // eg: cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.yaml.json
+	exec(yamltojson.c_str());
+	YAML::Node PlatformProfile = YAML::LoadFile(filename + ".json"); // NOTE: remember, json is a subset of yaml, so we can still use YAML::LoadFile to load it
+#endif
+
+	// profile = PlatformProfile.as<Profile_t>;
+	profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();
+	profile.Sections = PlatformProfile["Sections"].as<std::vector<Section_t>>();
+
+	// Read in the policy file
+	CreateRecords();
 }
 
-void PlatformProfile_c::Process(void)
+void FlightDataRecorder_c::CreateRecords(void)
 {
 	for (auto &section : profile.Sections)
 	{
 		// std::cout << "Section.ID: " << section.ID << "\n";
+		section.parent_profile = &profile;
 		for (auto &component : section.Components)
 		{
 			// std::cout << "\tComponent.ID: " << component.ID << "\n";
+			component.parent_section = &section;
 			for (auto &infogroup : component.InfoGroups)
 			{
+				infogroup.parent_component = &component;
 				for (auto &info : infogroup.InfoList)
 				{
-					// std::cout << "\tID: " << info.ID << "\n";
-					if (difftime(std::time(nullptr), info.LastUpdateAt) >= info.FetchFreqSecs)
-					{
-						std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
-						std::string logfile = infogroup.ID + ".log";
+					//Save link to the parent
+					info.parent_infogroup = &infogroup;
 
-						// Search & replace all params with values in the commands/paths
-						for (auto &param : component.Params)
-						{
-							//$param.name --> param.value
-							boost::replace_all(info.FetchPath, "$" + param.name, param.value);
-						}
+					// Create a record object
+					Record *resource = new Record(profile, section, component, infogroup, info);
 
-						// Create log directory if missing
-						std::filesystem::path dir(logdir);
-						if (!(std::filesystem::exists(dir)))
-						{
-							if (!(std::filesystem::create_directories(dir)))
-								std::cout << "Failed to create directory: " << dir << std::endl;
-							// TODO: error handling
-						}
-
-						// Open logfile
-						std::ofstream myfile(logdir + logfile, std::ios_base::app);
-						if (myfile.is_open())
-						{
-							fdr_record record;
-							std::time_t current_time = std::time(nullptr);
-
-							record.TimeStamp = std::to_string(current_time);
-							record.InfoName = info.ID;
-							record.InfoValue = exec(info.FetchPath.c_str());
-							info.LastUpdateAt = current_time;
-
-							json jrecord{record};		 // Marshall record to json
-							myfile << jrecord[0].dump(); // NOTE: for some reason, the json marshalling above produces an array instead of a single element
-							// myfile << jrecord[0].dump(4);
-							myfile << std::endl;
-
-							myfile.close();
-						}
-						// TODO: error handling
-					}
+					// Append it to the list
+					RecList.push_back(resource);
 				}
 			}
 		}
 	}
 }
 
-PlatformProfile_c::~PlatformProfile_c()
+void FlightDataRecorder_c::ReadOldRecords(void)
 {
+	for (auto &rec1 : RecList)
+	{
+		rec1->Load();
+	}
+}
+
+void FlightDataRecorder_c::RefreshAndRecord(void)
+{
+	for (auto &rec : RecList)
+	{
+		rec->Refresh();
+		rec->Store();
+	}
+}
+
+void FlightDataRecorder_c::Averager(void)
+{
+	for (auto &section : profile.Sections)
+	{
+		for (auto &component : section.Components)
+		{
+			for (auto &infogroup : component.InfoGroups)
+			{
+				if (infogroup.ID != "Stats")
+					continue; // Only numerical stats can be compacted not text etc.
+
+				std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
+				std::string logfile = infogroup.ID + ".log";
+				std::string statsfile = infogroup.ID + ".stats";
+
+				// Create a map info.ID --> {n,min,max,sum,}
+				std::map<std::string, fdr_stat> stats_so_far;
+
+				FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat);
+				fdr_sample readrec;
+				while (fdrlogs.readnext(&readrec))
+				{
+					stats_so_far[readrec.infoname()].set_numsamples(stats_so_far[readrec.infoname()].numsamples() + 1);
+					stats_so_far[readrec.infoname()].set_sum(stats_so_far[readrec.infoname()].sum() + readrec.infovalueint64());
+					stats_so_far[readrec.infoname()].set_min(std::min(stats_so_far[readrec.infoname()].min(), readrec.infovalueint64()));
+					stats_so_far[readrec.infoname()].set_max(std::max(stats_so_far[readrec.infoname()].max(), readrec.infovalueint64()));
+					stats_so_far[readrec.infoname()].set_fromtime(stats_so_far[readrec.infoname()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.infoname()].fromtime());
+					stats_so_far[readrec.infoname()].set_totime(readrec.timestamp());
+				}
+				for (auto &stat : stats_so_far)
+				{
+					stat.second.set_avg(stat.second.sum() / stat.second.numsamples());
+
+					std::cout << "-----Stats for ID: " << stat.first << std::endl;
+					std::cout << "Num: " << stat.second.numsamples() << std::endl;
+					std::cout << "Min: " << stat.second.min() << std::endl;
+					std::cout << "Max: " << stat.second.max() << std::endl;
+					std::cout << "Avg: " << stat.second.avg() << std::endl;
+					std::cout << "Sum: " << stat.second.sum() << std::endl;
+
+					FDRStore fdrstats(logdir + statsfile, profile.GeneralConfig.LogsFormat);
+					fdrstats.append(stat.second);
+				}
+			}
+		}
+	}
+}
+
+FlightDataRecorder_c::~FlightDataRecorder_c()
+{
+}
+
+static inline const char *strna(const char *s)
+{
+	return s ?: "n/a";
+}
+
+sd_bus *bus = NULL;
+
+int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
+{
+	printf("callback: path=%s interface=%s member=%s\n",
+		   strna(sd_bus_message_get_path(m)),
+		   strna(sd_bus_message_get_interface(m)),
+		   strna(sd_bus_message_get_member(m)));
+
+	sd_bus_error error = SD_BUS_ERROR_NULL;
+	sd_bus_message *reply = NULL;
+	int r;
+
+	r = sd_bus_get_property(bus, "org.freedesktop.NetworkManager", "/org/freedesktop/NetworkManager/Devices/1",
+							"org.freedesktop.NetworkManager.Device.Statistics", "RxBytes",
+							&error, &reply, "t");
+	if (r < 0)
+	{
+		printf("sd_bus_get_property failed: error=%s\n", error.message);
+	}
+
+	uint64_t rxbytes;
+	r = sd_bus_message_read(reply, "t", &rxbytes);
+	if (r < 0)
+		printf("sd_bus_message_read failed\n");
+
+	printf("rxbytes =%ld\n", rxbytes);
+	// sd_bus_message_dump(reply, stdout, SD_BUS_MESSAGE_DUMP_SUBTREE_ONLY);
+
+	return 0;
 }
 
 int main(void)
 {
+	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
+
+	sd_bus_default_system(&bus);
+
+	FlightDataRecorder_c fdr("fdr_vulcan.yaml");
+
+	// Read in the last recorded values from log files
+	fdr.ReadOldRecords();
 
 #if 0
-	PlatformProfile_c platform("fdr_vulcan.yaml");
-#else
-	exec("cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.json"); // Convert yaml to json(which is still yaml) to resolve all internal references (anchors and aliases)
-	PlatformProfile_c platform("fdr_vulcan.json");
+	// Install Listeners so we can avoid polling as much as possible
+	sd_bus_match_signal(
+		bus,												// bus
+		NULL,												// ret
+		NULL,												// sender
+		"/org/freedesktop/NetworkManager/Devices/1",		// path
+		"org.freedesktop.NetworkManager.Device.Statistics", // interface
+		"PropertiesChanged",								// member
+		message_callback,									// callback
+		NULL);												// userdata
+
+	while (1)
+	{
+		sd_bus_wait(bus, UINT64_MAX);
+		while (sd_bus_process(bus, NULL))
+		{
+		}
+	}
 #endif
 
 	while (true)
 	{
-		platform.Process();
+		// Start the core engine of fetching and recording
+		fdr.RefreshAndRecord();
+
+		// Compactor
+		fdr.Averager();
+
 		sleep(1);
 	}
 
+	sd_bus_unref(bus);
 	return EXIT_SUCCESS;
 }
 

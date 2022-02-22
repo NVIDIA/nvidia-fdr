@@ -7,10 +7,11 @@ bin_PROGRAMS = fdr
 
 fdr_SOURCES = \
 	main.cpp \
-	fdr_profile.cpp
+	fdr_profile.cpp \
+	fdr_record.cpp
 
-fdr_LDFLAGS = -static
-fdr_LDADD = -lyaml-cpp -lstdc++fs 
+# fdr_LDFLAGS = -static
+fdr_LDADD = -lyaml-cpp -lsystemd
 
 distclean-local:
 	rm -rf autom4te.cache

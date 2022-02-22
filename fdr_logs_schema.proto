@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package fdr;
+
+message fdr_sample {
+  uint64 TimeStamp = 1; // Time at which this sample was captured
+  string InfoType = 2;  // Type of this sample Uint64|String|Binary etc.
+  string InfoName = 3;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
+  oneof InfoValue {     // Value of this sample
+    string InfoValueString = 4; // Applicable when InfoType==string
+    int64 InfoValueInt64 = 5;   // Applicable when InfoType==Uint64
+  }
+}
+
+message fdr_stat {
+  int64 FromTime = 1;   // Start of time period within which samples lie
+  int64 ToTime = 2;     // End of time period within which samples lie
+  int64 NumSamples = 3; // Number of samples this stat took into consideration
+  int64 Min = 4;        // Minimum value seen across all samples
+  int64 Max = 5;        // Maximum value seen across all samples
+  int64 Sum = 6;        // Sum of all all samples
+  int64 Avg = 7;        // Average values for the sample set
+}

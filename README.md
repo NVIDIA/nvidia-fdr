@@ -1,11 +1,10 @@
 
 # Build
 
-./autogen.sh
-
-./configure
+cmake .
 
 make
+
 
 # Run
 
