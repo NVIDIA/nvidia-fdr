@@ -1,68 +1,138 @@
 GeneralConfig:
   LogsBasePath: "/tmp/logs/fdr"
+  LogsFormat: Binary  #Choices=JSON|Binary
 
 GPU: &gpu
   Params:
     - name: gpuid
       value: 0
-  InfoGroups:           #A Logfile shall be created for each item in this list
-    - ID: Inventory     #Will create for eg. $LogsBasePath/GPU/GPU0/Inventory.log
+  InfoGroups:                         #A Logfile shall be created for each item in this list
+    - ID: Inventory                   #This for eg. will create $LogsBasePath/GPU/GPU0/Inventory.log
       InfoList:
-        - ID: Model
-          FetchMethod: Command #WIP: add support for DBUS|SysFS|IPMI|RF etc.
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
-          FetchFreqSecs: 10
-          StoreFreq: OnChange|everytime
+        - ID: Model                   #Name of the this info/parameter/metric inside the log file
+          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
+          FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
+          FetchFreqSecs: 10           #Sampling freq in seconds
+          StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
+          CommandParams:              #applicable only when FetchMethod=Command
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
         - ID: Serial
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=serial"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=serial"
         - ID: UUID
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=uuid"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=uuid"
     - ID: Versions
       InfoList:
         - ID: Driver
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=driver_version"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=driver_version"
         - ID: VBIOS
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=vbios_version"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=vbios_version"
         - ID: Inforom
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=inforom.oem,inforom.ecc,inforom.pwr"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=inforom.oem,inforom.ecc,inforom.pwr"
     - ID: Config
       InfoList:
         - ID: PowerManagementEnabled
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.management"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.management"
         - ID: MIGMode
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=mig.mode.current"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=mig.mode.current"
         - ID: UserConfiguredGraphicsClock
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.gr"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.gr"
         - ID: UserConfiguredMemoryClock
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.mem"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.mem"
     - ID: Errors
       InfoList:
         - ID: L1CacheErrorsCorrected
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l1_cache"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l1_cache"
         - ID: L2CacheErrorsCorrected
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
+    - ID: Sensors
+      InfoList:
+        - ID: GPUTemperature
+          FetchPolicy: Periodic
+          FetchMethod: Command
+          FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
+        - ID: MemTemperature
+          FetchPolicy: Periodic
+          FetchMethod: Command
+          FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
+
+NIC: &nic
+  Params:
+    - name: nicid
+      value: 0
+  InfoGroups:
+    - ID: Stats
+      InfoList:
+        - ID: RxBytes
+          DataType: Uint64
+          FetchPolicy: Poll
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          DbusParams:
+            Service: "org.freedesktop.NetworkManager"
+            ObjectPath: "/org/freedesktop/NetworkManager/Devices/$nicid"
+            Interface: "org.freedesktop.NetworkManager.Device.Statistics"
+            Property: "RxBytes"
 
 Circle: &circ
   Params:
@@ -72,13 +142,19 @@ Circle: &circ
     - ID: Size
       InfoList:
         - ID: Area
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "echo 3.14*$radius*$radius | bc -l"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "echo 3.14*$radius*$radius | bc -l"
         - ID: Circumference
+          FetchPolicy: Periodic
           FetchMethod: Command
-          FetchPath: "echo 2*3.14*$radius | bc -l"
           FetchFreqSecs: 10
+          StorePolicy: OnChange
+          CommandParams:
+            Command: "echo 2*3.14*$radius | bc -l"
 
 Rectangle: &rect
   Params:
@@ -99,11 +175,18 @@ Rectangle: &rect
           FetchFreqSecs: 10
 
 Sections:
+  - ID: NIC
+    Components:
+      - <<: *nic
+        ID: NIC1
+        Params:
+          - name: nicid
+            value: 1
   - ID: GPU
     Components:
-      - <<: *gpu            #Inherit all definitions from template
-        ID: GPU0            #add an ID
-        Params:             #and change parameter values
+      - <<: *gpu #Inherit all definitions from template
+        ID: GPU0 #add an ID
+        Params: #and change parameter values
           - name: gpuid
             value: 0
       - <<: *gpu
