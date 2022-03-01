@@ -13,11 +13,11 @@ message fdr_sample {
 }
 
 message fdr_stat {
-  int64 FromTime = 1;   // Start of time period within which samples lie
-  int64 ToTime = 2;     // End of time period within which samples lie
-  int64 NumSamples = 3; // Number of samples this stat took into consideration
-  int64 Min = 4;        // Minimum value seen across all samples
-  int64 Max = 5;        // Maximum value seen across all samples
-  int64 Sum = 6;        // Sum of all all samples
+  string InfoName = 1;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
+  int64 FromTime = 2;   // Start of time period within which samples lie
+  int64 ToTime = 3;     // End of time period within which samples lie
+  int64 NumSamples = 4; // Number of samples this stat took into consideration
+  int64 Min = 5;        // Minimum value seen across all samples
+  int64 Max = 6;        // Maximum value seen across all samples
   int64 Avg = 7;        // Average values for the sample set
 }

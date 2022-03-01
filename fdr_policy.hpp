@@ -53,7 +53,11 @@ struct InfoGroup_t
 {
 	std::string ID;				   // Unique ID for this group eg: Inventory|Config|Versions|Errors|Stats
 	std::vector<Info_t> InfoList;  // List of information related to this component
+	std::string CompactionPolicy;  // Compaction policy (Periodic|OnChange|etc.)
+	std::string CompactionMethod;  // Compaction method (Average|Discard|etc.)
+	int CompactionFreqSecs;		   // Seconds between each compaction (if CompactionPolicy==Periodic)
 	Component_t *parent_component; // Pointer to the component this infogroup belongs to
+	std::time_t LastCompactedAt;   // Time of last compaction
 };
 
 struct Component_t
@@ -207,6 +211,21 @@ namespace YAML
 		{
 			rhs.ID = node["ID"].as<std::string>();
 			rhs.InfoList = node["InfoList"].as<std::vector<Info_t>>();
+
+			if (node["CompactionPolicy"])
+			{
+				rhs.CompactionPolicy = node["CompactionPolicy"].as<std::string>();
+			}
+			if (node["CompactionMethod"])
+			{
+				rhs.CompactionMethod = node["CompactionMethod"].as<std::string>();
+			}
+			if (node["CompactionFreqSecs"])
+			{
+				rhs.CompactionFreqSecs = node["CompactionFreqSecs"].as<int>();
+			}
+
+			rhs.LastCompactedAt = 0;
 
 			return true;
 		}

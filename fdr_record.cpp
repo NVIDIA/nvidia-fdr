@@ -23,7 +23,6 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     LastFetchedAt = 0; // Init last read time to epoch
     LastStoredAt = 0;  // Init last store time to epoch
 
-    info.StoreFreqSecs = 5; // HACK: must come from policy file
     data.set_infotype(info.DataType);
 
     // Search & replace all params with values in the commands/paths
@@ -59,57 +58,65 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
 
 void Record::Refresh(void)
 {
-    if (difftime(std::time(nullptr), LastFetchedAt) >= info.FetchFreqSecs)
+    // Skip if too early to refresh
+    if (difftime(std::time(nullptr), LastFetchedAt) < info.FetchFreqSecs)
+        return;
+
+    std::time_t current_time = std::time(nullptr);
+    data.set_timestamp(current_time);
+    data.set_infoname(info.ID);
+    LastFetchedAt = current_time;
+
+    if (info.FetchMethod == "Command")
     {
-        prev_data = data;
-
-        std::time_t current_time = std::time(nullptr);
-        data.set_timestamp(current_time);
-        data.set_infoname(info.ID);
-        LastFetchedAt = current_time;
-
-        if (info.FetchMethod == "Command")
+        std::string commandresult = exec(info.CommandParams.Command.c_str());
+        if (data.infotype() == "Uint64")
         {
-            data.set_infovaluestring(exec(info.CommandParams.Command.c_str()));
+            std::istringstream str2num(commandresult);
+            uint64_t val;
+            str2num >> val;
+            data.set_infovalueint64(val);
         }
-        else if (info.FetchMethod == "DBUS")
+        else
         {
-            extern sd_bus *bus;
-            sd_bus_error error = SD_BUS_ERROR_NULL;
-            sd_bus_message *reply = NULL;
-            int r;
+            data.set_infovaluestring(commandresult);
+        }
+    }
+    else if (info.FetchMethod == "DBUS")
+    {
+        extern sd_bus *bus;
+        sd_bus_error error = SD_BUS_ERROR_NULL;
+        sd_bus_message *reply = NULL;
+        int r;
 
-            std::cout << "DbusParams Are: ";
-            std::cout << info.DbusParams.Service << info.DbusParams.ObjectPath << info.DbusParams.Interface << info.DbusParams.Property << std::endl;
+        std::cout << "DbusParams Are: ";
+        std::cout << info.DbusParams.Service << info.DbusParams.ObjectPath << info.DbusParams.Interface << info.DbusParams.Property << std::endl;
 
-            r = sd_bus_get_property(bus, info.DbusParams.Service.c_str(), info.DbusParams.ObjectPath.c_str(),
-                                    info.DbusParams.Interface.c_str(), info.DbusParams.Property.c_str(),
-                                    &error, &reply, "t");
-            if (r < 0)
-            {
-                printf("sd_bus_get_property failed: error=%s\n", error.message);
-            }
-
-            int64_t val;
-            r = sd_bus_message_read(reply, "t", &val);
-            if (r < 0)
-                printf("sd_bus_message_read failed\n");
-
-            printf("val =%ld\n", val);
-
-            if (data.infotype() == "Uint64")
-            {
-                data.set_infovalueint64(val);
-            }
-            else
-            {
-                data.set_infovaluestring(std::to_string(val));
-            }
-
-            sd_bus_error_free(&error);
+        r = sd_bus_get_property(bus, info.DbusParams.Service.c_str(), info.DbusParams.ObjectPath.c_str(),
+                                info.DbusParams.Interface.c_str(), info.DbusParams.Property.c_str(),
+                                &error, &reply, "t");
+        if (r < 0)
+        {
+            printf("sd_bus_get_property failed: error=%s\n", error.message);
         }
 
-        // TODO: error handling
+        int64_t val;
+        r = sd_bus_message_read(reply, "t", &val);
+        if (r < 0)
+            printf("sd_bus_message_read failed\n");
+
+        printf("val =%ld\n", val);
+
+        if (data.infotype() == "Uint64")
+        {
+            data.set_infovalueint64(val);
+        }
+        else
+        {
+            data.set_infovaluestring(std::to_string(val));
+        }
+
+        sd_bus_error_free(&error);
     }
 }
 
@@ -134,22 +141,51 @@ bool same_data_values(const fdr_sample &left, const fdr_sample &right)
     }
 }
 
+void print_data(const std::string name, const fdr_sample &dat)
+{
+
+    std::cout << "Name: " + name << std::endl;
+    std::cout << "dat.infoname(): " + dat.infoname() << std::endl;
+    std::cout << "dat.infotype(): " + dat.infotype() << std::endl;
+    std::cout << "dat.InfoValue_case(): " + dat.InfoValue_case() << std::endl;
+    if (dat.InfoValue_case() == fdr::fdr_sample::kInfoValueInt64)
+        std::cout << "dat.infovalueint64(): " + dat.infovalueint64() << std::endl;
+    else
+        std::cout << "dat.infovaluestring(): " + dat.infovaluestring() << std::endl;
+}
 
 void Record::Store(void)
 {
     // Skip if update not necessary per the policy
-    if ((info.StorePolicy == "OnChange") && (same_data_values(data, prev_data)))
+    if ((info.StorePolicy == "OnChange") && (same_data_values(data, last_stored_data)))
     {
         return;
     }
 
     // Skip if its not time to store yet
-    if (difftime(std::time(nullptr), LastStoredAt) < info.StoreFreqSecs)
+    if ((info.StorePolicy == "Periodic") && (difftime(std::time(nullptr), LastStoredAt) < info.StoreFreqSecs))
     {
         return;
     }
 
+    // Skip if last store is quite older than last fetch
+    if ((info.StorePolicy == "EveryFetch") && (difftime(LastFetchedAt, LastStoredAt) < info.FetchFreqSecs))
+    {
+        return;
+    }
+
+    // if (data.infoname() == "Model")
+    // {
+    //     std::cout << "Writing Model for ID " << info.parent_infogroup->parent_component->ID << std::endl;
+    //     print_data("last_stored_data", last_stored_data);
+    //     print_data("data", data);
+    // }
+
     fdrreaderwriter->append(data);
+
+    // if (info.ID == "Model")
+    //     std::cout << "Setting last_stored_data = data for ID " << info.parent_infogroup->parent_component->ID << std::endl;
+    last_stored_data = data;
     LastStoredAt = std::time(nullptr);
 }
 
@@ -161,14 +197,14 @@ void Record::Load(void)
     { // TODO: read the file from last to first
         if (readrec.infoname() == info.ID)
         {
-            data = prev_data = readrec;
+            data = last_stored_data = readrec;
         }
     }
 
-    // prev_data.InfoValue = 0;
+    // last_stored_data.InfoValue = 0;
 }
 
 void Record::Print(void)
 {
-    // std::cout << "Set prev_data.InfoValue=" + prev_data.InfoValue << std::endl;
+    // std::cout << "Set last_stored_data.InfoValue=" + last_stored_data.InfoValue << std::endl;
 }
