@@ -28,7 +28,7 @@ public:
 	void CreateRecords(void);
 	void ReadOldRecords(void);
 	void RefreshAndRecord(void);
-	void Averager(void);
+	void Compactor(void);
 };
 
 std::string exec(const char *cmd)
@@ -44,6 +44,11 @@ std::string exec(const char *cmd)
 	{
 		result += buffer.data();
 	}
+
+	//Remove newline from end if applicable
+	if (result[result.length()-1] == '\n')
+		result.erase(result.length()-1);
+
 	return result;
 }
 
@@ -81,7 +86,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 				infogroup.parent_component = &component;
 				for (auto &info : infogroup.InfoList)
 				{
-					//Save link to the parent
+					// Save link to the parent
 					info.parent_infogroup = &infogroup;
 
 					// Create a record object
@@ -112,7 +117,7 @@ void FlightDataRecorder_c::RefreshAndRecord(void)
 	}
 }
 
-void FlightDataRecorder_c::Averager(void)
+void FlightDataRecorder_c::Compactor(void)
 {
 	for (auto &section : profile.Sections)
 	{
@@ -120,8 +125,24 @@ void FlightDataRecorder_c::Averager(void)
 		{
 			for (auto &infogroup : component.InfoGroups)
 			{
-				if (infogroup.ID != "Stats")
-					continue; // Only numerical stats can be compacted not text etc.
+				if (infogroup.CompactionMethod != "Average")
+					continue; // Only numerical stats can be compacted not text etc. for now
+
+				double timeSinceLastCompaction = difftime(std::time(nullptr), infogroup.LastCompactedAt);
+				// std::cout << "LastCompactedAt: " << infogroup.LastCompactedAt 
+				// 		  << "\tCurrentTime: " << std::time(nullptr) 
+				// 		  << "\tCompactionFreqSecs: " << infogroup.CompactionFreqSecs
+				// 		  << "\ttimeSinceLastCompaction: " << timeSinceLastCompaction
+				// 		  << "\tCompactionPolicy: " << infogroup.CompactionPolicy
+				// 		  << std::endl;
+
+				// Skip if its not time to compact yet
+				if ((infogroup.CompactionPolicy == "Periodic") && (timeSinceLastCompaction < infogroup.CompactionFreqSecs)) {
+					// std::cout << "Skippping Compaction" << std::endl;
+					continue;
+				}else{
+					// std::cout << "Proceeding with Compaction" << std::endl;
+				}
 
 				std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
 				std::string logfile = infogroup.ID + ".log";
@@ -134,26 +155,41 @@ void FlightDataRecorder_c::Averager(void)
 				fdr_sample readrec;
 				while (fdrlogs.readnext(&readrec))
 				{
+					stats_so_far[readrec.infoname()].set_infoname(readrec.infoname());
 					stats_so_far[readrec.infoname()].set_numsamples(stats_so_far[readrec.infoname()].numsamples() + 1);
-					stats_so_far[readrec.infoname()].set_sum(stats_so_far[readrec.infoname()].sum() + readrec.infovalueint64());
-					stats_so_far[readrec.infoname()].set_min(std::min(stats_so_far[readrec.infoname()].min(), readrec.infovalueint64()));
+					stats_so_far[readrec.infoname()].set_avg(stats_so_far[readrec.infoname()].avg() + readrec.infovalueint64()); // TODO: using avg field as sum. avoid overflow.
+					if (stats_so_far[readrec.infoname()].min() != 0)
+						stats_so_far[readrec.infoname()].set_min(std::min(stats_so_far[readrec.infoname()].min(), readrec.infovalueint64()));
+					else
+						stats_so_far[readrec.infoname()].set_min(readrec.infovalueint64());
 					stats_so_far[readrec.infoname()].set_max(std::max(stats_so_far[readrec.infoname()].max(), readrec.infovalueint64()));
 					stats_so_far[readrec.infoname()].set_fromtime(stats_so_far[readrec.infoname()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.infoname()].fromtime());
 					stats_so_far[readrec.infoname()].set_totime(readrec.timestamp());
 				}
 				for (auto &stat : stats_so_far)
 				{
-					stat.second.set_avg(stat.second.sum() / stat.second.numsamples());
+					stat.second.set_avg(stat.second.avg() / stat.second.numsamples());
 
 					std::cout << "-----Stats for ID: " << stat.first << std::endl;
 					std::cout << "Num: " << stat.second.numsamples() << std::endl;
 					std::cout << "Min: " << stat.second.min() << std::endl;
 					std::cout << "Max: " << stat.second.max() << std::endl;
 					std::cout << "Avg: " << stat.second.avg() << std::endl;
-					std::cout << "Sum: " << stat.second.sum() << std::endl;
 
 					FDRStore fdrstats(logdir + statsfile, profile.GeneralConfig.LogsFormat);
 					fdrstats.append(stat.second);
+					infogroup.LastCompactedAt = std::time(nullptr);
+					// Delete the records we just compacted
+					std::string filetodelete = logdir + logfile;
+					if (remove(filetodelete.c_str()) != 0)
+					{
+						perror("Error deleting file");
+						std::cout << "Failed to delete: " << filetodelete << std::endl;
+					}
+					else
+					{
+						std::cout << "Succesfully deleted: " << filetodelete << std::endl;
+					}
 				}
 			}
 		}
@@ -239,7 +275,7 @@ int main(void)
 		fdr.RefreshAndRecord();
 
 		// Compactor
-		fdr.Averager();
+		fdr.Compactor();
 
 		sleep(1);
 	}

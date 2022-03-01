@@ -1,6 +1,6 @@
 GeneralConfig:
   LogsBasePath: "/tmp/logs/fdr"
-  LogsFormat: Binary  #Choices=JSON|Binary
+  LogsFormat: JSON  #Choices=JSON|Binary
 
 GPU: &gpu
   Params:
@@ -9,112 +9,81 @@ GPU: &gpu
   InfoGroups:                         #A Logfile shall be created for each item in this list
     - ID: Inventory                   #This for eg. will create $LogsBasePath/GPU/GPU0/Inventory.log
       InfoList:
-        - ID: Model                   #Name of the this info/parameter/metric inside the log file
+        - &defaults
+          ID: Model                   #Name of the this info/parameter/metric inside the log file
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
           FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 10           #Sampling freq in seconds
+          FetchFreqSecs: 5           #Sampling freq in seconds
           StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
           CommandParams:              #applicable only when FetchMethod=Command
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
         - ID: Serial
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=serial"
         - ID: UUID
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=uuid"
     - ID: Versions
       InfoList:
         - ID: Driver
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=driver_version"
         - ID: VBIOS
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=vbios_version"
         - ID: Inforom
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=inforom.oem,inforom.ecc,inforom.pwr"
     - ID: Config
       InfoList:
         - ID: PowerManagementEnabled
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.management"
         - ID: MIGMode
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=mig.mode.current"
         - ID: UserConfiguredGraphicsClock
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.gr"
         - ID: UserConfiguredMemoryClock
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.mem"
     - ID: Errors
       InfoList:
         - ID: L1CacheErrorsCorrected
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l1_cache"
         - ID: L2CacheErrorsCorrected
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+          <<: *defaults
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
     - ID: Sensors
       InfoList:
-        - ID: GPUTemperature
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+        - ID: GPUTemp
+          <<: *defaults
+          StorePolicy: EveryFetch
+          DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
-        - ID: MemTemperature
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
+        - ID: MemTemp
+          <<: *defaults
+          StorePolicy: EveryFetch
+          DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
+      CompactionPolicy: Periodic
+      CompactionFreqSecs: 60
+      CompactionMethod: Average
 
 NIC: &nic
   Params:
@@ -125,14 +94,18 @@ NIC: &nic
       InfoList:
         - ID: RxBytes
           DataType: Uint64
-          FetchPolicy: Poll
+          FetchPolicy: Periodic
           FetchFreqSecs: 5
           FetchMethod: DBUS
+          StorePolicy: EveryFetch
           DbusParams:
             Service: "org.freedesktop.NetworkManager"
             ObjectPath: "/org/freedesktop/NetworkManager/Devices/$nicid"
             Interface: "org.freedesktop.NetworkManager.Device.Statistics"
             Property: "RxBytes"
+      CompactionPolicy: Periodic
+      CompactionFreqSecs: 20
+      CompactionMethod: Average
 
 Circle: &circ
   Params:
@@ -175,39 +148,39 @@ Rectangle: &rect
           FetchFreqSecs: 10
 
 Sections:
-  - ID: NIC
-    Components:
-      - <<: *nic
-        ID: NIC1
-        Params:
-          - name: nicid
-            value: 1
   - ID: GPU
     Components:
-      - <<: *gpu #Inherit all definitions from template
-        ID: GPU0 #add an ID
-        Params: #and change parameter values
+      - ID: GPU0          #assign an ID
+        <<: *gpu          #Inherit all definitions from template
+        Params:           #and change parameter values
           - name: gpuid
             value: 0
-      - <<: *gpu
-        ID: GPU1
+      - ID: GPU1
+        <<: *gpu
         Params:
           - name: gpuid
             value: 1
-      - <<: *gpu
-        ID: GPU2
+      - ID: GPU2
+        <<: *gpu
         Params:
           - name: gpuid
             value: 2
-      - <<: *gpu
-        ID: GPU3
+      - ID: GPU3
+        <<: *gpu
         Params:
           - name: gpuid
             value: 3
+  - ID: NIC
+    Components:
+      - ID: NIC1
+        <<: *nic
+        Params:
+          - name: nicid
+            value: 1
   - ID: Rectangles
     Components:
-      - <<: *rect
-        ID: Rectangles1
+      - ID: Rectangles1
+        <<: *rect
         Params:
           - name: length
             value: 2
@@ -216,15 +189,15 @@ Sections:
   - ID: RoundObjects
     Components:
       - ID: Circle1
+        <<: *circ
         Params:
           - name: radius
             value: 20
-        <<: *circ
       - ID: Circle2
+        <<: *circ
         Params:
           - name: radius
             value: 40
-        <<: *circ
 #
 #          - ID: Stats
 #            Command: "nvidia-smi"
