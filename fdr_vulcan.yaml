@@ -13,7 +13,7 @@ GPU: &gpu
           ID: Model                   #Name of the this info/parameter/metric inside the log file
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
           FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 5           #Sampling freq in seconds
+          FetchFreqSecs: 5            #Sampling freq in seconds
           StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
           CommandParams:              #applicable only when FetchMethod=Command
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
@@ -107,50 +107,10 @@ NIC: &nic
       CompactionFreqSecs: 20
       CompactionMethod: Average
 
-Circle: &circ
-  Params:
-    - name: radius
-      value: 20
-  InfoGroups:
-    - ID: Size
-      InfoList:
-        - ID: Area
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
-          CommandParams:
-            Command: "echo 3.14*$radius*$radius | bc -l"
-        - ID: Circumference
-          FetchPolicy: Periodic
-          FetchMethod: Command
-          FetchFreqSecs: 10
-          StorePolicy: OnChange
-          CommandParams:
-            Command: "echo 2*3.14*$radius | bc -l"
-
-Rectangle: &rect
-  Params:
-    - name: length
-      value: 2
-    - name: breadth
-      value: 3
-  InfoGroups:
-    - ID: Size
-      InfoList:
-        - ID: Area
-          FetchMethod: Command
-          FetchPath: "echo -n $(($length * $breadth))"
-          FetchFreqSecs: 10
-        - ID: Perimeter
-          FetchMethod: Command
-          FetchPath: "echo -n $((2 * $length + 2 * $breadth))"
-          FetchFreqSecs: 10
-
 Sections:
   - ID: GPU
     Components:
-      - ID: GPU0          #assign an ID
+      - ID: GPU0
         <<: *gpu          #Inherit all definitions from template
         Params:           #and change parameter values
           - name: gpuid
@@ -177,42 +137,6 @@ Sections:
         Params:
           - name: nicid
             value: 1
-  - ID: Rectangles
-    Components:
-      - ID: Rectangles1
-        <<: *rect
-        Params:
-          - name: length
-            value: 2
-          - name: breadth
-            value: 3
-  - ID: RoundObjects
-    Components:
-      - ID: Circle1
-        <<: *circ
-        Params:
-          - name: radius
-            value: 20
-      - ID: Circle2
-        <<: *circ
-        Params:
-          - name: radius
-            value: 40
-#
-#          - ID: Stats
-#            Command: "nvidia-smi"
-#            Deletion:
-#              Policy: OlderThan
-#              Args: ["10", "days"]
-#            Compaction:
-#              Policy: MinMaxAvg
-#          - ID: Snapshots
-#            Command: "nvidia-smi"
-#            Deletion:
-#              Policy: OlderThan
-#              Args: ["10", "entries"]
-#          - ID: Logs
-#            Command: "nvidia-smi"
 
 #NVSwitch:
 #PCIeSwitch:
