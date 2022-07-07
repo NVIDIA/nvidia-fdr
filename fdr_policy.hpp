@@ -15,6 +15,7 @@ struct GeneralConfig_t
 {
 	std::string LogsBasePath; // Root directory for all logs for this system
 	std::string LogsFormat;	  // Data encoding format to use (JSON|Binary etc.)
+	std::string DatabaseName;	//Database name to be used
 };
 
 struct CommandParams_t
@@ -101,6 +102,7 @@ namespace YAML
 		{
 			rhs.LogsBasePath = node["LogsBasePath"].as<std::string>();
 			rhs.LogsFormat = node["LogsFormat"].as<std::string>();
+			rhs.DatabaseName = node["DatabaseName"].as<std::string>();
 			return true;
 		}
 	};
