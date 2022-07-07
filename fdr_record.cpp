@@ -3,7 +3,6 @@
 #include <fstream>
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
-#include "fdr_logs_schema.pb.h"
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
@@ -16,14 +15,12 @@ std::string exec(const char *cmd);
 Record::Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info) : profile(profile), section(section), component(component), infogroup(infogroup), info(info)
 {
     logsformat = profile.GeneralConfig.LogsFormat;
-    logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
-    logfile = infogroup.ID + ".log";
-    logfilepath = logdir + logfile;
+    logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
 
     LastFetchedAt = 0; // Init last read time to epoch
     LastStoredAt = 0;  // Init last store time to epoch
 
-    data.set_infotype(info.DataType);
+    data.paramType = info.DataType;
 
     // Search & replace all params with values in the commands/paths
     for (auto &param : component.Params)
@@ -43,7 +40,8 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     }
 
     // Create log directory if missing
-    std::filesystem::path dir(logdir);
+    //std::filesystem::path dir(logdir);
+    std::filesystem::path dir(profile.GeneralConfig.LogsBasePath);
     if (!(std::filesystem::exists(dir)))
     {
         if (!(std::filesystem::create_directories(dir)))
@@ -53,7 +51,9 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
 
     // Init the encoder to file
     //  FDREncoder fdrreaderwriter(logfilepath, "JSON");
-    fdrreaderwriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
+    
+    //fdrreaderwriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
+    fdrreaderwriter.reset(new FDRStore(logfilepath, logsformat, infogroup.ID, section.ID, component.ID));
 }
 
 void Record::Refresh(void)
@@ -63,23 +63,23 @@ void Record::Refresh(void)
         return;
 
     std::time_t current_time = std::time(nullptr);
-    data.set_timestamp(current_time);
-    data.set_infoname(info.ID);
+    data.timestamp = current_time;
+    data.paramName = info.ID;
     LastFetchedAt = current_time;
 
     if (info.FetchMethod == "Command")
     {
         std::string commandresult = exec(info.CommandParams.Command.c_str());
-        if (data.infotype() == "Uint64")
+        if (data.paramType == "Uint64")
         {
             std::istringstream str2num(commandresult);
             uint64_t val;
             str2num >> val;
-            data.set_infovalueint64(val);
+            data.paramValueInt64 = val;
         }
         else
         {
-            data.set_infovaluestring(commandresult);
+            data.paramValueString = commandresult;
         }
     }
     else if (info.FetchMethod == "DBUS")
@@ -107,13 +107,13 @@ void Record::Refresh(void)
 
         printf("val =%ld\n", val);
 
-        if (data.infotype() == "Uint64")
+        if (data.paramType == "Uint64")
         {
-            data.set_infovalueint64(val);
+            data.paramValueInt64 = val;
         }
         else
         {
-            data.set_infovaluestring(std::to_string(val));
+            data.paramValueString = std::to_string(val);
         }
 
         sd_bus_error_free(&error);
@@ -122,36 +122,42 @@ void Record::Refresh(void)
 
 bool same_data_values(const fdr_sample &left, const fdr_sample &right)
 {
-    if ((left.infoname() != right.infoname()) || (left.infotype() != right.infotype()) || (left.InfoValue_case() != right.InfoValue_case()))
+    if ((left.paramName != right.paramName) || (left.paramType != right.paramType))
         return false;
 
-    switch (left.InfoValue_case())
+    if (left.paramType == "Uint64"){
+        return (left.paramValueInt64 == right.paramValueInt64);
+    }
+    else{
+        return (left.paramValueString == right.paramValueString);
+    }
+
+    /*switch (left.paramType)
     {
-    case fdr::fdr_sample::kInfoValueInt64:
-        return (left.infovalueint64() == right.infovalueint64());
+    case InfoType::UINT64:
+        return (left.paramValue.paramValueInt64 == right.paramValue.paramValueInt64);
         break;
-    case fdr::fdr_sample::kInfoValueString:
-        return (left.infovaluestring() == right.infovaluestring());
+    case InfoType::STRING:
+        return (left.paramValue.paramValueString == right.paramValue.paramValueString);
         break;
     case 2:
         return true;
         break;
     default:
         return true;
-    }
+    }*/
 }
 
 void print_data(const std::string name, const fdr_sample &dat)
 {
 
     std::cout << "Name: " + name << std::endl;
-    std::cout << "dat.infoname(): " + dat.infoname() << std::endl;
-    std::cout << "dat.infotype(): " + dat.infotype() << std::endl;
-    std::cout << "dat.InfoValue_case(): " + dat.InfoValue_case() << std::endl;
-    if (dat.InfoValue_case() == fdr::fdr_sample::kInfoValueInt64)
-        std::cout << "dat.infovalueint64(): " + dat.infovalueint64() << std::endl;
+    std::cout << "dat.paramName: " + dat.paramName << std::endl;
+    std::cout << "dat.paramType: " + dat.paramType << std::endl;
+    if (dat.paramType == "Uint64")
+        std::cout << "dat.paramValueint64: " + dat.paramValueInt64 << std::endl;
     else
-        std::cout << "dat.infovaluestring(): " + dat.infovaluestring() << std::endl;
+        std::cout << "dat.paramValuestring: " + dat.paramValueString << std::endl;
 }
 
 void Record::Store(void)
@@ -174,7 +180,7 @@ void Record::Store(void)
         return;
     }
 
-    // if (data.infoname() == "Model")
+    // if (data.paramName() == "Model")
     // {
     //     std::cout << "Writing Model for ID " << info.parent_infogroup->parent_component->ID << std::endl;
     //     print_data("last_stored_data", last_stored_data);
@@ -195,16 +201,16 @@ void Record::Load(void)
     fdr_sample readrec;
     while (fdrreaderwriter->readnext(&readrec))
     { // TODO: read the file from last to first
-        if (readrec.infoname() == info.ID)
+        if (readrec.paramName == info.ID)
         {
             data = last_stored_data = readrec;
         }
     }
 
-    // last_stored_data.InfoValue = 0;
+    // last_stored_data.paramValue = 0;
 }
 
 void Record::Print(void)
 {
-    // std::cout << "Set last_stored_data.InfoValue=" + last_stored_data.InfoValue << std::endl;
+    //std::cout << "Set last_stored_data.paramValue=" + last_stored_data.paramValueString << std::endl;
 }

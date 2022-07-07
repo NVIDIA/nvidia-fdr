@@ -7,9 +7,6 @@
 
 #include "fdr_policy.hpp"
 #include "fdr_store.hpp"
-#include "fdr_logs_schema.pb.h"
-
-using namespace fdr;
 
 class Record
 {

@@ -1,6 +1,7 @@
 GeneralConfig:
   LogsBasePath: "/tmp/logs/fdr"
-  LogsFormat: JSON  #Choices=JSON|Binary
+  LogsFormat: DB  #Choices=JSON|Binary|DB
+  DatabaseName: "Database.db"
 
 GPU: &gpu
   Params:

@@ -144,53 +144,47 @@ void FlightDataRecorder_c::Compactor(void)
 					// std::cout << "Proceeding with Compaction" << std::endl;
 				}
 
-				std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
-				std::string logfile = infogroup.ID + ".log";
+				std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
+				std::string logfile = profile.GeneralConfig.DatabaseName;
 				std::string statsfile = infogroup.ID + ".stats";
 
 				// Create a map info.ID --> {n,min,max,sum,}
 				std::map<std::string, fdr_stat> stats_so_far;
 
-				FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat);
+				FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
 				fdr_sample readrec;
 				while (fdrlogs.readnext(&readrec))
 				{
-					stats_so_far[readrec.infoname()].set_infoname(readrec.infoname());
-					stats_so_far[readrec.infoname()].set_numsamples(stats_so_far[readrec.infoname()].numsamples() + 1);
-					stats_so_far[readrec.infoname()].set_avg(stats_so_far[readrec.infoname()].avg() + readrec.infovalueint64()); // TODO: using avg field as sum. avoid overflow.
-					if (stats_so_far[readrec.infoname()].min() != 0)
-						stats_so_far[readrec.infoname()].set_min(std::min(stats_so_far[readrec.infoname()].min(), readrec.infovalueint64()));
+					stats_so_far[readrec.paramName].paramName = readrec.paramName;
+					stats_so_far[readrec.paramName].numsamples += 1;
+					stats_so_far[readrec.paramName].avg += readrec.paramValueInt64; // TODO: using avg field as sum. avoid overflow.
+					if (stats_so_far[readrec.paramName].min != 0)
+						stats_so_far[readrec.paramName].min = std::min(stats_so_far[readrec.paramName].min, readrec.paramValueInt64);
 					else
-						stats_so_far[readrec.infoname()].set_min(readrec.infovalueint64());
-					stats_so_far[readrec.infoname()].set_max(std::max(stats_so_far[readrec.infoname()].max(), readrec.infovalueint64()));
-					stats_so_far[readrec.infoname()].set_fromtime(stats_so_far[readrec.infoname()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.infoname()].fromtime());
-					stats_so_far[readrec.infoname()].set_totime(readrec.timestamp());
+						stats_so_far[readrec.paramName].min = readrec.paramValueInt64;
+					stats_so_far[readrec.paramName].max = std::max(stats_so_far[readrec.paramName].max, readrec.paramValueInt64);
+					stats_so_far[readrec.paramName].fromtime = stats_so_far[readrec.paramName].fromtime == 0 ? readrec.timestamp : stats_so_far[readrec.paramName].fromtime;
+					stats_so_far[readrec.paramName].totime = readrec.timestamp;
 				}
+
+				FDRStore fdrstats(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
+				fdrstats.createStatesTable();
+
 				for (auto &stat : stats_so_far)
 				{
-					stat.second.set_avg(stat.second.avg() / stat.second.numsamples());
+					stat.second.avg = stat.second.avg / stat.second.numsamples;
 
 					std::cout << "-----Stats for ID: " << stat.first << std::endl;
-					std::cout << "Num: " << stat.second.numsamples() << std::endl;
-					std::cout << "Min: " << stat.second.min() << std::endl;
-					std::cout << "Max: " << stat.second.max() << std::endl;
-					std::cout << "Avg: " << stat.second.avg() << std::endl;
+					std::cout << "Num: " << stat.second.numsamples << std::endl;
+					std::cout << "Min: " << stat.second.min << std::endl;
+					std::cout << "Max: " << stat.second.max << std::endl;
+					std::cout << "Avg: " << stat.second.avg << std::endl;
 
-					FDRStore fdrstats(logdir + statsfile, profile.GeneralConfig.LogsFormat);
-					fdrstats.append(stat.second);
+					fdrstats.appendStat(stat.second);
 					infogroup.LastCompactedAt = std::time(nullptr);
-					// Delete the records we just compacted
-					std::string filetodelete = logdir + logfile;
-					if (remove(filetodelete.c_str()) != 0)
-					{
-						perror("Error deleting file");
-						std::cout << "Failed to delete: " << filetodelete << std::endl;
-					}
-					else
-					{
-						std::cout << "Succesfully deleted: " << filetodelete << std::endl;
-					}
 				}
+				//Delete existing records
+				fdrlogs.deleteRecords();
 			}
 		}
 	}
