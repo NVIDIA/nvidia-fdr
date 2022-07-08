@@ -108,6 +108,217 @@ NIC: &nic
       CompactionFreqSecs: 20
       CompactionMethod: Average
 
+NVSwitch: &nvswitch
+  Params:
+    - name: switchid
+      values: 1
+  InfoGroups:
+    - ID: Config
+      InfoList:
+        - ID: ShutdownTemperature
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensor/temperature/TEMP_GB_NVS$switchid" #Check this
+            Interface: "xyz.openbmc_project.Sensor.Threshold.HardShutdown"
+            Property: "HardShutdownHigh"
+        - ID: MaximumOperatingTemperature
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensor/temperature/TEMP_GB_NVS$switchid" #Check this
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "MaxAllowableValue"
+        - ID: FirmwareVersion
+          FetchPolicy: Periodic
+          FetchFreqSecs: 60  #Temp freq
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/NVSwitch$switchidFirmware"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+        - ID: InfoROMVersion
+          FetchPolicy: Periodic
+          FetchFreqSecs: 60  #Temp freq
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/NVSwitch$switchidInfoROM"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+    - ID: Error
+      InfoList:
+        - ID: ECCCorrectable
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ceCount"
+        - ID: ECCUncorrectable
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ueCount"
+        - ID: NonFatal
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "nonfeCount"
+        - ID: Fatal
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "feCount"
+        - ID: Correctable
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ceCount"
+        - ID: Replay
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ReplayCount"
+        - ID: ReplayRollover
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ReplayRolloverCount"
+        - ID: NAKsSent
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "NAKSentCount"
+        - ID: NAKsReceived
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 5
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "NAKReceivedCount"
+    - ID: Inventory
+      InfoList:
+        - ID: BoardPartNumber
+          FetchPolicy: Periodic
+          FetchFreqSecs: 60 #Temp freq
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+        - ID: SerialNumber
+          FetchPolicy: Periodic
+          FetchFreqSecs: 60 #Temp freq
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+        - ID: GUID
+          FetchPolicy: Periodic
+          FetchFreqSecs: 60 #Temp freq
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
+            Interface: "xyz.openbmc_project.Common.UUID"
+            Property: "UUID"
+    - ID: Status
+      InfoList:
+        - ID: ManagerState
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 30
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/managers/FabricManager"
+            Interface: "xyz.openbmc_project.State.Decorator.OperationalStatus"
+            Property: "State"
+    - ID: Sensor
+      InfoList:
+        - ID: TEMP_GB_NVS
+          DataType: Uint64
+          FetchPolicy: Periodic
+          FetchFreqSecs: 10
+          FetchMethod: DBUS
+          StorePolicy: Periodic
+          StoreFreqSecs: 3600
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/TEMP_GB_NVS$switchid"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+
 Sections:
   - ID: GPU
     Components:
@@ -138,6 +349,28 @@ Sections:
         Params:
           - name: nicid
             value: 1
+  - ID: NVSwitch
+    Components:
+      - ID: NVSwitch0
+        <<: *nvswitch
+        Params:
+          - name: switchid
+            value: 0
+      - ID: NVSwitch1
+        <<: *nvswitch
+        Params:
+          - name: switchid
+            value: 1
+      - ID: NVSwitch2
+        <<: *nvswitch
+        Params:
+          - name: switchid
+            value: 2
+      - ID: NVSwitch3
+        <<: *nvswitch
+        Params:
+          - name: switchid
+            value: 3
 
 #NVSwitch:
 #PCIeSwitch:
