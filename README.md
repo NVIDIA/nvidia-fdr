@@ -10,6 +10,8 @@ sudo apt install libsystemd-dev
 
 sudo apt install sqlite3
 
+sudo apt install libsqlite3-dev
+
 # Build
 
 cmake .
