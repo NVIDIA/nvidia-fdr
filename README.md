@@ -6,11 +6,11 @@ sudo apt install nlohmann-json3-dev
 
 sudo apt install libboost-all-dev
 
-sudo apt install protobuf-compiler
-
 sudo apt install libsystemd-dev
 
 sudo apt install sqlite3
+
+sudo apt install libsqlite3-dev
 
 # Build
 
