@@ -6,7 +6,9 @@
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
-#include <systemd/sd-bus.h>
+#include <sdbusplus/bus.hpp>
+#include <sdbusplus/exception.hpp>
+
 
 #include "fdr_store.hpp"
 
@@ -84,26 +86,24 @@ void Record::Refresh(void)
     }
     else if (info.FetchMethod == "DBUS")
     {
-        extern sd_bus *bus;
-        sd_bus_error error = SD_BUS_ERROR_NULL;
-        sd_bus_message *reply = NULL;
-        int r;
+        auto bus = sdbusplus::bus::new_default();
+        int64_t val;
 
         std::cout << "DbusParams Are: ";
-        std::cout << info.DbusParams.Service << info.DbusParams.ObjectPath << info.DbusParams.Interface << info.DbusParams.Property << std::endl;
+        std::cout << info.DbusParams.Service.c_str() << info.DbusParams.ObjectPath.c_str() << info.DbusParams.Interface.c_str() << info.DbusParams.Property.c_str() << std::endl;
 
-        r = sd_bus_get_property(bus, info.DbusParams.Service.c_str(), info.DbusParams.ObjectPath.c_str(),
-                                info.DbusParams.Interface.c_str(), info.DbusParams.Property.c_str(),
-                                &error, &reply, "t");
-        if (r < 0)
+        try
         {
-            printf("sd_bus_get_property failed: error=%s\n", error.message);
+            auto method = bus.new_method_call(info.DbusParams.Service.c_str(), info.DbusParams.ObjectPath.c_str(),
+                                    info.DbusParams.Interface.c_str(), info.DbusParams.Property.c_str());
+            
+            auto reply = bus.call(method);
+            reply.read(val);
         }
-
-        int64_t val;
-        r = sd_bus_message_read(reply, "t", &val);
-        if (r < 0)
-            printf("sd_bus_message_read failed\n");
+        catch (const sdbusplus::exception::exception& e)
+        {
+            printf("sdbusplus Failed to get property: error=%s\n", e.what());
+        }
 
         printf("val =%ld\n", val);
 
@@ -115,8 +115,6 @@ void Record::Refresh(void)
         {
             data.paramValueString = std::to_string(val);
         }
-
-        sd_bus_error_free(&error);
     }
 }
 
