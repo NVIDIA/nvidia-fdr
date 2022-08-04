@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include "fdr_policy.hpp"
@@ -11,6 +10,7 @@
 
 
 #include "fdr_store.hpp"
+#include "dbus_accessor.hpp"
 
 std::string exec(const char *cmd);
 
@@ -86,34 +86,40 @@ void Record::Refresh(void)
     }
     else if (info.FetchMethod == "DBUS")
     {
-        auto bus = sdbusplus::bus::new_default();
-        int64_t val;
-
         std::cout << "DbusParams Are: ";
         std::cout << info.DbusParams.Service.c_str() << info.DbusParams.ObjectPath.c_str() << info.DbusParams.Interface.c_str() << info.DbusParams.Property.c_str() << std::endl;
 
-        try
-        {
-            auto method = bus.new_method_call(info.DbusParams.Service.c_str(), info.DbusParams.ObjectPath.c_str(),
-                                    info.DbusParams.Interface.c_str(), info.DbusParams.Property.c_str());
-            
-            auto reply = bus.call(method);
-            reply.read(val);
-        }
-        catch (const sdbusplus::exception::exception& e)
-        {
-            printf("sdbusplus Failed to get property: error=%s\n", e.what());
-        }
-
-        printf("val =%ld\n", val);
+        PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
+                                                     info.DbusParams.Interface, info.DbusParams.Property);
 
         if (data.paramType == "Uint64")
         {
-            data.paramValueInt64 = val;
+            if (auto ptr (std::get_if<int64_t>(&val)); ptr)
+            {
+                printf("int64 = %lld\n", *ptr);
+                data.paramValueInt64 = (uint64_t) *ptr;
+            }
+            else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
+            {
+                printf("uint32 = %lu\n", *ptr);
+                data.paramValueInt64 = (uint64_t) *ptr;
+            }
+            else if (auto ptr (std::get_if<double>(&val)); ptr)
+            {
+                printf("double = %lf\n", *ptr);
+                data.paramValueInt64 = (uint64_t) *ptr;
+            }
+            else {
+                printf("DBus read failed: Unknown numerical variant type\n");
+            }
         }
         else
         {
-            data.paramValueString = std::to_string(val);
+            if (auto ptr (std::get_if<std::string>(&val)); ptr) 
+            {
+                printf("val =%s\n", ptr->c_str());
+                data.paramValueString = *ptr;
+            }
         }
     }
 }
