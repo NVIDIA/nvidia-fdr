@@ -149,7 +149,6 @@ void FlightDataRecorder_c::Compactor(void)
 					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
 					std::string logfile = infogroup.ID + ".log";
 					std::string statsfile = infogroup.ID + ".stats";
-					std::cout << "Here : " << logdir+logfile << std::endl;
 
 					// Create a map info.ID --> {n,min,max,sum,}
 					std::map<std::string, fdr::fdr_stat> stats_so_far;
@@ -199,8 +198,6 @@ void FlightDataRecorder_c::Compactor(void)
 				else{
 					std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
 					std::string logfile = profile.GeneralConfig.DatabaseName;
-					std::string statsfile = infogroup.ID + ".stats";
-					std::cout << "There : " << logdir+logfile << std::endl;
 
 					// Create a map info.ID --> {n,min,max,sum,}
 					std::map<std::string, fdr_stat_sql> stats_so_far;

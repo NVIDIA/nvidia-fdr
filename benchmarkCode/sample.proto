@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+option optimize_for = LITE_RUNTIME;
+
+package test;
+
+message sample2 {
+	uint64 id = 1;
+	string text = 2;
+	string extra = 3;
+	uint64 ex = 4;
+}
