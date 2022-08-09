@@ -108,7 +108,7 @@ void execTrans2(sqlite3* DB, int index){
 
 int main(int argc, char **argv){
 
-    //sqlite3* DB;
+    sqlite3* DB;
 	int errCode = 0;
     init();
 
