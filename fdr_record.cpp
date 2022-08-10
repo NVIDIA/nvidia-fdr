@@ -21,7 +21,7 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
     logfile = infogroup.ID + ".log";
 
-    if (info.DataType == ENCODING_CHOICE_DB){
+    if (logsformat == ENCODING_CHOICE_DB){
         logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
     }
     else{
@@ -68,8 +68,7 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
 
     // Init the encoder to file
     //  FDREncoder fdrreaderwriter(logfilepath, "JSON");
-    
-    if (info.DataType == ENCODING_CHOICE_DB){
+    if (logsformat == ENCODING_CHOICE_DB){
         fdrreaderwriter.reset(new FDRStore(logfilepath, logsformat, infogroup.ID, section.ID, component.ID));
     }
     else{
@@ -183,6 +182,7 @@ void print_data(const std::string name, const fdr::fdr_sample &dat)
 
 void Record::Store(void)
 {
+    
     // Skip if update not necessary per the policy
     if ((info.StorePolicy == "OnChange") && (same_data_values(data, last_stored_data)))
     {
@@ -208,7 +208,7 @@ void Record::Store(void)
     //     print_data("data", data);
     // }
 
-    if (data.paramtype() != ENCODING_CHOICE_DB){
+    if (logsformat != ENCODING_CHOICE_DB){
         fdrreaderwriter->append(data);
     }
     else{
@@ -234,7 +234,7 @@ void Record::Store(void)
 // Read the last record of our type from the storage
 void Record::Load(void)
 {
-    if (data.paramtype() != ENCODING_CHOICE_DB){
+    if (logsformat != ENCODING_CHOICE_DB){
         fdr::fdr_sample readrec;
         while (fdrreaderwriter->readnext(&readrec))
         { // TODO: read the file from last to first
