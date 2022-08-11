@@ -102,7 +102,7 @@ namespace YAML
 		{
 			rhs.LogsBasePath = node["LogsBasePath"].as<std::string>();
 			rhs.LogsFormat = node["LogsFormat"].as<std::string>();
-			if (node["DatabaseName"])
+			if (node["DatabaseName"] || rhs.LogsFormat == "DB")
 				rhs.DatabaseName = node["DatabaseName"].as<std::string>();
 			return true;
 		}
