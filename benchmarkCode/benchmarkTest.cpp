@@ -12,10 +12,10 @@
 #include "sample.pb.h"
 
 struct sample {
-    int a;
-    std::string b;
-    std::string c;
-    int d;
+    uint64_t timestamp;
+    std::string paramType;
+    std::string paramName;
+    std::string value;
 };
 
 
@@ -155,7 +155,7 @@ int main(int argc, char **argv){
 
     char *zErrMsg = 0;
     int numTab = 2;
-    const std::string sqlEnd = " (ID INT PRIMARY KEY NOT NULL,NAME TEXT NOT NULL, EXTRA TEXT, EX INT);";
+    const std::string sqlEnd = " (TIMESTAMP INT NOT NULL,PARAMTYPE TEXT NOT NULL, PARAMNAME TEXT, VALUE INT);";
 
     start = std::chrono::system_clock::now();
 
@@ -273,11 +273,11 @@ int main(int argc, char **argv){
     int n = 0;
     int numIns = insPerTrans;
 
-    std::string midString = ",'n1','";
+    std::string midString = ",'String','Param Test','";
     for(int i = 0 ; i < textSize ; i++){
         midString += 'a';
     }
-    midString += "',1234)";
+    midString += "')";
 
     start = std::chrono::system_clock::now();
     
@@ -308,12 +308,12 @@ int main(int argc, char **argv){
         std::cout << "BINARY FILE(NO PROTOBUF) TEST" << std::endl;
         std::ofstream op("test", std::ios_base::out /*| std::ios_base::binary*/);
         struct sample temp;
-        temp.b = "n1";
-        temp.c = midString;
-        temp.d = 328237;
+        temp.timestamp = 48393452938;
+        temp.paramType = "String";
+        temp.paramName = "Param Temp";
         for(int i = 0 ; i < numTrans ; i++){
-            temp.a = i;
-            op << temp.a << " " << temp.b << " " << temp.c << " " << temp.d << std::endl;
+            temp.value = midString;
+            op << temp.timestamp << " " << temp.paramType << " " << temp.paramName << " " << temp.value << std::endl;
             //op.write((char *) &temp, sizeof(sample));
             //std::cout << "OP:" << temp.a << " " << temp.b << " " << temp.c << " " << temp.d << std::endl;
             usleep(delayus);
@@ -322,13 +322,13 @@ int main(int argc, char **argv){
     }
     else if(type == 2){
         std::cout << "PROTOBUF TEST" << std::endl;
-        test::sample2 temp1;
-        temp1.set_text("n1");
-        temp1.set_extra(midString);
-        temp1.set_ex(328237);
+        test::fdr_sample temp1;
+        temp1.set_timestamp(48393452938);
+        temp1.set_paramtype("String");
+        temp1.set_paramname("Param Temp");
         std::ofstream op("testProto.bin", std::ios_base::out | std::ios_base::binary);
         for(int i = 0 ; i < numTrans ; i++){
-            temp1.set_id(i);
+            temp1.set_paramvaluestring(midString);
             //op << temp.a << " " << temp.b << " " << temp.c << " " << temp.d << std::endl;
             temp1.SerializeToOstream(&op);
             //std::cout << "OP:" << temp1.id() << " " << temp1.text() << " " << temp1.extra() << " " << temp1.ex() << std::endl;

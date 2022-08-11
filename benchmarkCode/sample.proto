@@ -4,9 +4,12 @@ option optimize_for = LITE_RUNTIME;
 
 package test;
 
-message sample2 {
-	uint64 id = 1;
-	string text = 2;
-	string extra = 3;
-	uint64 ex = 4;
+message fdr_sample {
+  uint64 TimeStamp = 1; // Time at which this sample was captured
+  string ParamType = 2;  // Type of this sample Uint64|String|Binary etc.
+  string ParamName = 3;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
+  oneof ParamValue {     // Value of this sample
+    string ParamValueString = 4; // Applicable when InfoType==string
+    int64 ParamValueInt64 = 5;   // Applicable when InfoType==Uint64
+  }
 }
