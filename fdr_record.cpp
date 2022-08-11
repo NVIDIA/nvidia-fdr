@@ -24,7 +24,7 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     if (logsformat == ENCODING_CHOICE_DB){
         logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
     }
-    else{
+    else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON){
         logfilepath = logdir + logfile;
     }
     
@@ -53,10 +53,10 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
 
     // Create log directory if missing
     std::filesystem::path dir;
-    if (info.DataType == ENCODING_CHOICE_DB){
+    if (logsformat == ENCODING_CHOICE_DB){
         dir = profile.GeneralConfig.LogsBasePath;
     }
-    else{
+    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         dir = logdir;
     }
     if (!(std::filesystem::exists(dir)))
@@ -71,7 +71,7 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     if (logsformat == ENCODING_CHOICE_DB){
         fdrreaderwriter.reset(new FDRStore(logfilepath, logsformat, infogroup.ID, section.ID, component.ID));
     }
-    else{
+    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrreaderwriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
     }
 }
@@ -208,10 +208,10 @@ void Record::Store(void)
     //     print_data("data", data);
     // }
 
-    if (logsformat != ENCODING_CHOICE_DB){
+    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrreaderwriter->append(data);
     }
-    else{
+    else if (logsformat == ENCODING_CHOICE_DB){
         fdr_sample_sql sqlDat;
         sqlDat.timestamp = data.timestamp();
         sqlDat.paramName = data.paramname();
@@ -234,7 +234,7 @@ void Record::Store(void)
 // Read the last record of our type from the storage
 void Record::Load(void)
 {
-    if (logsformat != ENCODING_CHOICE_DB){
+    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdr::fdr_sample readrec;
         while (fdrreaderwriter->readnext(&readrec))
         { // TODO: read the file from last to first
@@ -244,7 +244,7 @@ void Record::Load(void)
             }
         }
     }
-    else{
+    else if (logsformat == ENCODING_CHOICE_DB){
         fdr_sample_sql readrec;
         while (fdrreaderwriter->readnext(&readrec))
         { // TODO: read the file from last to first

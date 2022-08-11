@@ -145,7 +145,7 @@ void FlightDataRecorder_c::Compactor(void)
 					// std::cout << "Proceeding with Compaction" << std::endl;
 				}
 
-				if (profile.GeneralConfig.LogsFormat != ENCODING_CHOICE_DB){
+				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON || profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY){
 					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
 					std::string logfile = infogroup.ID + ".log";
 					std::string statsfile = infogroup.ID + ".stats";
@@ -195,7 +195,7 @@ void FlightDataRecorder_c::Compactor(void)
 					}
 
 				}
-				else{
+				else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB){
 					std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
 					std::string logfile = profile.GeneralConfig.DatabaseName;
 
