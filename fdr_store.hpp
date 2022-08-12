@@ -4,6 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <sqlite3.h>
+#include "fdr_logs_schema.pb.h"
 //using namespace fdr;
 
 const std::string ENCODING_CHOICE_JSON = "JSON";
@@ -11,7 +12,7 @@ const std::string ENCODING_CHOICE_BINARY = "BINARY";
 const std::string ENCODING_CHOICE_DB = "DB";
 
 
-struct fdr_sample {
+struct fdr_sample_sql {
     uint64_t timestamp;     // Time at which this sample was captured
     std::string paramName;   // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
     std::string paramType;   // Type of this sample Uint64|String|Binary etc.
@@ -19,7 +20,7 @@ struct fdr_sample {
     std::string paramValueString;    // Applicable when paramType==string
 };
 
-struct fdr_stat {
+struct fdr_stat_sql {
     std::string paramName;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
     uint64_t fromtime;   // Start of time period within which samples lie
     uint64_t totime;     // End of time period within which samples lie
@@ -35,8 +36,8 @@ private:
     /* data */
     std::string storagefilepath;
     std::string encodingtouse;
-    /*std::ifstream instream;
-    std::ofstream outstream;*/
+    std::ifstream instream;
+    std::ofstream outstream;
 
     std::string dbLoc;
     std::string paramClass, compClass;
@@ -52,11 +53,13 @@ public:
     ~FDRStore();
 
     //void append(const google::protobuf::Message &data); // append data to file
-    void append(const fdr_sample &data);
+    void append(const fdr_sample_sql &data);
+    void append(const google::protobuf::Message &data);
 
-    int readnext(fdr_sample *datap); // read data at current pointer in file and advance pointer to next
+    int readnext(fdr_sample_sql *datap); // read data at current pointer in file and advance pointer to next
+    int readnext(google::protobuf::Message *datap);
 
-    int getLatest(fdr_sample *datap, std::string infoID);   // Get the latest record corresponding to the given infoID
+    //int getLatest(fdr_sample *datap, std::string infoID);   // Get the latest record corresponding to the given infoID
 
     void deleteRecords();   // Delete all records in the table
 
@@ -64,7 +67,7 @@ public:
 
     void createStatesTable();   //Creates the stats table if it does not exist
 
-    void appendStat(const fdr_stat &data);
+    void appendStat(const fdr_stat_sql &data);
 
     void rewind(); // reset pointer in file to begining of file
 };

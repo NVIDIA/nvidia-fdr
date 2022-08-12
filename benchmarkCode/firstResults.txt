@@ -1,0 +1,216 @@
+Text File Test:
+
+./a.out 20000 10 0 200 1 1
+Total time : 52.529s
+Number of transactions : 20000
+Transactions per second : 380.742
+Size of text : 200
+CPU Usage: 10-11%
+
+
+./a.out 10000 100 0 200 1 1
+Total time : 15.4611s
+Number of transactions : 10000
+Transactions per second : 646.784
+Size of text : 200
+CPU Usage: 8-10%
+
+
+./a.out 8000 1000 0 200 1 1
+Total time : 19.7781s
+Number of transactions : 8000
+Transactions per second : 404.488
+Size of text : 200
+CPU Usage: 7-8%
+
+
+./a.out 6000 5000 0 200 1 1
+Total time : 39.0051s
+Number of transactions : 6000
+Transactions per second : 153.826
+Size of text : 200
+CPU Usage: 3-4%
+
+
+./a.out 6000 1000 0 500 1 1
+Total time : 17.5464s
+Number of transactions : 6000
+Transactions per second : 341.95
+Size of text : 500
+CPU Usage: 8%
+
+
+./a.out 6000 2000 0 500 1 1
+Total time : 19.6048s
+Number of transactions : 6000
+Transactions per second : 306.047
+Size of text : 500
+CPU Usage: 6-7%
+
+
+./a.out 6000 3000 0 500 1 1
+Total time : 26.5119s
+Number of transactions : 6000
+Transactions per second : 226.314
+Size of text : 500
+CPU Usage: 5%
+
+
+./a.out 6000 5000 0 2000 1 1
+Total time : 43.9899s
+Number of transactions : 6000
+Transactions per second : 136.395
+Size of text : 2000
+CPU Usage: 5-6%
+
+
+./a.out 6000 3000 0 2000 1 1
+Total time : 35.273s
+Number of transactions : 6000
+Transactions per second : 170.102
+Size of text : 2000
+CPU Usage: 7-8%
+
+
+
+======================================================
+SQL Test
+
+./a.out 1000 300 0 200 1 0
+Total time : 46.0203s
+Number of transactions : 1000
+Transactions per second : 21.7296
+Size of text : 200
+CPU Usage: 9-12%
+
+
+./a.out 900 700 0 200 1 0
+Total time : 43.4439s
+Number of transactions : 900
+Transactions per second : 20.7164
+Size of text : 200
+CPU Usage: 8-12%
+
+
+./a.out 600 1200 0 200 1 0
+Total time : 29.5424s
+Number of transactions : 600
+Transactions per second : 20.3098
+Size of text : 200
+CPU Usage: 7-10%
+
+
+./a.out 500 2000 0 200 1 0
+Total time : 25.776s
+Number of transactions : 500
+Transactions per second : 19.3979
+Size of text : 200
+CPU Usage: 8-10%
+
+
+./a.out 400 10000 0 200 1 0
+Total time : 24.569s
+Number of transactions : 400
+Transactions per second : 16.2807
+Size of text : 200
+CPU Usage: 7-9%
+
+
+=======================================================
+Protobuf Test
+
+./a.out 50000 100 0 500 1 2
+Total time : 16.292s
+Number of transactions : 50000
+Transactions per second : 3068.99
+Size of text : 500
+CPU Usage: 12-15%
+
+
+./a.out 30000 500 0 500 1 2
+Total time : 25.8897s
+Number of transactions : 30000
+Transactions per second : 1158.76
+Size of text : 500
+CPU Usage: 7-8%
+
+
+./a.out 25000 700 0 500 1 2
+Total time : 27.8373s
+Number of transactions : 25000
+Transactions per second : 898.074
+Size of text : 500
+CPU Usage: 5-6%
+
+
+./a.out 20000 1000 0 500 1 2
+Total time : 31.6503s
+Number of transactions : 20000
+Transactions per second : 631.906
+Size of text : 500
+CPU Usage: 3-5%
+
+
+./a.out 20000 1000 0 2000 1 2
+Total time : 58.8823s
+Number of transactions : 20000
+Transactions per second : 339.661
+Size of text : 2000
+CPU Usage: 10-12%
+
+
+./a.out 8000 2000 0 2000 1 2
+Total time : 40.7464s
+Number of transactions : 8000
+Transactions per second : 196.336
+Size of text : 2000
+CPU Usage: 7-9%
+
+
+./a.out 5000 3500 0 2000 1 2
+Total time : 28.0606s
+Number of transactions : 5000
+Transactions per second : 178.186
+Size of text : 2000
+CPU Usage: 6%
+
+
+./a.out 4000 4500 0 2000 1 2
+Total time : 26.4777s
+Number of transactions : 4000
+Transactions per second : 151.07
+Size of text : 2000
+CPU Usage: 5%
+
+
+./a.out 4000 3000 0 1000 1 2
+Total time : 17.9736s
+Number of transactions : 4000
+Transactions per second : 222.549
+Size of text : 1000
+CPU Usage: 6%
+
+
+./a.out 4000 3500 0 1000 1 2
+Total time : 20.9222s
+Number of transactions : 4000
+Transactions per second : 191.185
+Size of text : 1000
+CPU Usage: 5-6%
+
+
+./a.out 3500 4000 0 1000 1 2
+Total time : 19.5562s
+Number of transactions : 3500
+Transactions per second : 178.971
+Size of text : 1000
+CPU Usage: 5%
+
+./a.out 30000 400 0 200 1 2
+Total time : 17.9031s
+Number of transactions : 30000
+Transactions per second : 1675.68
+Size of text : 200
+CPU Usage: 5-6%
+
+
