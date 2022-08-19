@@ -12,7 +12,7 @@ set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_EXE_LINKER_FLAGS "-static")
 
-add_executable(fdr main.cpp fdr_policy.cpp fdr_record.cpp fdr_store.cpp)
+add_executable(fdr main.cpp fdr_policy.cpp fdr_record.cpp fdr_store.cpp dbus_accessor.cpp property_variant.hpp)
 
 # find_library(FDRDEPLIBS libyaml-cpp.a)
 # target_link_libraries(fdr PUBLIC ${FDRDEPLIBS})
