@@ -54,8 +54,8 @@ std::string exec(const char *cmd)
 
 FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 {
-#if 0
-	YAML::Node PlatformProfile = YAML::LoadFile(filename);
+#if 1
+	YAML::Node PlatformProfile = YAML::LoadFile(filename + ".json");
 #else
 	// HACK: yaml-cpp lib seems to have trouble parsing yaml with anchors and aliases, so need to convert to json first
 	std::string yamltojson = "cat " + filename + " | yaml2json - > " + filename + ".json"; // eg: cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.yaml.json
