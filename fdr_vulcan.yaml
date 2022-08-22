@@ -1,5 +1,5 @@
 GeneralConfig:
-  LogsBasePath: "/tmp/logs/fdr"
+  LogsBasePath: "/home/root/"
   LogsFormat: DB  #Choices=JSON|Binary|DB
   DatabaseName: "Database.db"
 
