@@ -4,16 +4,16 @@ package fdr;
 
 message fdr_sample {
   uint64 TimeStamp = 1; // Time at which this sample was captured
-  string InfoType = 2;  // Type of this sample Uint64|String|Binary etc.
-  string InfoName = 3;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
-  oneof InfoValue {     // Value of this sample
-    string InfoValueString = 4; // Applicable when InfoType==string
-    int64 InfoValueInt64 = 5;   // Applicable when InfoType==Uint64
+  string ParamType = 2;  // Type of this sample Uint64|String|Binary etc.
+  string ParamName = 3;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
+  oneof ParamValue {     // Value of this sample
+    string ParamValueString = 4; // Applicable when InfoType==string
+    int64 ParamValueInt64 = 5;   // Applicable when InfoType==Uint64
   }
 }
 
 message fdr_stat {
-  string InfoName = 1;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
+  string ParamName = 1;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
   int64 FromTime = 2;   // Start of time period within which samples lie
   int64 ToTime = 3;     // End of time period within which samples lie
   int64 NumSamples = 4; // Number of samples this stat took into consideration

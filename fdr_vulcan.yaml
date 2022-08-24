@@ -1,7 +1,7 @@
 GeneralConfig:
+  LogsFormat: JSON  #Choices=JSON|BINARY|DB
+  #DatabaseName: "Database.db"   #Only used if logs format is DB
   LogsBasePath: "/home/root/"
-  LogsFormat: DB  #Choices=JSON|Binary|DB
-  DatabaseName: "Database.db"
 
 GPU: &gpu
   Params:

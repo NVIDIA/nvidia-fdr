@@ -29,8 +29,8 @@ private:
 public:
     Info_t &info; // How to create/update this record
 
-    fdr_sample data;             // Data that will actually land in the DB
-    fdr_sample last_stored_data; // Last fetched value. Used to determine if anything changed
+    fdr::fdr_sample data;             // Data that will actually land in the DB
+    fdr::fdr_sample last_stored_data; // Last fetched value. Used to determine if anything changed
 
     Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info);
 

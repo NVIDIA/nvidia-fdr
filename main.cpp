@@ -117,6 +117,7 @@ void FlightDataRecorder_c::RefreshAndRecord(void)
 	}
 }
 
+
 void FlightDataRecorder_c::Compactor(void)
 {
 	for (auto &section : profile.Sections)
@@ -144,47 +145,98 @@ void FlightDataRecorder_c::Compactor(void)
 					// std::cout << "Proceeding with Compaction" << std::endl;
 				}
 
-				std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
-				std::string logfile = profile.GeneralConfig.DatabaseName;
-				std::string statsfile = infogroup.ID + ".stats";
+				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON || profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY){
+					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
+					std::string logfile = infogroup.ID + ".log";
+					std::string statsfile = infogroup.ID + ".stats";
 
-				// Create a map info.ID --> {n,min,max,sum,}
-				std::map<std::string, fdr_stat> stats_so_far;
+					// Create a map info.ID --> {n,min,max,sum,}
+					std::map<std::string, fdr::fdr_stat> stats_so_far;
 
-				FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
-				fdr_sample readrec;
-				while (fdrlogs.readnext(&readrec))
-				{
-					stats_so_far[readrec.paramName].paramName = readrec.paramName;
-					stats_so_far[readrec.paramName].numsamples += 1;
-					stats_so_far[readrec.paramName].avg += readrec.paramValueInt64; // TODO: using avg field as sum. avoid overflow.
-					if (stats_so_far[readrec.paramName].min != 0)
-						stats_so_far[readrec.paramName].min = std::min(stats_so_far[readrec.paramName].min, readrec.paramValueInt64);
-					else
-						stats_so_far[readrec.paramName].min = readrec.paramValueInt64;
-					stats_so_far[readrec.paramName].max = std::max(stats_so_far[readrec.paramName].max, readrec.paramValueInt64);
-					stats_so_far[readrec.paramName].fromtime = stats_so_far[readrec.paramName].fromtime == 0 ? readrec.timestamp : stats_so_far[readrec.paramName].fromtime;
-					stats_so_far[readrec.paramName].totime = readrec.timestamp;
+					FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat);
+					fdr::fdr_sample readrec;
+					while (fdrlogs.readnext(&readrec))
+					{
+						stats_so_far[readrec.paramname()].set_paramname(readrec.paramname());
+						stats_so_far[readrec.paramname()].set_numsamples(stats_so_far[readrec.paramname()].numsamples() + 1);
+						stats_so_far[readrec.paramname()].set_avg(stats_so_far[readrec.paramname()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
+						if (stats_so_far[readrec.paramname()].min() != 0)
+							stats_so_far[readrec.paramname()].set_min(std::min(stats_so_far[readrec.paramname()].min(), readrec.paramvalueint64()));
+						else
+							stats_so_far[readrec.paramname()].set_min(readrec.paramvalueint64());
+						stats_so_far[readrec.paramname()].set_max(std::max(stats_so_far[readrec.paramname()].max(), readrec.paramvalueint64()));
+						stats_so_far[readrec.paramname()].set_fromtime(stats_so_far[readrec.paramname()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.paramname()].fromtime());
+						stats_so_far[readrec.paramname()].set_totime(readrec.timestamp());
+					}
+					for (auto &stat : stats_so_far)
+					{
+						stat.second.set_avg(stat.second.avg() / stat.second.numsamples());
+
+						std::cout << "-----Stats for ID: " << stat.first << std::endl;
+						std::cout << "Num: " << stat.second.numsamples() << std::endl;
+						std::cout << "Min: " << stat.second.min() << std::endl;
+						std::cout << "Max: " << stat.second.max() << std::endl;
+						std::cout << "Avg: " << stat.second.avg() << std::endl;
+
+						FDRStore fdrstats(logdir + statsfile, profile.GeneralConfig.LogsFormat);
+						fdrstats.append(stat.second);
+						infogroup.LastCompactedAt = std::time(nullptr);
+						// Delete the records we just compacted
+						std::string filetodelete = logdir + logfile;
+						if (remove(filetodelete.c_str()) != 0)
+						{
+							perror("Error deleting file");
+							std::cout << "Failed to delete: " << filetodelete << std::endl;
+						}
+						else
+						{
+							std::cout << "Succesfully deleted: " << filetodelete << std::endl;
+						}
+					}
+
 				}
+				else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB){
+					std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
+					std::string logfile = profile.GeneralConfig.DatabaseName;
 
-				FDRStore fdrstats(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
-				fdrstats.createStatesTable();
+					// Create a map info.ID --> {n,min,max,sum,}
+					std::map<std::string, fdr_stat_sql> stats_so_far;
 
-				for (auto &stat : stats_so_far)
-				{
-					stat.second.avg = stat.second.avg / stat.second.numsamples;
+					FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
+					fdr_sample_sql readrec;
+					while (fdrlogs.readnext(&readrec))
+					{
+						stats_so_far[readrec.paramName].paramName = readrec.paramName;
+						stats_so_far[readrec.paramName].numsamples += 1;
+						stats_so_far[readrec.paramName].avg += readrec.paramValueInt64; // TODO: using avg field as sum. avoid overflow.
+						if (stats_so_far[readrec.paramName].min != 0)
+							stats_so_far[readrec.paramName].min = std::min(stats_so_far[readrec.paramName].min, readrec.paramValueInt64);
+						else
+							stats_so_far[readrec.paramName].min = readrec.paramValueInt64;
+						stats_so_far[readrec.paramName].max = std::max(stats_so_far[readrec.paramName].max, readrec.paramValueInt64);
+						stats_so_far[readrec.paramName].fromtime = stats_so_far[readrec.paramName].fromtime == 0 ? readrec.timestamp : stats_so_far[readrec.paramName].fromtime;
+						stats_so_far[readrec.paramName].totime = readrec.timestamp;
+					}
 
-					std::cout << "-----Stats for ID: " << stat.first << std::endl;
-					std::cout << "Num: " << stat.second.numsamples << std::endl;
-					std::cout << "Min: " << stat.second.min << std::endl;
-					std::cout << "Max: " << stat.second.max << std::endl;
-					std::cout << "Avg: " << stat.second.avg << std::endl;
+					FDRStore fdrstats(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
+					fdrstats.createStatesTable();
 
-					fdrstats.appendStat(stat.second);
-					infogroup.LastCompactedAt = std::time(nullptr);
+					for (auto &stat : stats_so_far)
+					{
+						stat.second.avg = stat.second.avg / stat.second.numsamples;
+
+						std::cout << "-----Stats for ID: " << stat.first << std::endl;
+						std::cout << "Num: " << stat.second.numsamples << std::endl;
+						std::cout << "Min: " << stat.second.min << std::endl;
+						std::cout << "Max: " << stat.second.max << std::endl;
+						std::cout << "Avg: " << stat.second.avg << std::endl;
+
+						fdrstats.appendStat(stat.second);
+						infogroup.LastCompactedAt = std::time(nullptr);
+					}
+					//Delete existing records
+					fdrlogs.deleteRecords();
 				}
-				//Delete existing records
-				fdrlogs.deleteRecords();
 			}
 		}
 	}
