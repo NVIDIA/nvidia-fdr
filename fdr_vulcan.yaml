@@ -1,3 +1,9 @@
+FingerPrint:
+  Checks:   # all conditions needs to be satisified
+    - "grep -q -i openbmc-phosphor /etc/os-release"
+    - "grep -q -i hgx /etc/os-release"
+    - "grep -q -i VULCAN /etc/os-release"
+
 GeneralConfig:
   LogsFormat: JSON  #Choices=JSON|BINARY|DB
   #DatabaseName: "Database.db"   #Only used if logs format is DB
