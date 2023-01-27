@@ -11,6 +11,11 @@ struct Component_t;
 struct InfoGroup_t;
 struct Info_t;
 
+struct FingerPrint_t
+{
+	std::vector<std::string> Checks; // list of checks to find the platform
+};
+
 struct GeneralConfig_t
 {
 	std::string LogsBasePath; // Root directory for all logs for this system
@@ -35,7 +40,7 @@ struct Info_t
 	std::string ID;				   // Unique ID for this information piece
 	std::string FetchPolicy;	   // Periodic|OnEvent
 	std::string FetchMethod;	   // Fetch method (Command|File|DBUS|GPIO)
-	std::string StorePolicy;	   // Storage policy (Periodic|OnChange|etc.)
+	std::string StorePolicy;	   // Storage policy (EveryFetch|OnChange|etc.)
 	int FetchFreqSecs;			   // Seconds between each fetch
 	int StoreFreqSecs;			   // Seconds between each store (if StorePolicy==Periodic)
 	CommandParams_t CommandParams; // If FetchMethod==Command
@@ -78,6 +83,7 @@ struct Section_t
 
 struct Profile_t
 {
+	FingerPrint_t FingerPrint;
 	GeneralConfig_t GeneralConfig;	 // General config for this system
 	std::vector<Section_t> Sections; // List of Component Categories/Sections in the platform
 };
@@ -85,6 +91,20 @@ struct Profile_t
 // TODO: Find way to move following functions to a cpp file and not a header
 namespace YAML
 {
+	template <>
+	struct convert<FingerPrint_t>
+	{
+		static bool decode(const Node &node, FingerPrint_t &rhs)
+		{
+			if (node["Checks"])
+			{
+				rhs.Checks = node["Checks"].as<std::vector<std::string>>();
+			}
+
+			return true;
+		}
+	};
+
 	template <>
 	struct convert<GeneralConfig_t>
 	{
@@ -265,6 +285,7 @@ namespace YAML
 	{
 		static bool decode(const Node &node, Profile_t &rhs)
 		{
+			rhs.FingerPrint = node["FingerPrint"].as<FingerPrint_t>();
 			rhs.GeneralConfig = node["GeneralConfig"].as<GeneralConfig_t>();
 			rhs.Sections = node["Sections"].as<std::vector<Section_t>>();
 

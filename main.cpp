@@ -4,9 +4,14 @@
 #include <iostream>
 #include <fstream>
 #include <ctime>
+#include <filesystem>
+#include <string>
+#include <sys/stat.h>
+#include <exception>
 
 #include "yaml-cpp/yaml.h" //yaml-cpp lib used for parsing input (yaml) files
 
+#include "fdr_common.hpp"
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
 #include "fdr_store.hpp"
@@ -15,11 +20,18 @@
 #include <boost/algorithm/string.hpp>
 #include <systemd/sd-bus.h>
 
+// Global variable
+std::string SupportedPlatformsDir = "/mnt/source/fdr/platform";
+
 class FlightDataRecorder_c
 {
 private:
 	/* data */
 	std::vector<Record *> RecList;
+
+	int FindAndLoadPlatformProfile(void);
+	int ConvertPPFToStruct(const std::string filename);
+	int ExecuteFingerPrintRules(void);
 
 public:
 	Profile_t profile;
@@ -31,44 +43,133 @@ public:
 	void Compactor(void);
 };
 
-std::string exec(const char *cmd)
+CommandResult_t exec(const char *cmd)
 {
-	std::array<char, 128> buffer;
+	int exitcode = 0;
+	std::array<char, ONE_MB> buffer {};
 	std::string result;
-	std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-	if (!pipe)
-	{
+
+	FILE *pipe = popen(cmd, "r");
+	if (pipe == nullptr) {
 		throw std::runtime_error("popen() failed!");
 	}
-	while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
-	{
-		result += buffer.data();
+	try {
+		std::size_t bytesread;
+		while ((bytesread = std::fread(buffer.data(), sizeof(buffer.at(0)), sizeof(buffer), pipe)) != 0) {
+			result += std::string(buffer.data(), bytesread);
+		}
+	} catch (...) {
+		pclose(pipe);
+		throw;
 	}
+	exitcode = WEXITSTATUS(pclose(pipe));
 
-	//Remove newline from end if applicable
-	if (result[result.length()-1] == '\n')
-		result.erase(result.length()-1);
-
-	return result;
+	return CommandResult_t {result, exitcode};
 }
 
 FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 {
-#if 1
-	YAML::Node PlatformProfile = YAML::LoadFile(filename + ".json");
-#else
-	// HACK: yaml-cpp lib seems to have trouble parsing yaml with anchors and aliases, so need to convert to json first
-	std::string yamltojson = "cat " + filename + " | yaml2json - > " + filename + ".json"; // eg: cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.yaml.json
-	exec(yamltojson.c_str());
-	YAML::Node PlatformProfile = YAML::LoadFile(filename + ".json"); // NOTE: remember, json is a subset of yaml, so we can still use YAML::LoadFile to load it
-#endif
+	int retVal;
 
-	// profile = PlatformProfile.as<Profile_t>;
-	profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();
-	profile.Sections = PlatformProfile["Sections"].as<std::vector<Section_t>>();
+	// have to identify the platform
+	retVal = FindAndLoadPlatformProfile();
+	if (retVal != FDR_SUCCESS) {
+		std::cout << "Not able to find the right PPF file for this platform..Exiting!!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 
-	// Read in the policy file
+	// create the records from the PPF file
 	CreateRecords();
+}
+
+int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
+{
+    // Path to the directory
+	std::vector <std::string> SupportedPlatforms;
+	struct stat sb;
+	int index;
+	int retVal;
+  
+    // step 1: get all the PPF files
+    for (const auto& entry : std::filesystem::directory_iterator(SupportedPlatformsDir)) {
+        // Converting the path to const char * in the subsequent lines
+        std::filesystem::path outfilename = entry.path();
+        std::string outfilename_str = outfilename.string();
+        const char* path = outfilename_str.c_str();
+  
+        // Testing whether the path points to a non-directory or not If it does, displays path
+        if (stat(path, &sb) == 0 && !(sb.st_mode & S_IFDIR)) {
+			SupportedPlatforms.push_back(path);
+		}
+    }
+
+	// for (int i=0; i<SupportedPlatforms.size(); i++) {
+	// 	std::cout << i << ": before sorting: SupportedPlatforms: " << SupportedPlatforms[i] << std::endl;
+	// }
+
+	// sort the list of platform files ascendingly
+	sort(SupportedPlatforms.begin(), SupportedPlatforms.end());
+
+	// step 2: loop through the list of PPFs, execute the rules and find the right PPF
+	for (index=0; index<SupportedPlatforms.size(); index++) {
+		// convert the given PPF to data structs
+		retVal = ConvertPPFToStruct(SupportedPlatforms[index]);
+		if (retVal != FDR_SUCCESS) {
+			std::cout << "ExecuteFingerPrintRules failed...Try another" << std::endl;
+			continue;
+		}
+		// execute the Fingerprint in the PPF
+		retVal = ExecuteFingerPrintRules();
+		if (retVal == FDR_SUCCESS) {
+			std::cout << "Found the PPF file: " << SupportedPlatforms[index] << std::endl;
+			// now Data struct have all the values from this PPF file. Hence return FDR_SUCCESS.
+			return FDR_SUCCESS;
+		}
+	}
+
+	return FDR_ERR_GENFAILURE;
+}
+
+// convert the Platform Profile File[PPF] file and store the values in the "profile" data struct
+int FlightDataRecorder_c::ConvertPPFToStruct(const std::string filename)
+{
+	// catch any exception while parsing through the yaml or json file
+	try {
+	#if 1
+		YAML::Node PlatformProfile = YAML::LoadFile(filename);
+	#else
+		// HACK: yaml-cpp lib seems to have trouble parsing yaml with anchors and aliases, so need to convert to json first
+		std::string yamltojson = "cat " + filename + " | yaml2json - > " + filename + ".json"; // eg: cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.yaml.json
+		exec(yamltojson.c_str());
+		YAML::Node PlatformProfile = YAML::LoadFile(filename + ".json"); // NOTE: remember, json is a subset of yaml, so we can still use YAML::LoadFile to load it
+	#endif
+
+		profile.FingerPrint = PlatformProfile["FingerPrint"].as<FingerPrint_t>();
+		profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();
+		profile.Sections = PlatformProfile["Sections"].as<std::vector<Section_t>>();
+
+		return EXIT_SUCCESS;
+	} catch(std::exception& e) {
+		std::cout << "Exception while parsing " << filename << ": " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+}
+
+// use the values from "profile" data struct and execute the rules
+int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
+{
+	for (auto CheckRule : profile.FingerPrint.Checks) {
+        CommandResult_t cmdResult = exec(CheckRule.c_str());
+		// std::cout << "\tcommandresult: "
+		// 		  << "cmdExitstatus: " << cmdResult.cmdExitstatus << std::endl;
+				//   << "; cmdOutput: " << cmdResult.cmdOutput << std::endl;
+		if (cmdResult.cmdExitstatus == FDR_ERR_GENFAILURE) {
+			// if any of the command failed, then this is not the PPF file for this platform
+			std::cout << "command Failed: " << CheckRule << std::endl;
+			return FDR_ERR_GENFAILURE;
+		}
+	}
+	return FDR_SUCCESS;
 }
 
 void FlightDataRecorder_c::CreateRecords(void)

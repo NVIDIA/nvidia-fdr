@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include "fdr_common.hpp"
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
 #include "fdr_logs_schema.pb.h"
@@ -12,8 +13,6 @@
 
 #include "fdr_store.hpp"
 #include "dbus_accessor.hpp"
-
-std::string exec(const char *cmd);
 
 Record::Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info) : profile(profile), section(section), component(component), infogroup(infogroup), info(info)
 {
@@ -91,7 +90,13 @@ void Record::Refresh(void)
 
     if (info.FetchMethod == "Command")
     {
-        std::string commandresult = exec(info.CommandParams.Command.c_str());
+        CommandResult_t cmdResult = exec(info.CommandParams.Command.c_str());
+		if (cmdResult.cmdExitstatus == FDR_ERR_GENFAILURE) {
+			std::cout << "command Failed: " << info.CommandParams.Command << std::endl;
+			return;
+		}
+
+        std::string commandresult = cmdResult.cmdOutput;
         if (data.paramtype() == "Uint64")
         {
             std::istringstream str2num(commandresult);
