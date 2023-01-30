@@ -1,30 +1,57 @@
-# Dev Setup:
+# Dev environment setup on build machine:
 
-sudo apt install libyaml-cpp-dev
+    sudo apt install nlohmann-json3-dev
+    sudo apt install libboost-all-dev
+    sudo apt install libsystemd-dev
+    sudo apt install sqlite3
+    sudo apt install libsqlite3-dev
 
-sudo apt install nlohmann-json3-dev
+Install sdbusplus library from sources (Binary not available from distro)
 
-sudo apt install libboost-all-dev
+    git clone https://github.com/openbmc/sdbusplus.git
+    cd sdbusplus/
+    git checkout -b temp 1778b12b1d304b759fd6b86f25f8efb74870a953
+    meson build -Dtests=disabled -Dexamples=disabled -Ddefault_library=static
+    cd build
+    ninja
+    ninja test
+    sudo ninja install
 
-sudo apt install libsystemd-dev
 
-sudo apt install sqlite3
+Install protobuf from sources (Version from distro is too old for us)
 
-sudo apt install libsqlite3-dev
+    wget https://github.com/protocolbuffers/protobuf/archive/refs/tags/v21.12.tar.gz
+    tar xzf v21.12.tar.gz
+    cd protobuf-21.12/
+    cmake . -Dprotobuf_BUILD_TESTS:BOOL=OFF
+    cmake --build . --parallel 10
+    sudo make install
 
-sudo apt install protobuf-compiler
+# Additional Dev Setup for cross-compiling :
+## Build and install ARM cross compiler toolchain for OpenBMC
 
-# Build
+    git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/bmc/openbmc.git
+    cd openbmc
+    . setup hgx
+    bitbake obmc-phosphor-image
+    bitbake obmc-phosphor-image -c populate_sdk
 
-cmake .
+# Build (x86 native)
 
-make
+    cmake -B build/
+    make -j24 -C build/
 
+# Build (ARM cross compile)
+
+    . /usr/local/oecore-x86_64/environment-setup-armv7ahf-vfpv4d16-openbmc-linux-gnueabi
+    cmake -B build/
+    make -j24 -C build/
 
 # Run
 
-./fdr
+    ./build/fdr
 
-Logs would start landing in /tmp/logs/fdr/
+FDR data would start landing under /tmp/fdr/
+
 
 
