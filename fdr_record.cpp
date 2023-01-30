@@ -117,16 +117,16 @@ void Record::Refresh(void)
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
 
-        if (data.paramType == "Uint64")
+        if (data.paramtype() == "Uint64")
         {
             if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
-                printf("int64 = %lld\n", *ptr);
+                printf("int64 = %ld\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
             {
-                printf("uint32 = %lu\n", *ptr);
+                printf("uint32 = %u\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<double>(&val)); ptr)
@@ -143,7 +143,7 @@ void Record::Refresh(void)
             if (auto ptr (std::get_if<std::string>(&val)); ptr) 
             {
                 printf("val =%s\n", ptr->c_str());
-                data.set_paramValueString(*ptr);
+                data.set_paramvaluestring(*ptr);
             }
         }
     }

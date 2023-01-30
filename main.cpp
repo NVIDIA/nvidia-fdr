@@ -20,9 +20,6 @@
 #include <boost/algorithm/string.hpp>
 #include <systemd/sd-bus.h>
 
-// Global variable
-std::string SupportedPlatformsDir = "/mnt/source/fdr/platform";
-
 class FlightDataRecorder_c
 {
 private:
@@ -90,16 +87,16 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 	int index;
 	int retVal;
   
+	std::string SupportedPlatformsDir = "./platforms"; //Most relevant path if/when a developer is running fdr from source directory
+	if (!(std::filesystem::exists("./platforms"))) {
+		SupportedPlatformsDir = "/mnt/source/fdr/platform"; //Applicable when FDR is running from a installed location
+	}
+
     // step 1: get all the PPF files
     for (const auto& entry : std::filesystem::directory_iterator(SupportedPlatformsDir)) {
-        // Converting the path to const char * in the subsequent lines
-        std::filesystem::path outfilename = entry.path();
-        std::string outfilename_str = outfilename.string();
-        const char* path = outfilename_str.c_str();
-  
         // Testing whether the path points to a non-directory or not If it does, displays path
-        if (stat(path, &sb) == 0 && !(sb.st_mode & S_IFDIR)) {
-			SupportedPlatforms.push_back(path);
+        if (stat(entry.path().c_str(), &sb) == 0 && !(sb.st_mode & S_IFDIR)) {
+			SupportedPlatforms.push_back(entry.path());
 		}
     }
 
@@ -111,9 +108,22 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 	sort(SupportedPlatforms.begin(), SupportedPlatforms.end());
 
 	// step 2: loop through the list of PPFs, execute the rules and find the right PPF
-	for (index=0; index<SupportedPlatforms.size(); index++) {
+	for (auto filename : SupportedPlatforms) {
+		
+		std::cout << "Trying " + filename << std::endl;
+		
+		std::string filetoload = filename;
+
+		//HACK: If YAML, convert to JSON because yaml-cpp has trouble parsing yaml with anchors and aliases
+		if (filename.substr(filename.find_last_of(".")) == ".yaml")
+		{
+			filetoload = "/tmp/fdr_ppf_temp.json";
+			std::string yamltojson = "yaml2json " + filename + " > " + filetoload; // eg: yaml2json fdr_ppf_vulcan.yaml > /tmp/fdr_ppf_temp.json
+			exec(yamltojson.c_str());
+		}
+
 		// convert the given PPF to data structs
-		retVal = ConvertPPFToStruct(SupportedPlatforms[index]);
+		retVal = ConvertPPFToStruct(filetoload);
 		if (retVal != FDR_SUCCESS) {
 			std::cout << "ExecuteFingerPrintRules failed...Try another" << std::endl;
 			continue;
@@ -121,7 +131,7 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		// execute the Fingerprint in the PPF
 		retVal = ExecuteFingerPrintRules();
 		if (retVal == FDR_SUCCESS) {
-			std::cout << "Found the PPF file: " << SupportedPlatforms[index] << std::endl;
+			std::cout << "Found the PPF file: " << filetoload << std::endl;
 			// now Data struct have all the values from this PPF file. Hence return FDR_SUCCESS.
 			return FDR_SUCCESS;
 		}
