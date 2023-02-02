@@ -15,6 +15,7 @@
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
 #include "fdr_store.hpp"
+#include "fdr_redfish.hpp"
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
@@ -398,6 +399,8 @@ int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 	return 0;
 }
 
+RedfishClient *rfc;
+
 int main(void)
 {
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
@@ -405,6 +408,18 @@ int main(void)
 	sd_bus_default_system(&bus);
 
 	FlightDataRecorder_c fdr("fdr_vulcan.yaml");
+
+	// Redfish client is a global variable, will be used in fdr_record.
+	// might be better to make fdr a global variable instead.
+	if (!fdr.profile.GeneralConfig.RedfishSchema.empty()){
+		try {
+			rfc = new RedfishClient (fdr.profile.GeneralConfig.RedfishSchema, fdr.profile.GeneralConfig.RedfishUser, fdr.profile.GeneralConfig.RedfishPassword);
+		} catch (const std::exception &e) {
+			std::cerr << "Error creating redfish client " << e.what() << std::endl;
+		}
+	} else {
+		std::cout << "No redfish configuration found, skipped creating redfish client." << std::endl;
+	}
 
 	// Read in the last recorded values from log files
 	fdr.ReadOldRecords();
@@ -441,6 +456,9 @@ int main(void)
 		sleep(1);
 	}
 
+	if (rfc) {
+		delete rfc;
+	}
 	sd_bus_unref(bus);
 	return EXIT_SUCCESS;
 }
