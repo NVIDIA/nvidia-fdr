@@ -1,57 +1,68 @@
-# Dev environment setup on build machine:
+# Dev environment setup on build machine
 
-    sudo apt install nlohmann-json3-dev
-    sudo apt install libboost-all-dev
-    sudo apt install libsystemd-dev
-    sudo apt install sqlite3
-    sudo apt install libsqlite3-dev
+These steps were verified on Ubuntu 20.04 and 22.04.
 
-Install sdbusplus library from sources (Binary not available from distro)
+```bash
+# Dependency for sdbusplus
+sudo apt install git meson libtool pkg-config g++ libsystemd-dev \
+    python3 python3-pip python3-yaml python3-mako python3-inflection
 
-    git clone https://github.com/openbmc/sdbusplus.git
-    cd sdbusplus/
-    git checkout -b temp 1778b12b1d304b759fd6b86f25f8efb74870a953
-    meson build -Dtests=disabled -Dexamples=disabled -Ddefault_library=static
-    cd build
-    ninja
-    ninja test
-    sudo ninja install
-
-
-Install protobuf from sources (Version from distro is too old for us)
-
-    wget https://github.com/protocolbuffers/protobuf/archive/refs/tags/v21.12.tar.gz
-    tar xzf v21.12.tar.gz
-    cd protobuf-21.12/
-    cmake . -Dprotobuf_BUILD_TESTS:BOOL=OFF
-    cmake --build . --parallel 10
-    sudo make install
-
-# Additional Dev Setup for cross-compiling :
-## Build and install ARM cross compiler toolchain for OpenBMC
-
-    git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/bmc/openbmc.git
-    cd openbmc
-    . setup hgx
-    bitbake obmc-phosphor-image
-    bitbake obmc-phosphor-image -c populate_sdk
+# Dependency for fdr
+sudo apt install cmake protobuf-compiler nlohmann-json3-dev libboost-all-dev \
+    sqlite3 libsqlite3-dev libyaml-cpp-dev
+```
 
 # Build (x86 native)
 
-    cmake -B build/
-    make -j24 -C build/
+```bash
+cmake -B build/
+make -j24 -C build/
+```
+## Run
 
-# Build (ARM cross compile)
-
-    . /usr/local/oecore-x86_64/environment-setup-armv7ahf-vfpv4d16-openbmc-linux-gnueabi
-    cmake -B build/
-    make -j24 -C build/
-
-# Run
-
-    ./build/fdr
+```bash
+./build/fdr
+```
 
 FDR data would start landing under /tmp/fdr/
 
+# Build (ARM cross compile with bitbake)
 
+## Add recipe to openbmc project
 
+This is a one time step, and it would be no longer needed once it is committed to openbmc. 
+
+```bash
+git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/bmc/openbmc.git
+cd openbmc
+
+. setup hgx
+
+# Copy the fdr_git.bb from this repo to openbmc, make necessary changes first
+mkdir -p ../../meta-nvidia/recipes-nvidia/fdr
+cp /path/to/nvidia-fdr/fdr_git.bb openbmc/meta-nvidia/recipes-nvidia/fdr
+```
+
+## Building fdr
+
+```bash
+# Make sure you've activate `. setup hgx`
+bitbake fdr
+```
+
+Once the command succeed:
+
+- The rpm can be found under `openbmc/build/hgx/tmp/deploy/rpm/armv7ahf_vfpv4d16`
+- The unpackage files(including the fdr binary) are loacated in `openbmc/build/hgx/tmp/work/armv7ahf-vfpv4d16-openbmc-linux-gnueabi/fdr/git-r0/package` if you wish to scp them into openbmc
+
+Otherwise, if errors occur, checkout the logs under `openbmc/build/hgx/tmp/work/armv7ahf-vfpv4d16-openbmc-linux-gnueabi/fdr/git-r0/temp`
+
+## Build fdr along with openbmc
+
+Append `IMAGE_INSTALL:append = "fdr"` to `openbmc/build/hgx/conf/local.conf`, then build the image
+
+```
+bitbake obmc-phosphor-image
+```
+
+Run the image with qemu, and the fdr command will be already there.

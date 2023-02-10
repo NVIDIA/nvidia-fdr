@@ -5,48 +5,46 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 project(fdr VERSION 0.1)
 
-# add_compile_options(-D__ARM_PCS_VFP)
+# Add protobuf
+#set(Protobuf_USE_STATIC_LIBS_ON)
+find_package(Protobuf REQUIRED)
+include_directories(${Protobuf_INCLUDE_DIRS})
 
+# Compile the proto file
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS fdr_logs_schema.proto)
 
-#Download & build yaml-cpp
-include(ExternalProject)
-ExternalProject_Add(
-	dependency-yaml-cpp
-  PREFIX my-yaml-cpp
-  GIT_REPOSITORY "https://github.com/jbeder/yaml-cpp.git"
-  GIT_TAG yaml-cpp-0.6.3
-	CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-)
-include_directories("${PROJECT_BINARY_DIR}/my-yaml-cpp/include")
-link_directories(${PROJECT_BINARY_DIR}/my-yaml-cpp/lib)
+option(YOCTO "Enable Building in Yocto" OFF)
 
-#Download & build protobuf
-ExternalProject_Add(
-  dependency-protobuf
-  PREFIX my-protobuf
-  URL https://github.com/protocolbuffers/protobuf/archive/refs/tags/v21.12.tar.gz
-  # URL https://github.com/protocolbuffers/protobuf/archive/refs/tags/v3.12.4.tar.gz
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR> -Dprotobuf_BUILD_TESTS:BOOL=OFF 
-)
-include_directories("${PROJECT_BINARY_DIR}/my-protobuf/include")
-link_directories(${PROJECT_BINARY_DIR}/my-protobuf/lib)
-
-add_custom_command(
-  OUTPUT fdr_logs_schema.pb.cc
-  # WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-  COMMAND protoc --cpp_out=. --proto_path ${CMAKE_CURRENT_SOURCE_DIR} fdr_logs_schema.proto
-  DEPENDS fdr_logs_schema.proto
-  VERBATIM
+if(NOT YOCTO)
+  include(ExternalProject)
+  ExternalProject_Add(sdbusplus
+    PREFIX ${CMAKE_SOURCE_DIR}/sdbusplus
+    GIT_REPOSITORY https://github.com/openbmc/sdbusplus.git
+    # This commit id is C++17 based, while the latest were C++20 based.
+    # If latest version is desired, it can be compiled by g++-12 on Ubuntu 22.04
+    GIT_TAG 1778b12b1d304b759fd6b86f25f8efb74870a953
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND cd ${CMAKE_SOURCE_DIR}/sdbusplus/src/sdbusplus && meson build -Dtests=disabled -Dexamples=disabled  -Ddefault_library=static && ninja -C build libsdbusplus.a
+    INSTALL_COMMAND ""
   )
-include_directories("${PROJECT_BINARY_DIR}")
+  include_directories (${CMAKE_SOURCE_DIR}/sdbusplus/src/sdbusplus/include)
+  link_directories (${CMAKE_SOURCE_DIR}/sdbusplus/src/sdbusplus/build)
+endif()
 
-add_executable(fdr main.cpp fdr_policy.cpp fdr_record.cpp fdr_store.cpp dbus_accessor.cpp property_variant.hpp fdr_logs_schema.pb.cc)
+add_executable(fdr main.cpp fdr_policy.cpp fdr_record.cpp fdr_store.cpp dbus_accessor.cpp property_variant.hpp ${PROTO_SRCS} ${PROTO_HDRS})
+
+target_link_libraries(fdr PRIVATE ${Protobuf_LIBRARIES})
 target_link_libraries(fdr PRIVATE -lyaml-cpp)
 target_link_libraries(fdr PRIVATE -lprotobuf)
 target_link_libraries(fdr PRIVATE -lsqlite3)
 target_link_libraries(fdr PRIVATE -lsdbusplus)
 target_link_libraries(fdr PRIVATE -lsystemd)
 
-add_dependencies(fdr dependency-yaml-cpp dependency-protobuf)
+if (NOT YOCTO)
+  add_dependencies (fdr sdbusplus)
+endif ()
 
-
+# Install fdr
+install(TARGETS fdr RUNTIME DESTINATION bin)
+install(DIRECTORY platforms DESTINATION /etc/fdr)
