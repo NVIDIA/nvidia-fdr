@@ -29,5 +29,5 @@ inherit cmake
 # Specify any options you want to pass to cmake using EXTRA_OECMAKE:
 EXTRA_OECMAKE = "-DYOCTO=ON"
 
-DEPENDS = "yaml-cpp protobuf protobuf-native sqlite3 boost systemd sdbusplus nlohmann-json curl"
+DEPENDS = "yaml-cpp protobuf protobuf-native sqlite3 boost systemd sdbusplus nlohmann-json curl python3 python3-pyyaml"
 RDEPENDS_${PN} = "yaml-cpp protobuf sqlite3 boost systemd sdbusplus curl"

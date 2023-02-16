@@ -9,7 +9,7 @@ sudo apt install git meson libtool pkg-config g++ libsystemd-dev \
 
 # Dependency for fdr
 sudo apt install cmake protobuf-compiler nlohmann-json3-dev libboost-all-dev \
-    sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev
+    sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml
 ```
 
 # Build (x86 native)
