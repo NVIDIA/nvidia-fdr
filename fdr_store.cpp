@@ -18,7 +18,7 @@ FDRStore::FDRStore(std::string filename, std::string fileformat)    //Protobuf/j
 }
 
 FDRStore::FDRStore(std::string file, std::string fileformat, std::string pClass, std::string cClass, std::string ID) :
-        dbLoc(file), encodingtouse(fileformat), paramClass(pClass), compClass(cClass), compID(ID)
+        encodingtouse(fileformat), dbLoc(file), paramClass(pClass), compClass(cClass), compID(ID)
 {
     DB = NULL;
 
@@ -246,6 +246,10 @@ void FDRStore::createStatesTable(){
     //Create the table if it does not exist
     std::string sql = "CREATE TABLE if not exists " + tableName + " (ParamID INT, FromTimeStamp INTEGER, ToTimeStamp INTEGER, Num INTEGER, Min INTEGER, Max INTEGER, Average INTEGER);";
     int errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
+
+    if(errCode != SQLITE_OK){	//TODO: Error Handling
+        std::cout << "Error creating states table" << std::endl;
+    }
 }
 
 void FDRStore::appendStat(const fdr_stat_sql &data){

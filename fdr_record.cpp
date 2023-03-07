@@ -121,7 +121,7 @@ void Record::Refresh(void)
         {
             if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
-                printf("int64 = %ld\n", *ptr);
+                printf("int64 = %" PRIu64 "\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
