@@ -136,6 +136,9 @@ int FDRStore::readnext(google::protobuf::Message *datap){
 
             bool clean_eof = true;
             auto ret = google::protobuf::util::ParseDelimitedFromZeroCopyStream(datap, binaryinzerocopystream, &clean_eof);
+
+            delete binaryinzerocopystream;
+
             if (ret == false)
             {
                 if (clean_eof)
