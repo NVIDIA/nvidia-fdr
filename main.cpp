@@ -68,6 +68,8 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 {
 	int retVal;
 
+	(void)filename;
+
 	// have to identify the platform
 	retVal = FindAndLoadPlatformProfile();
 	if (retVal != FDR_SUCCESS) {
@@ -84,7 +86,6 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
     // Path to the directory
 	std::vector <std::string> SupportedPlatforms;
 	struct stat sb;
-	int index;
 	int retVal;
   
 	std::string SupportedPlatformsDir = "./platforms"; //Most relevant path if/when a developer is running fdr from source directory
@@ -359,13 +360,16 @@ FlightDataRecorder_c::~FlightDataRecorder_c()
 
 static inline const char *strna(const char *s)
 {
-	return s ?: "n/a";
+	return s ? s : "n/a";
 }
 
 sd_bus *bus = NULL;
 
 int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 {
+	(void)userdata;
+	(void)ret_error;
+
 	printf("callback: path=%s interface=%s member=%s\n",
 		   strna(sd_bus_message_get_path(m)),
 		   strna(sd_bus_message_get_interface(m)),
@@ -388,7 +392,7 @@ int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 	if (r < 0)
 		printf("sd_bus_message_read failed\n");
 
-	printf("rxbytes =%ld\n", rxbytes);
+	printf("rxbytes =%" PRIu64 "\n", rxbytes);
 	// sd_bus_message_dump(reply, stdout, SD_BUS_MESSAGE_DUMP_SUBTREE_ONLY);
 
 	return 0;
