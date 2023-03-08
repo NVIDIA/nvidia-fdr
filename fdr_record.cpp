@@ -13,6 +13,9 @@
 
 #include "fdr_store.hpp"
 #include "dbus_accessor.hpp"
+#include "fdr_redfish.hpp"
+
+extern RedfishClient *rfc;
 
 Record::Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info) : profile(profile), section(section), component(component), infogroup(infogroup), info(info)
 {
@@ -145,6 +148,27 @@ void Record::Refresh(void)
                 printf("val =%s\n", ptr->c_str());
                 data.set_paramvaluestring(*ptr);
             }
+        }
+    } else if (info.FetchMethod == "Redfish") {
+        if (!rfc) {
+            std::cout << "Redfish not configured or not connected, skipping" << std::endl;
+            return;
+        }
+        std::string uri = info.RedfishParams.URI;
+        std::string json_pointer = info.RedfishParams.JSONPointer;
+        std::cout << "RedfishParams URI: " << uri << " JSONPointer: " << json_pointer << std::endl;
+
+        try {
+            if (data.paramtype() == "Uint64") {
+                uint64_t u = rfc->query_uint64t (uri, json_pointer);
+                data.set_paramvalueint64(u);
+            } else {
+                // string
+                std::string s = rfc->query_string (uri, json_pointer);
+                data.set_paramvaluestring(s);
+            }
+        } catch (const std::exception &e) {
+            std::cerr << "Error fetching redfish: " << e.what() << std::endl;
         }
     }
 }

@@ -15,6 +15,7 @@
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
 #include "fdr_store.hpp"
+#include "fdr_redfish.hpp"
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
@@ -32,7 +33,7 @@ private:
 
 public:
 	Profile_t profile;
-	FlightDataRecorder_c(const std::string filename);
+	FlightDataRecorder_c(const std::string filename=std::string{});
 	~FlightDataRecorder_c();
 	void CreateRecords(void);
 	void ReadOldRecords(void);
@@ -68,12 +69,15 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 {
 	int retVal;
 
-	(void)filename;
-
-	// have to identify the platform
-	retVal = FindAndLoadPlatformProfile();
+	if (! filename.empty()) {
+		std::cout << "Specified PPF file " << filename << ", PPF detection skipped" << std::endl;
+		retVal = ConvertPPFToStruct(filename);
+	} else {
+		// have to identify the platform
+		retVal = FindAndLoadPlatformProfile();
+	}
 	if (retVal != FDR_SUCCESS) {
-		std::cout << "Not able to find the right PPF file for this platform..Exiting!!" << std::endl;
+		std::cout << "Error loading PPF file..Exiting!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -119,6 +123,7 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		if (filename.substr(filename.find_last_of(".")) == ".yaml")
 		{
 			filetoload = "/tmp/fdr_ppf_temp.json";
+			// FIXME: HMC won't have yaml2json
 			std::string yamltojson = "yaml2json " + filename + " > " + filetoload; // eg: yaml2json fdr_ppf_vulcan.yaml > /tmp/fdr_ppf_temp.json
 			exec(yamltojson.c_str());
 		}
@@ -132,11 +137,13 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		// execute the Fingerprint in the PPF
 		retVal = ExecuteFingerPrintRules();
 		if (retVal == FDR_SUCCESS) {
-			std::cout << "Found the PPF file: " << filetoload << std::endl;
+			std::cout << "Found the PPF file: " << filename << std::endl;
 			// now Data struct have all the values from this PPF file. Hence return FDR_SUCCESS.
 			return FDR_SUCCESS;
 		}
 	}
+
+	std::cout << "Not able to find the right PPF file for this platform." << std::endl;
 
 	return FDR_ERR_GENFAILURE;
 }
@@ -398,13 +405,32 @@ int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 	return 0;
 }
 
-int main(void)
+RedfishClient *rfc;
+
+int main(int argc, char *argv[])
 {
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
 
 	sd_bus_default_system(&bus);
 
-	FlightDataRecorder_c fdr("fdr_vulcan.yaml");
+	// a quick and dirty way to specify the platform definination file instead of detection
+	std::string filename{};
+	if (argc >= 2) {
+		filename = argv[1];
+	}
+	FlightDataRecorder_c fdr(filename);
+
+	// Redfish client is a global variable, will be used in fdr_record.
+	// might be better to make fdr a global variable instead.
+	if (!fdr.profile.GeneralConfig.RedfishSchema.empty()){
+		try {
+			rfc = new RedfishClient (fdr.profile.GeneralConfig.RedfishSchema, fdr.profile.GeneralConfig.RedfishUser, fdr.profile.GeneralConfig.RedfishPassword);
+		} catch (const std::exception &e) {
+			std::cerr << "Error creating redfish client " << e.what() << std::endl;
+		}
+	} else {
+		std::cout << "No redfish configuration found, skipped creating redfish client." << std::endl;
+	}
 
 	// Read in the last recorded values from log files
 	fdr.ReadOldRecords();
@@ -441,6 +467,9 @@ int main(void)
 		sleep(1);
 	}
 
+	if (rfc) {
+		delete rfc;
+	}
 	sd_bus_unref(bus);
 	return EXIT_SUCCESS;
 }

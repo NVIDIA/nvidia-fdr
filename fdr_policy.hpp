@@ -20,7 +20,10 @@ struct GeneralConfig_t
 {
 	std::string LogsBasePath; // Root directory for all logs for this system
 	std::string LogsFormat;	  // Data encoding format to use (JSON|Binary etc.)
-	std::string DatabaseName;	//Database name to be used
+	std::string DatabaseName; // Database name to be used
+	std::string RedfishSchema;
+	std::string RedfishUser;
+	std::string RedfishPassword;
 };
 
 struct CommandParams_t
@@ -35,6 +38,13 @@ struct DbusParams_t
 	std::string Interface;
 	std::string Property;
 };
+
+struct RedfishParams_t
+{
+	std::string URI;
+	std::string JSONPointer;
+};
+
 struct Info_t
 {
 	std::string ID;				   // Unique ID for this information piece
@@ -43,8 +53,10 @@ struct Info_t
 	std::string StorePolicy;	   // Storage policy (EveryFetch|OnChange|etc.)
 	int FetchFreqSecs;			   // Seconds between each fetch
 	int StoreFreqSecs;			   // Seconds between each store (if StorePolicy==Periodic)
+	// TODO: make these Params a Union to save memory
 	CommandParams_t CommandParams; // If FetchMethod==Command
 	DbusParams_t DbusParams;	   // If FetchMethod==DBUS
+	RedfishParams_t RedfishParams; // If FetchMethod==Redfish
 	std::string DataType;		   // Data Type ()
 	InfoGroup_t *parent_infogroup; // Pointer to the infogroup this info belongs to
 };
@@ -124,6 +136,10 @@ namespace YAML
 			rhs.LogsFormat = node["LogsFormat"].as<std::string>();
 			if (node["DatabaseName"] || rhs.LogsFormat == "DB")
 				rhs.DatabaseName = node["DatabaseName"].as<std::string>();
+
+			rhs.RedfishSchema = node["RedfishSchema"] ? node["RedfishSchema"].as<std::string>() : std::string{};
+			rhs.RedfishUser = node["RedfishUser"] ? node["RedfishUser"].as<std::string>() : std::string{};
+			rhs.RedfishPassword = node["RedfishPassword"] ? node["RedfishPassword"].as<std::string>() : std::string{};
 			return true;
 		}
 	};
@@ -173,6 +189,24 @@ namespace YAML
 	};
 
 	template <>
+	struct convert<RedfishParams_t>
+	{
+		static bool decode(const Node &node, RedfishParams_t &rhs)
+		{
+			if (node["URI"])
+			{
+				rhs.URI = node["URI"].as<std::string>();
+			}
+			if (node["JSONPointer"])
+			{
+				rhs.JSONPointer = node["JSONPointer"].as<std::string>();
+			}
+
+			return true;
+		}
+	};
+
+	template <>
 	struct convert<Info_t>
 	{
 		static bool decode(const Node &node, Info_t &rhs)
@@ -209,6 +243,10 @@ namespace YAML
 			if (node["DbusParams"])
 			{
 				rhs.DbusParams = node["DbusParams"].as<DbusParams_t>();
+			}
+			if (node["RedfishParams"])
+			{
+				rhs.RedfishParams = node["RedfishParams"].as<RedfishParams_t>();
 			}
 
 			return true;
