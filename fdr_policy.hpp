@@ -132,7 +132,8 @@ namespace YAML
 #endif
 		static bool decode(const Node &node, GeneralConfig_t &rhs)
 		{
-			rhs.LogsBasePath = node["LogsBasePath"].as<std::string>();
+			// just take the first element[of type std::string] from the vector
+			rhs.LogsBasePath = node["LogsBasePath"].as<std::vector<std::string>>().front();
 			rhs.LogsFormat = node["LogsFormat"].as<std::string>();
 			if (node["DatabaseName"] || rhs.LogsFormat == "DB")
 				rhs.DatabaseName = node["DatabaseName"].as<std::string>();
@@ -259,8 +260,13 @@ namespace YAML
 		static bool decode(const Node &node, Param_t &rhs)
 		{
 			rhs.name = node["name"].as<std::string>();
-			rhs.value = node["value"].as<std::string>();
-
+			try {
+				// try to get as std::string
+				rhs.value = node["value"].as<std::string>();
+			} catch(std::exception& e) {
+				// try to get as std::vector<std::string> and get only the first element of the vector
+				rhs.value = node["value"].as<std::vector<std::string>>().front();
+			}
 			return true;
 		}
 	};

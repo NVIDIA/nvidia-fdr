@@ -51,3 +51,4 @@ endif ()
 # Install fdr
 install(TARGETS fdr RUNTIME DESTINATION bin)
 install(DIRECTORY platforms DESTINATION /etc/fdr)
+install(PROGRAMS tools/FdrBootCounter.sh DESTINATION bin)

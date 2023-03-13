@@ -7,7 +7,8 @@ FingerPrint:
 GeneralConfig:
   LogsFormat: JSON  #Choices=JSON|BINARY|DB
   #DatabaseName: "Database.db"   #Only used if logs format is DB
-  LogsBasePath: "/home/root/"
+  LogsBasePath: &LogsBasePath
+    - "/home/root/"
 
 GPU: &gpu
   Params:
@@ -121,7 +122,7 @@ NVSwitch: &nvswitch
   InfoGroups:
     - ID: Config
       InfoList:
-        - &switchDefaults
+        - &NvSwitchDefaults
           ID: FirmwareVersion
           FetchPolicy: Periodic
           FetchFreqSecs: 60  #Temp freq
@@ -133,7 +134,7 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
         - ID: ShutdownTemperature
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DataType: Uint64
           FetchFreqSecs: 5
           DbusParams:
@@ -142,7 +143,7 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Sensor.Threshold.HardShutdown"
             Property: "HardShutdownHigh"
         - ID: MaximumOperatingTemperature
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DataType: Uint64
           FetchFreqSecs: 5
           DbusParams:
@@ -151,7 +152,7 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Sensor.Value"
             Property: "MaxAllowableValue"
         - ID: InfoROMVersion
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/NVSwitch$switchidInfoROM"
@@ -159,7 +160,7 @@ NVSwitch: &nvswitch
             Property: "Version"
     - ID: Error
       InfoList:
-        - &ErrorDefaults
+        - &NvSwitchErrorDefaults
           ID: ECCCorrectable
           DataType: Uint64
           FetchPolicy: Periodic
@@ -172,56 +173,56 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Memory.MemoryECC"
             Property: "ceCount"
         - ID: ECCUncorrectable
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.Memory.MemoryECC"
             Property: "ueCount"
         - ID: NonFatal
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "nonfeCount"
         - ID: Fatal
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "feCount"
         - ID: Correctable
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "ceCount"
         - ID: Replay
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "ReplayCount"
         - ID: ReplayRollover
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "ReplayRolloverCount"
         - ID: NAKsSent
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "NAKSentCount"
         - ID: NAKsReceived
-          <<: *ErrorDefaults
+          <<: *NvSwitchErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
@@ -230,21 +231,21 @@ NVSwitch: &nvswitch
     - ID: Inventory
       InfoList:
         - ID: BoardPartNumber
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
             Property: "PartNumber"
         - ID: SerialNumber
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
             Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
             Property: "SerialNumber"
         - ID: GUID
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
@@ -253,7 +254,7 @@ NVSwitch: &nvswitch
     - ID: Status
       InfoList:
         - ID: ManagerState
-          <<: *switchDefaults
+          <<: *NvSwitchDefaults
           DataType: Uint64
           FetchFreqSecs: 30
           DbusParams:
@@ -276,8 +277,26 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Sensor.Value"
             Property: "Value"
 
+BOOTEVENT: &bootevent
+  InfoGroups:
+    - ID: bootevent
+      InfoList:
+        - ID: BootEventLog
+          <<: *defaults
+          FetchPolicy: OnBoot
+          StorePolicy: EveryFetch
+          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
+            Command: "./tools/FdrBootCounter.sh $logbasepath; echo ';'; uptime -s"
 
 Sections:
+  - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance
+    Components:
+      - ID: BOOTEVENT
+        <<: *bootevent
+        Params:           #and change parameter values
+          - name: logbasepath
+            value: *LogsBasePath
+
   - ID: GPU
     Components:
       - ID: GPU0
