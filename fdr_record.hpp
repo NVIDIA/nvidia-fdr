@@ -34,7 +34,7 @@ public:
 
     Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info);
 
-    ~Record(){};
+    ~Record();
 
     void Refresh(void); // Update the record with fresh info from platform
     void Load(void);    // Read the (last) record from logfile into the record

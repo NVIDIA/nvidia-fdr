@@ -78,6 +78,16 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrreaderwriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
     }
+
+    // for debugging purpose
+    // Print();
+}
+
+Record::~Record()
+{
+    // data.release_paramtype();
+    FDRStore* fds = fdrreaderwriter.release();
+    delete fds;
 }
 
 void Record::Refresh(void)
@@ -90,6 +100,14 @@ void Record::Refresh(void)
     data.set_timestamp(current_time);
     data.set_paramname(info.ID);
     LastFetchedAt = current_time;
+
+/*
+    std::cout << "Execute: current_time: " << current_time << std::endl
+              << "\tsection.ID: " << section.ID << std::endl
+              << "\tComponent.ID: " << component.ID << std::endl
+              << "\t\tinfogroup.ID: " << infogroup.ID<< std::endl
+              << "\t\t\tinfo.ID: " << info.ID<< std::endl;
+*/
 
     if (info.FetchMethod == "Command")
     {
@@ -114,8 +132,11 @@ void Record::Refresh(void)
     }
     else if (info.FetchMethod == "DBUS")
     {
-        std::cout << "DbusParams Are: ";
-        std::cout << info.DbusParams.Service.c_str() << info.DbusParams.ObjectPath.c_str() << info.DbusParams.Interface.c_str() << info.DbusParams.Property.c_str() << std::endl;
+        std::cout << "DbusParams Are: " << std::endl
+                  << "\tService: " << info.DbusParams.Service.c_str() << std::endl
+                  << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
+                  << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
+                  << "\tProperty: " << info.DbusParams.Property.c_str() << std::endl;
 
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
@@ -125,6 +146,11 @@ void Record::Refresh(void)
             if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
                 printf("int64 = %" PRIu64 "\n", *ptr);
+                data.set_paramvalueint64((uint64_t) *ptr);
+            }
+            else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
+            {
+                printf("uint64 = %ld\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
@@ -138,7 +164,7 @@ void Record::Refresh(void)
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
             else {
-                printf("DBus read failed: Unknown numerical variant type\n");
+                std::cout << "DBus read failed: Unknown numerical variant type: " << data.paramtype() << std::endl;
             }
         }
         else
@@ -302,4 +328,34 @@ void Record::Load(void)
 void Record::Print(void)
 {
     //std::cout << "Set last_stored_data.paramValue=" + last_stored_data.paramValueString << std::endl;
+    std::cout << "---------------------------------------" << std::endl;
+    std::cout << "this: " << this << std::endl;
+    std::cout << "section.ID: " << section.ID << std::endl
+              << "\tComponent.ID: " << component.ID << std::endl
+              << "\t\tinfogroup.ID: " << infogroup.ID << std::endl
+              << "\t\t\tCompactionPolicy: " << infogroup.CompactionPolicy << std::endl
+              << "\t\t\tCompactionMethod: " << infogroup.CompactionMethod << std::endl
+              << "\t\t\tCompactionFreqSecs: " << infogroup.CompactionFreqSecs << std::endl
+              << "\t\t\tLastCompactedAt: " << infogroup.LastCompactedAt << std::endl
+              << "\t\t\tCompactionPolicy: " << infogroup.CompactionPolicy << std::endl
+              << "\t\t\tinfo.ID: " << info.ID << std::endl
+              << "\t\t\t\tFetchPolicy: " << info.FetchPolicy << std::endl
+              << "\t\t\t\tFetchMethod: " << info.FetchMethod << std::endl
+              << "\t\t\t\tStorePolicy: " << info.StorePolicy << std::endl
+              << "\t\t\t\tFetchFreqSecs: " << info.FetchFreqSecs << std::endl
+              << "\t\t\t\tStoreFreqSecs: " << info.StoreFreqSecs << std::endl
+              << "\t\t\t\tDataType: " << info.DataType << std::endl
+              << "\t\t\t\tCommandParams.command: " << info.CommandParams.Command << std::endl
+              << "\t\t\t\tCommandParams.WorkingDir: " << info.CommandParams.WorkingDir << std::endl
+              << "\t\t\t\tDbusParams.Service: " << info.DbusParams.Service << std::endl
+              << "\t\t\t\tDbusParams.ObjectPath: " << info.DbusParams.ObjectPath << std::endl
+              << "\t\t\t\tDbusParams.Interface: " << info.DbusParams.Interface << std::endl
+              << "\t\t\t\tDbusParams.Property: " << info.DbusParams.Property << std::endl
+              << "\t\t\t\tDataType: " << info.DataType << std::endl;
+
+    std::cout << "logdir: " << logdir << std::endl;
+    std::cout << "logfile: " << logfile << std::endl;
+    std::cout << "logfilepath: " << logfilepath << std::endl;
+    std::cout << "logsformat: " << logsformat << std::endl;
+    std::cout << "fdrreaderwriter: " << fdrreaderwriter.get() << std::endl;
 }

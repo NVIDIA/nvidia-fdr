@@ -6,7 +6,8 @@ FingerPrint:
 GeneralConfig:
   LogsFormat: JSON  #Choices=JSON|BINARY|DB
   #DatabaseName: "Database.db"   #Only used if logs format is DB
-  LogsBasePath: "/tmp/fdr/"
+  LogsBasePath: &LogsBasePath
+    - "/tmp/fdr/"
 
 GPU: &gpu
   Params:
@@ -113,8 +114,26 @@ NIC: &nic
       CompactionFreqSecs: 20
       CompactionMethod: Average
 
+BOOTEVENT: &bootevent
+  InfoGroups:
+    - ID: bootevent
+      InfoList:
+        - ID: BootEventLog
+          <<: *defaults
+          FetchPolicy: OnBoot
+          StorePolicy: EveryFetch
+          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
+            Command: "./tools/FdrBootCounter.sh $logbasepath; echo ';'; uptime -s"
 
 Sections:
+  - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance
+    Components:
+      - ID: BOOTEVENT
+        <<: *bootevent
+        Params:           #and change parameter values
+          - name: logbasepath
+            value: *LogsBasePath
+
   - ID: GPU
     Components:
       - ID: GPU0

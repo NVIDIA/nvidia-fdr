@@ -27,6 +27,7 @@ private:
 	/* data */
 	std::vector<Record *> RecList;
 
+	std::string birthCertFilePath;
 	int FindAndLoadPlatformProfile(void);
 	int ConvertPPFToStruct(const std::string filename);
 	int ExecuteFingerPrintRules(void);
@@ -37,8 +38,9 @@ public:
 	~FlightDataRecorder_c();
 	void CreateRecords(void);
 	void ReadOldRecords(void);
-	void RefreshAndRecord(void);
+	void RefreshAndRecord(bool skipOnBootRec);
 	void Compactor(void);
+	void CollectAndArchieveBirthCertificate(void);
 };
 
 CommandResult_t exec(const char *cmd)
@@ -80,6 +82,8 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 		std::cout << "Error loading PPF file..Exiting!" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+
+    birthCertFilePath = profile.GeneralConfig.LogsBasePath + "/BirthCertificate.tar";
 
 	// create the records from the PPF file
 	CreateRecords();
@@ -125,7 +129,14 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 			filetoload = "/tmp/fdr_ppf_temp.json";
 			// FIXME: HMC won't have yaml2json
 			std::string yamltojson = "yaml2json " + filename + " > " + filetoload; // eg: yaml2json fdr_ppf_vulcan.yaml > /tmp/fdr_ppf_temp.json
-			exec(yamltojson.c_str());
+			CommandResult_t cmdResult = exec(yamltojson.c_str());
+			if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
+				std::cout << "yaml2json command Failed: " << yamltojson << std::endl;
+				continue;
+			}
+		} else if (filename.substr(filename.find_last_of(".")) != ".json") {
+			std::cout << "skipping non config file: " << filename << std::endl;
+			continue;
 		}
 
 		// convert the given PPF to data structs
@@ -181,7 +192,7 @@ int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
 		// std::cout << "\tcommandresult: "
 		// 		  << "cmdExitstatus: " << cmdResult.cmdExitstatus << std::endl;
 				//   << "; cmdOutput: " << cmdResult.cmdOutput << std::endl;
-		if (cmdResult.cmdExitstatus == FDR_ERR_GENFAILURE) {
+		if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
 			// if any of the command failed, then this is not the PPF file for this platform
 			std::cout << "command Failed: " << CheckRule << std::endl;
 			return FDR_ERR_GENFAILURE;
@@ -219,18 +230,47 @@ void FlightDataRecorder_c::CreateRecords(void)
 	}
 }
 
-void FlightDataRecorder_c::ReadOldRecords(void)
+// This method will creates a snapshot of all Inventory.log, config.log and Versions.log
+// of all the inventory only for the very first time when fdr booted
+void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 {
-	for (auto &rec1 : RecList)
-	{
-		rec1->Load();
+	// 1. execute all the records irrespective of whether birth certificate got created or not
+	RefreshAndRecord(false);
+
+	// 2. create the birth certificate archieve, if not already present
+	if (!(std::filesystem::exists(birthCertFilePath))) {
+		std::string fdrDumpPath = profile.GeneralConfig.LogsBasePath;
+		std::string commandStr = "find " + fdrDumpPath + " | grep -e Inventory.log -e Config.log -e Versions.log | xargs tar -cJf " + birthCertFilePath;
+
+		// std::cout << "tarCmd: " << commandStr << std::endl;
+		CommandResult_t cmdResult = exec(commandStr.c_str());
+		if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
+			std::cout << "tarCmd command Failed: " << commandStr << std::endl;
+			return;
+		}
+		std::cout << "Successfully created Birth certificate: " << birthCertFilePath << std::endl;
+	} else {
+        // std::cout << "exist: " << birthCertFilePath << "..so no need to create Birthcertificate again!!" << std::endl;
 	}
 }
 
-void FlightDataRecorder_c::RefreshAndRecord(void)
+void FlightDataRecorder_c::ReadOldRecords(void)
 {
 	for (auto &rec : RecList)
 	{
+		if (rec->info.FetchPolicy.compare("Periodic") ==0) {
+			rec->Load();
+		}
+	}
+}
+
+void FlightDataRecorder_c::RefreshAndRecord(bool skipOnBootRec)
+{
+	for (auto &rec : RecList)
+	{
+		if (rec->info.FetchPolicy.compare("OnBoot") == 0 && skipOnBootRec == true) {
+			continue;
+		}
 		rec->Refresh();
 		rec->Store();
 	}
@@ -456,10 +496,13 @@ int main(int argc, char *argv[])
 	}
 #endif
 
+	// create the birth certificate archive file, if needed
+	fdr.CollectAndArchieveBirthCertificate();
+
 	while (true)
 	{
 		// Start the core engine of fetching and recording
-		fdr.RefreshAndRecord();
+		fdr.RefreshAndRecord(true);
 
 		// Compactor
 		fdr.Compactor();
