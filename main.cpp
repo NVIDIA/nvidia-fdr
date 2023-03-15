@@ -109,10 +109,6 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		}
     }
 
-	// for (int i=0; i<SupportedPlatforms.size(); i++) {
-	// 	std::cout << i << ": before sorting: SupportedPlatforms: " << SupportedPlatforms[i] << std::endl;
-	// }
-
 	// sort the list of platform files ascendingly
 	sort(SupportedPlatforms.begin(), SupportedPlatforms.end());
 
@@ -121,26 +117,15 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		
 		std::cout << "Trying " + filename << std::endl;
 		
-		std::string filetoload = filename;
-
 		//HACK: If YAML, convert to JSON because yaml-cpp has trouble parsing yaml with anchors and aliases
-		if (filename.substr(filename.find_last_of(".")) == ".yaml")
+		if (filename.substr(filename.find_last_of(".")) != ".yaml")
 		{
-			filetoload = "/tmp/fdr_ppf_temp.json";
-			// FIXME: HMC won't have yaml2json
-			std::string yamltojson = "yaml2json " + filename + " > " + filetoload; // eg: yaml2json fdr_ppf_vulcan.yaml > /tmp/fdr_ppf_temp.json
-			CommandResult_t cmdResult = exec(yamltojson.c_str());
-			if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
-				std::cout << "yaml2json command Failed: " << yamltojson << std::endl;
-				continue;
-			}
-		} else if (filename.substr(filename.find_last_of(".")) != ".json") {
 			std::cout << "skipping non config file: " << filename << std::endl;
 			continue;
 		}
 
 		// convert the given PPF to data structs
-		retVal = ConvertPPFToStruct(filetoload);
+		retVal = ConvertPPFToStruct(filename);
 		if (retVal != FDR_SUCCESS) {
 			std::cout << "ExecuteFingerPrintRules failed...Try another" << std::endl;
 			continue;
@@ -164,14 +149,7 @@ int FlightDataRecorder_c::ConvertPPFToStruct(const std::string filename)
 {
 	// catch any exception while parsing through the yaml or json file
 	try {
-	#if 1
 		YAML::Node PlatformProfile = YAML::LoadFile(filename);
-	#else
-		// HACK: yaml-cpp lib seems to have trouble parsing yaml with anchors and aliases, so need to convert to json first
-		std::string yamltojson = "cat " + filename + " | yaml2json - > " + filename + ".json"; // eg: cat fdr_vulcan.yaml | yaml2json - > fdr_vulcan.yaml.json
-		exec(yamltojson.c_str());
-		YAML::Node PlatformProfile = YAML::LoadFile(filename + ".json"); // NOTE: remember, json is a subset of yaml, so we can still use YAML::LoadFile to load it
-	#endif
 
 		profile.FingerPrint = PlatformProfile["FingerPrint"].as<FingerPrint_t>();
 		profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();

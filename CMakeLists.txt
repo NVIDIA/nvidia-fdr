@@ -16,6 +16,25 @@ include_directories(${Protobuf_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS fdr_logs_schema.proto)
 
+# Remove the aliases in yaml to workaround https://github.com/jbeder/yaml-cpp/issues/41
+# Explicitly specify which PPF to include
+# An alternative way is wildcarding the yaml file
+set(PPFS_SOURCE fdr_ppf_example.yaml fdr_ppf_vulcan.yaml)
+set(coverted_ppfs)
+file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/platforms)
+foreach (_file ${PPFS_SOURCE})
+  set(ppf_src ${CMAKE_CURRENT_SOURCE_DIR}/platforms.in/${_file})
+  set(ppf_conv ${CMAKE_CURRENT_BINARY_DIR}/platforms/${_file})
+  add_custom_command(
+      OUTPUT ${ppf_conv}
+      #COMMAND echo "\tGenerating ${ppf_conv} from ${ppf_src}"
+      COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/tools/yaml-converter.py ${ppf_src} > ${ppf_conv}
+      DEPENDS ${ppf_src}
+    )
+  list(APPEND converted_ppfs ${ppf_conv})
+endforeach()
+add_custom_target(ppfs ALL DEPENDS ${converted_ppfs})
+
 option(YOCTO "Enable Building in Yocto" OFF)
 
 if(NOT YOCTO)
@@ -50,5 +69,5 @@ endif ()
 
 # Install fdr
 install(TARGETS fdr RUNTIME DESTINATION bin)
-install(DIRECTORY platforms DESTINATION /etc/fdr)
+install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/platforms DESTINATION /etc/fdr)
 install(PROGRAMS tools/FdrBootCounter.sh DESTINATION bin)
