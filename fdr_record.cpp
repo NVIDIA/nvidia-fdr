@@ -141,16 +141,11 @@ void Record::Refresh(void)
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
 
-        if (data.paramtype() == "Uint64")
+         if (data.paramtype() == "Uint64")
         {
             if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
-                printf("int64 = %" PRIu64 "\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
-            }
-            else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
-            {
-                printf("uint64 = %ld\n", *ptr);
+                printf("int64 = %ld\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
@@ -158,14 +153,35 @@ void Record::Refresh(void)
                 printf("uint32 = %u\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
+            else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
+            {
+                printf("uint64 = %lu\n", *ptr);
+                data.set_paramvalueint64((uint64_t) *ptr);
+            }
+            else if (auto ptr (std::get_if<uint16_t>(&val)); ptr)
+            {
+                printf("uint16 = %u\n", *ptr);
+                data.set_paramvalueint64((uint64_t) *ptr);
+            }
+            else if (auto ptr (std::get_if<int16_t>(&val)); ptr)
+            {
+                printf("int16 = %d\n", *ptr);
+                data.set_paramvalueint64((uint64_t) *ptr);
+            }
             else if (auto ptr (std::get_if<double>(&val)); ptr)
             {
                 printf("double = %lf\n", *ptr);
                 data.set_paramvalueint64((uint64_t) *ptr);
             }
-            else {
-                std::cout << "DBus read failed: Unknown numerical variant type: " << data.paramtype() << std::endl;
+            else if (auto ptr (std::get_if<bool>(&val)); ptr)
+            {
+                printf("bool = %d\n", *ptr);
+                data.set_paramvalueint64((uint64_t) *ptr);
             }
+            else {
+                printf("DBus read failed: Unknown numerical variant type\n");
+            }
+
         }
         else
         {
