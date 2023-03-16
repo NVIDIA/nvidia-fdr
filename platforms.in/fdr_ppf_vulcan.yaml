@@ -1,119 +1,1027 @@
 FingerPrint:
   Checks:   # all conditions needs to be satisified
-    - "grep -q -i openbmc-phosphor /etc/os-release"
-    - "grep -q -i hgx /etc/os-release"
-    - "grep -q -i VULCAN /etc/os-release"
+      - "grep -q -i openbmc-phosphor /etc/os-release"
+      - "grep -q -i hgx /etc/os-release"
+      - "grep -q -i VULCAN /etc/os-release"
 
 GeneralConfig:
   LogsFormat: JSON  #Choices=JSON|BINARY|DB
   #DatabaseName: "Database.db"   #Only used if logs format is DB
-  LogsBasePath: &LogsBasePath
-    - "/home/root/"
+  LogsBasePath: "/home/root/"
+  DefaultCompactionSensors: &compaction-definition-sensors
+    CompactionFreqSecs: 60 #1 min
+    CompactionPolicy: Periodic
+    CompactionMethod: Average
 
 GPU: &gpu
   Params:
     - name: gpuid
-      value: 0
-  InfoGroups:                         #A Logfile shall be created for each item in this list
-    - ID: Inventory                   #This for eg. will create $LogsBasePath/GPU/GPU0/Inventory.log
+      value: 1
+  InfoGroups: #A Logfile shall be created for each item in this list
+    - ID: Inventory #This eg. will create $LogsBasePath/GPU/GPU0/Inventory.log
       InfoList:
         - &defaults
-          ID: Model                   #Name of the this info/parameter/metric inside the log file
+          ID: VENDOR #Name of the this info/parameter/metric inside the log file
+          DataType: string
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
           FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 5            #Sampling freq in seconds
+          FetchFreqSecs: 3600         #Sampling freq in seconds    #1 hour
           StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
-          CommandParams:              #applicable only when FetchMethod=Command
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
-        - ID: Serial
+          FetchMethod: DBUS
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Manufacturer"
+
+        - ID: BRD-PART-NUM
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=serial"
-        - ID: UUID
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: SERIAL
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=uuid"
-    - ID: Versions
-      InfoList:
-        - ID: Driver
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+
+  
+        - ID: PART-NUM[0]
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=driver_version"
-        - ID: VBIOS
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: PART-NUM[1]
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=vbios_version"
-        - ID: Inforom
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: PART-NUM[2]
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=inforom.oem,inforom.ecc,inforom.pwr"
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: GPU-GUID
+          <<: *defaults
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Common.UUID"
+            Property: "UUID"
+
+        - ID: PCI-DEV-ID
+          <<: *defaults
+          DataType: string
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "Function0DeviceId"
+
+        - ID: HW_REV
+          <<: *defaults
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Revision"
+            Property: "Version"
+
+        - ID: MODEL
+          <<: *defaults
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Model"
+
+        - ID: PCI-VENDOR-ID
+          <<: *defaults
+          DataType: string #Integer - catalog
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "Function0VendorId"
+
+        - ID: BUILD-DATE
+          <<: *defaults
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "BuildDate"
+
     - ID: Config
       InfoList:
-        - ID: PowerManagementEnabled
+
+        - ID: DRVR-VER
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.management"
-        - ID: MIGMode
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory_software/HGX_Driver_GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+        - ID: FW-VER
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=mig.mode.current"
-        - ID: UserConfiguredGraphicsClock
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+        - ID: INFOROM-VER
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.gr"
-        - ID: UserConfiguredMemoryClock
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_InfoROM_GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+        - ID: PWR-LIMIT-REQUESTED
           <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.mem"
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Control.Power.Cap"
+            Property: "PowerCap"
+
+        - ID: PWR-LIMIT-ENFORCED
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Control.Power.Cap"
+            Property: "PowerCap"
+
+        - ID: FW-WP-MODE
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Software.Settings"
+            Property: "WriteProtected"
+
+        - ID: ECC-MODE
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ECCModeEnabled"
+
     - ID: Errors
       InfoList:
-        - ID: L1CacheErrorsCorrected
-          <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l1_cache"
-        - ID: L2CacheErrorsCorrected
-          <<: *defaults
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
-    - ID: Sensors
-      InfoList:
-        - ID: GPUTemp
-          <<: *defaults
-          StorePolicy: EveryFetch
-          DataType: Uint64
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
-        - ID: MemTemp
-          <<: *defaults
-          StorePolicy: EveryFetch
-          DataType: Uint64
-          CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
-      CompactionPolicy: Periodic
-      CompactionFreqSecs: 60
-      CompactionMethod: Average
 
-NIC: &nic
-  Params:
-    - name: nicid
-      value: 0
-  InfoGroups:
-    - ID: Stats
-      InfoList:
-        - ID: RxBytes
+        - ID: NVLINK-ERR-CTR-REPLAY
+          <<: *defaults
+          FetchFreqSecs: 30
           DataType: Uint64
-          FetchPolicy: Periodic
-          FetchFreqSecs: 5
-          FetchMethod: DBUS
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "ReplayErrorsCount"
+
+        - ID: NVLINK-ERR-CTR-REPLAY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "ReplayErrorsCount"
+
+        - ID: NVLINK-ERR-CTR-REPLAY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "ReplayErrorsCount"
+
+        - ID: NVLINK-ERR-CTR-RECOVERY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RecoveryCount"
+
+        - ID: NVLINK-ERR-CTR-RECOVERY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RecoveryCount"
+
+        - ID: NVLINK-ERR-CTR-RECOVERY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RecoveryCount"
+
+        - ID: NVLINK-ERR-CTR-FLIT-CRC
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "FlitCRCCount"
+
+        - ID: NVLINK-ERR-CTR-FLIT-CRC
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "FlitCRCCount"
+
+        - ID: NVLINK-ERR-CTR-FLIT-CRC
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "FlitCRCCount"
+
+        - ID: NVLINK-ERR-CTR-DATA-CRC
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "DataCRCCount"
+        
+        - ID: NVLINK-ERR-CTR-DATA-CRC
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "DataCRCCount"
+
+        - ID: NVLINK-ERR-CTR-DATA-CRC
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "DataCRCCount"
+
+        #TODO: Array of string
+        # - ID: CLK-THROTTLE-REASON
+        #   <<: *defaults
+        #   FetchFreqSecs: 30
+        #   FetchMethod: DBUS
+        #   DbusParams: 
+        #     Service: "xyz.openbmc_project.GpuMgr"
+        #     ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+        #     Interface: "xyz.openbmc_project.State.ProcessorPerformance"
+        #     Property: "ThrottleReason"  
+
+        - ID: ECC-ERR-CTR-CE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ceCount"
+
+        - ID: ECC-ERR-CTR-UCE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ueCount"
+
+        - ID: ROW-REMAPPED-CTR-UE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "com.nvidia.MemoryRowRemapping"
+            Property: "ueRowRemappingCount"
+
+        - ID: ROW-REMAPPED-CTR-CE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "com.nvidia.MemoryRowRemapping"
+            Property: "ceRowRemappingCount"
+
+        - ID: ROW-REMAP-FAILED[0]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "com.nvidia.MemoryRowRemapping"
+            Property: "RowRemappingFailureState"
+
+        - ID: ROW-REMAP-FAILED[1]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "com.nvidia.MemoryRowRemapping"
+            Property: "RowRemappingFailureState"
+
+        - ID: PCI-ERR-CTR-CORR
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ceCount"
+
+        - ID: PCI-ERR-CTR-FATAL
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "feCount"
+      
+        - ID: PCI-ERR-CTR-L0-TO-RECOVERY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "L0ToRecoveryCount"
+
+        - ID: PCI-ERR-CTR-NAK-RECVD
+          <<: *defaults
+          FetchFreqSecs: 30
+
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "NAKReceivedCount"
+
+        - ID: PCI-ERR-CTR-NAK-SENT
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "NAKSentCount"
+
+        - ID: PCI-ERR-CTR-NON-FATAL
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "nonfeCount"
+
+        - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
+          <<: *defaults
+          FetchFreqSecs: 3600
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ReplayRolloverCount"
+
+        - ID: NVLINK-ERR-TRAINING[0]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[1]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[2]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-RUNTIME[0]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RuntimeError"
+            
+        - ID: NVLINK-ERR-RUNTIME[1]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RuntimeError"
+
+        - ID: NVLINK-ERR-RUNTIME[2]
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RuntimeError"
+
+        - ID: ECC-ERR-CTR-CE-CACHE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ceCount"
+
+        - ID: ECC-ERR-CTR-UE-CACHE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ueCount"
+
+
+        - ID: ECC-ERR-CTR-SBE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ceCount"
+
+        - ID: ECC-ERR-CTR-DBE
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ueCount"
+
+        - ID: PCI-ERR-CTR-REPLAY
+          <<: *defaults
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ReplayCount"
+
+
+    - ID: Sensor.Clock
+      InfoList:
+        - ID: CURR-CLK-GFX
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig"
+            Property: "OperatingSpeed"
+
+        - ID: CURR-CLK-MEM
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Dimm"
+            Property: "MemoryConfiguredSpeedInMhz"
+
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Power
+      InfoList:
+
+        - ID: CTR-ENERGY
+          <<: *defaults
+          FetchFreqSecs: 1
           StorePolicy: EveryFetch
-          DbusParams:
-            Service: "org.freedesktop.NetworkManager"
-            ObjectPath: "/org/freedesktop/NetworkManager/Devices/$nicid"
-            Interface: "org.freedesktop.NetworkManager.Device.Statistics"
-            Property: "RxBytes"
-      CompactionPolicy: Periodic
-      CompactionFreqSecs: 20
-      CompactionMethod: Average
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/energy/HGX_GPU_SXM_$gpuid_Energy_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+        - ID: PWR-CURR
+          <<: *defaults
+          FetchFreqSecs: 1
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_GPU_SXM_$gpuid_Power_0" #0,1 -> tempid
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+        - ID: PWR-MEM
+          <<: *defaults
+          FetchFreqSecs: 1
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_GPU_SXM_$gpuid_DRAM_0_Power_0" #0,1 -> tempid
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Thermal
+      InfoList:         
+
+        - ID: TEMP-DIFF-MAX
+          <<: *defaults
+          FetchFreqSecs: 1
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          # SensorType: "Thermal"
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_TEMP_1"
+            Interface: "xyz.openbmc_project.Sensor.Threshold.Warning"
+            Property: "WarningLow"
+
+        - ID: TEMP-GB-GPU[0]
+          <<: *defaults
+          FetchFreqSecs: 1
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_TEMP_0" #0,1 -> tempid
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+        - ID: TEMP-GB-GPU[1]
+          <<: *defaults
+          FetchFreqSecs: 1
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_TEMP_1" #0,1 -> tempid
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+        - ID: TEMP-MEM
+          <<: *defaults
+          FetchFreqSecs: 1 
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_DRAM_0_Temp_0" #0,1 -> tempid
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Voltage
+      InfoList:     
+        - ID: VOLTAGE
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/voltage/HGX_GPU_SXM_$gpuid_Voltage_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Perf
+      InfoList:  
+
+        - ID: NVLINK-THROUGHPUT-TX[0]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-TX[1]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-TX[2]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-RX[0]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-RX[1]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-RX[2]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX[0]
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX[1]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX[2]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX[0]
+          <<: *defaults
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX[1]
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX[2]
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXBytes"
+
+        - ID: UTIL-SM
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig"
+            Property: "Utilization"
+
+        - ID: UTIL-MEM
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Dimm"
+            Property: "Utilization"
+
+        - ID: PCI-LINK-WIDTH-CURR
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "LanesInUse"
+
+        - ID: NVLINK-BANDWIDTH[0]
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "CurrentSpeed"
+
+        - ID: NVLINK-BANDWIDTH[1]
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "CurrentSpeed"
+
+        - ID: NVLINK-BANDWIDTH[2]
+          <<: *defaults
+          FetchFreqSecs: 10
+          DataType: Uint64
+          StorePolicy: EveryFetch
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "CurrentSpeed"
+
+      <<: *compaction-definition-sensors
+
+    - ID: Status
+      InfoList:
+        - ID: NVLINK-STATUS[0]
+          <<: *defaults
+          DataType: string
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkStatus"
+
+        - ID: NVLINK-STATUS[1]
+          <<: *defaults
+          DataType: string
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkStatus"
+
+        - ID: NVLINK-STATUS[2]
+          <<: *defaults
+          DataType: string
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkStatus"
+
+        - ID: ECC-MODE-PENDING
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "PendingECCState"
+
+        - ID: NVLINK-SUBLINK-WIDTH-RX[0]
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXWidth"
+
+        - ID: NVLINK-SUBLINK-WIDTH-RX[1]
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXWidth"
+
+        - ID: NVLINK-SUBLINK-WIDTH-RX[2]
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXWidth"
+
+        - ID: NVLINK-SUBLINK-WIDTH-TX[0]
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXWidth"
+
+        - ID: NVLINK-SUBLINK-WIDTH-TX[1]
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXWidth"
+
+        - ID: NVLINK-SUBLINK-WIDTH-TX[2]
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXWidth"
+
+        - ID: ROW-REMAP-PENDING
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
+            Interface: "com.nvidia.MemoryRowRemapping"
+            Property: "RowRemappingPendingState"
+
+        - ID: PCI-LINK-SPEED-CURR
+          <<: *defaults
+          DataType: string
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "PCIeType"
+
+        - ID: MIG-MODE-CURR
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "com.nvidia.MigMode"
+            Property: "MIGModeEnabled"
+
+        - ID: MIG-MODE-PENDING
+          <<: *defaults
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "com.nvidia.MigMode"
+            Property: "PendingMIGState"
 
 NVSwitch: &nvswitch
   Params:
@@ -122,188 +1030,1199 @@ NVSwitch: &nvswitch
   InfoGroups:
     - ID: Config
       InfoList:
-        - &NvSwitchDefaults
-          ID: FirmwareVersion
+        - &switchDefaults
+          ID: FW-VER
           FetchPolicy: Periodic
-          FetchFreqSecs: 60  #Temp freq
+          FetchFreqSecs: 3600  
           FetchMethod: DBUS
           StorePolicy: OnChange
+          DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/software/NVSwitch$switchidFirmware"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
-        - ID: ShutdownTemperature
-          <<: *NvSwitchDefaults
+
+        - ID: TEMP-THRESH-SHUTDOWN
+          <<: *switchDefaults
           DataType: Uint64
-          FetchFreqSecs: 5
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/sensor/temperature/TEMP_GB_NVS$switchid" #Check this
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_0" 
             Interface: "xyz.openbmc_project.Sensor.Threshold.HardShutdown"
             Property: "HardShutdownHigh"
-        - ID: MaximumOperatingTemperature
-          <<: *NvSwitchDefaults
+
+        - ID: FW-WP-MODE
+          <<: *switchDefaults
           DataType: Uint64
-          FetchFreqSecs: 5
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/sensor/temperature/TEMP_GB_NVS$switchid" #Check this
-            Interface: "xyz.openbmc_project.Sensor.Value"
-            Property: "MaxAllowableValue"
-        - ID: InfoROMVersion
-          <<: *NvSwitchDefaults
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid" 
+            Interface: "xyz.openbmc_project.Software.Settings"
+            Property: "WriteProtected"
+
+        - ID: INFOROM-VER
+          <<: *switchDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/software/NVSwitch$switchidInfoROM"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_InfoROM_NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
+
+        - ID: DRVR-VER
+          <<: *switchDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+        - ID: TYPE
+          <<: *switchDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "Type"
+
+        - ID: PROTOCOL
+          <<: *switchDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "Protocol"
+
+        - ID: FW-REV
+          <<: *switchDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+        - ID: ENABLED
+          <<: *switchDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkState"
+
     - ID: Error
       InfoList:
-        - &NvSwitchErrorDefaults
-          ID: ECCCorrectable
+        - &ErrorDefaults
+          ID: PCI-ERR-CTR-CORR
           DataType: Uint64
           FetchPolicy: Periodic
-          FetchFreqSecs: 5
+          FetchFreqSecs: 30
           FetchMethod: DBUS
           StorePolicy: OnChange
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.Memory.MemoryECC"
-            Property: "ceCount"
-        - ID: ECCUncorrectable
-          <<: *NvSwitchErrorDefaults
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.Memory.MemoryECC"
-            Property: "ueCount"
-        - ID: NonFatal
-          <<: *NvSwitchErrorDefaults
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "nonfeCount"
-        - ID: Fatal
-          <<: *NvSwitchErrorDefaults
+            Property: "ceCount"
+
+        - ID: PCI-ERR-CTR-FATAL
+          <<: *ErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "feCount"
-        - ID: Correctable
-          <<: *NvSwitchErrorDefaults
+
+        - ID: NVLINK-ERR-CTR-REPLAY
+          <<: *ErrorDefaults
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "ReplayErrorsCount"
+
+        - ID: NVLINK-ERR-CTR-RECOVERY
+          <<: *ErrorDefaults
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RecoveryCount"
+
+        - ID: NVLINK-ERR-CTR-FLIT-CRC
+          <<: *ErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "FlitCRCCount"
+
+        - ID: NVLINK-ERR-CTR-DATA-CRC
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "DataCRCCount"
+
+        - ID: NVLINK-ERR-TRAINING
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-RUNTIME
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RuntimeError"
+
+        - ID: ECC-ERR-CTR-CE
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
             Property: "ceCount"
-        - ID: Replay
-          <<: *NvSwitchErrorDefaults
+
+        - ID: ECC-ERR-CTR-UE
+          <<: *ErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Memory.MemoryECC"
+            Property: "ueCount"
+
+        - ID: PCI-ERR-CTR-L0-TO-RECOVERY
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "ReplayCount"
-        - ID: ReplayRollover
-          <<: *NvSwitchErrorDefaults
+            Property: "L0ToRecoveryCount"
+
+        - ID: PCI-ERR-CTR-NAK-RECVD
+          <<: *ErrorDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "ReplayRolloverCount"
-        - ID: NAKsSent
-          <<: *NvSwitchErrorDefaults
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "NAKSentCount"
-        - ID: NAKsReceived
-          <<: *NvSwitchErrorDefaults
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/NVLinkFabric/Switches/NVSwitch$switchid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "NAKReceivedCount"
+
+        - ID: PCI-ERR-CTR-NAK-SENT
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "NAKSentCount"
+            
+        - ID: PCI-ERR-CTR-NAK-SENT
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "NAKSentCount"
+
+        - ID: PCI-ERR-CTR-NON-FATAL
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "nonfeCount"
+      
+        - ID: PCI-ERR-CTR-REPLAY
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ReplayCount"
+
+        - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "ReplayRolloverCount"
+
+        - ID: PCI-ERR-CTR-UNSUPP-REQ
+          <<: *ErrorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "feCount"
+
     - ID: Inventory
       InfoList:
-        - ID: BoardPartNumber
-          <<: *NvSwitchDefaults
+        - &InventoryDefaults
+          ID: GUID
+          DataType: string
+          FetchPolicy: Periodic
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          StorePolicy: OnChange
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
-            Property: "PartNumber"
-        - ID: SerialNumber
-          <<: *NvSwitchDefaults
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
-            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
-            Property: "SerialNumber"
-        - ID: GUID
-          <<: *NvSwitchDefaults
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/NVSwitch$switchid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_0"
             Interface: "xyz.openbmc_project.Common.UUID"
             Property: "UUID"
-    - ID: Status
-      InfoList:
-        - ID: ManagerState
-          <<: *NvSwitchDefaults
-          DataType: Uint64
-          FetchFreqSecs: 30
+
+        - ID: VERSION
+          <<: *InventoryDefaults
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/managers/FabricManager"
-            Interface: "xyz.openbmc_project.State.Decorator.OperationalStatus"
-            Property: "State"
-    - ID: Sensor
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Switch"
+            Property: "Type"
+            
+
+        - ID: DEV-ID
+          <<: *InventoryDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "Function0DeviceId"
+
+        - ID: GUID
+          <<: *InventoryDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Common.UUID"
+            Property: "UUID"
+            
+
+    - ID: Status
       InfoList:
-        - ID: TEMP_GB_NVS
+        - &statusDefaults
+          ID: NVLINK-STATUS-V1
+          DataType: string
+          FetchPolicy: Periodic
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkStatus"
+
+        - ID: NVLINK-STATUS-V2
+          <<: *statusDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkState"
+
+        - ID: LINK-STATUS
+          <<: *statusDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "LinkStatus"
+
+
+
+    - ID: Sensor.Perf
+      InfoList:
+        - &SensorDefaults
+          ID: NVLINK-BANDWIDTH
           DataType: Uint64
           FetchPolicy: Periodic
           FetchFreqSecs: 10
           FetchMethod: DBUS
+          StorePolicy: EveryFetch
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Switch"
+            Property: "CurrentBandwidth"
+
+        - ID: NVLINK-THROUGHPUT-TX
+          <<: *SensorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-RX
+          <<: *SensorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXNoProtocolBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX
+          <<: *SensorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXBytes"
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX
+          <<: *SensorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "RXBytes"
+
+        - ID: PCI-LINK-SPEED-CURR
+          <<: *SensorDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_0/PCIeDevices/NVSwitch_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "PCIeType"
+
+        - ID: PCI-LINK-WIDTH-CURR
+          <<: *SensorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
+            Property: "LanesInUse"
+
+        - ID: SPEED-CURR
+          <<: *SensorDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "CurrentSpeed"
+
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Thermal
+      InfoList:
+        - ID: TEMP-CURR
+          <<: *SensorDefaults
+          FetchFreqSecs: 1
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+
+      <<: *compaction-definition-sensors
+
+Retimer: &retimer
+  Params:
+    - name: retimerid
+      values: 1
+  InfoGroups:
+    - ID: Sensor.Thermal
+      InfoList:
+        - &retimerDefaults
+          ID: TEMP-RETIMER
+          FetchPolicy: Periodic
+          FetchFreqSecs: 1 
+          FetchMethod: DBUS
+          StorePolicy: EveryFetch
+          StoreFreqSecs: 3600
+          DataType: Uint64
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_PCIeRetimer_$retimerid_TEMP_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+          
+      <<: *compaction-definition-sensors
+
+    - ID: Config
+      InfoList:
+        - ID: FW-VER
+          <<: *retimerDefaults
+          FetchFreqSecs: 3600
+          StorePolicy: OnChange
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_PCIeRetimer_$retimerid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+HMC: &hmc
+  Params:
+    - name: hmcid
+      value: 0
+  InfoGroups:
+    - ID: Inventory
+      InfoList:
+        - &hmcDefaults
+          ID: BRD-MFG-DATE[0]
+          DataType: string
+          FetchPolicy: Periodic
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "BuildDate"
+
+        - ID: BRD-MFG-DATE[1]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "BuildDate"
+
+        - ID: BRD-MFG-DATE[2]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "BuildDate"   
+
+        - ID: BRD-SERIAL[0]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+
+        - ID: BRD-SERIAL[1]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+
+        - ID: BRD-SERIAL[2]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+
+        - ID: PRDCT-NAME[0]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Model"
+
+        - ID: PRDCT-NAME[1]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Model"
+
+        - ID: PRDCT-NAME[2]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Model"
+
+        - ID: PRDCT-PART-NUM[0]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: PRDCT-PART-NUM[1]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: PRDCT-PART-NUM[2]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
+
+        - ID: PRDCT-SERIAL[0]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+      
+        - ID: PRDCT-SERIAL[2]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+
+        - ID: PRDCT-SERIAL[3]
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"
+
+    - ID: Config
+      InfoList:
+        - ID: FW-VER
+          <<: *hmcDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.Software.BMC.Inventory"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_BMC_0"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+
+FPGA: &fpga
+  Params:
+    - name: fpgaid
+      value: 0
+  InfoGroups:
+    - ID: Config
+      InfoList:
+        - &fpgaDefaults
+          ID: FW-VER
+          DataType: string
+          FetchPolicy: Periodic
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/FPGA_$fpgaid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
+
+    - ID: Inventory
+      InfoList:
+        - ID: VENDOR
+          <<: *fpgaDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/FPGA_$fpgaid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Manufacturer"
+
+    - ID: Sensor.Thermal
+      InfoList:
+        - ID: TEMP-GB-FPGA
+          <<: *fpgaDefaults
+          DataType: Uint64
+          FetchFreqSecs: 1 
           StorePolicy: Periodic
           StoreFreqSecs: 3600
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/sensors/temperature/TEMP_GB_NVS$switchid"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_FPGA_$fpgaid_TEMP_0"
             Interface: "xyz.openbmc_project.Sensor.Value"
             Property: "Value"
 
-BOOTEVENT: &bootevent
+      <<: *compaction-definition-sensors
+
+Baseboard: &baseboard
+  Params:
+    - name: baseboard
+      values: 0
   InfoGroups:
-    - ID: bootevent
+    - ID: Config
       InfoList:
-        - ID: BootEventLog
-          <<: *defaults
-          FetchPolicy: OnBoot
-          StorePolicy: EveryFetch
-          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
-            Command: "./tools/FdrBootCounter.sh $logbasepath; echo ';'; uptime -s"
+        - &baseboardDefaults
+          ID: EEPROM-WP-STATUS
+          FetchPolicy: Periodic
+          FetchFreqSecs: 3600  
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DataType: Uint64
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
+            Interface: "xyz.openbmc_project.Software.Settings"
+            Property: "WriteProtectedControl"
+
+        - ID: TEMP-THRESH-ALERT
+          <<: *baseboardDefaults
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_Chassis_$baseboardid_PCB_0_Temp_0"
+            Interface: "xyz.openbmc_project.Sensor.Threshold.Critical"
+            Property: "CriticalHigh"
+
+    - ID: Inventory
+      InfoList:
+        - ID: CHAS-TYPE
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Chassis"
+            Property: "Type"            
+
+        - ID: CHAS-PART-NUM
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Chassis"
+            Property: "Type"         
+
+        - ID: CHAS-SERIAL
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"    
+
+        - ID: BRD-MFG-DATE
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "BuildDate"    
+
+        - ID: BRD-PRDCT-NAME
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Model"   
+
+        - ID: BRD-SERIAL
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber"   
+
+        - ID: BRD-PART-NUM
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"  
+
+        - ID: PRDCT-NAME
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Model"  
+
+        - ID: PRDCT-PART-NUM
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber" 
+
+        - ID: PRDCT-VER
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version" 
+
+        - ID: PRDCT-SERIAL
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber" 
+
+        - ID: PARTNUM
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber" 
+
+        - ID: HW-REV
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version" 
+
+        - ID: SERIAL
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "SerialNumber" 
+
+        - ID: VENDOR
+          <<: *baseboardDefaults
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0"
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "Manufacturer" 
+
+
+    - ID: Sensor.Thermal
+      InfoList:
+        - ID: TEMP-PCB-CURR
+          <<: *baseboardDefaults
+          DataType: Uint64
+          StorePolicy: Periodic
+          StoreFreqSecs: 3600
+          FetchFreqSecs: 1
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_Chassis_$baseboardid_PCB_0_Temp_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"   
+
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Pressure
+      InfoList:
+        - ID: ALT-PRESSURE
+          <<: *baseboardDefaults
+          DataType: Uint64
+          FetchFreqSecs: 10
+          StoreFreqSecs: 3600
+          StorePolicy: Periodic
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/altitude/HGX_Chassis_$baseboardid_AltitudePressure_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"  
+
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Power
+      InfoList:
+        - ID: ALT-PRESSURE
+          <<: *baseboardDefaults
+          DataType: Uint64
+          FetchFreqSecs: 1
+          StoreFreqSecs: 3600
+          StorePolicy: Periodic
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_Chassis_$baseboardid_HSC_0_Power_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"  
+
+      <<: *compaction-definition-sensors
+
+    - ID: Status
+      InfoList:
+        - ID: ALT-PRESSURE
+          <<: *baseboardDefaults
+          DataType: Uint64
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
+            Interface: "xyz.openbmc_project.Software.Settings"
+            Property: "WriteProtected"  
+
+    # TODO
+    # - ID: Error
+    #   InfoList:
+    #     - ID: REDFISH-EVENT-LOG
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 30
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: I2C1-INT-INFO-ARG00
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: I2C1-INT-INFO-ARG80
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"        
+
+    #     - ID: I2C1-INT-INFO-ARG81
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: I2C1-INT-INFO-ARG82
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"    
+
+    #     - ID: I2C1-INT-INFO-ARG83
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"    
+
+    #     - ID: I2C1-INT-INFO-ARG84
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"   
+
+    #     - ID: I2C1-INT-INFO-ARG85
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"   
+
+    #     - ID: I2C1-INT-INFO-ARG86
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"   
+
+    #     - ID: I2C1-INT-INFO-ARG80
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"  
+
+    #     - ID: I2C1-INT-INFO-ARG81
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: I2C1-INT-INFO-ARG82
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"     
+
+    #     - ID: I2C1-INT-INFO-ARG83
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"    
+
+    #     - ID: I2C1-INT-INFO-ARG84
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"
+
+    #     - ID: I2C1-INT-INFO-ARG85
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: I2C1-INT-INFO-ARG86
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: I2C1-INT-INFO-ARG87
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"   
+
+    #     - ID: I2C1-INT-INFO-ARG88
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"  
+
+    #     - ID: I2C1-INT-INFO-ARG89
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"    
+
+    #     - ID: I2C1-INT-INFO-ARG8A
+    #       <<: *baseboardDefaults
+    #       FetchFreqSecs: 60
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects"
+
+
+HSC: &hsc
+  Params:
+    - name: hsc
+      values: 0
+  InfoGroups:
+    - ID: Sensor.Thermal
+      InfoList:
+        - &hscDefaults
+          ID: TEMP-GB-HSC
+          FetchPolicy: Periodic
+          FetchFreqSecs: 1
+          FetchMethod: DBUS
+          StorePolicy: Periodic
+          StoreFreqSecs: 3600
+          DataType: Uint64
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_HSC_$hscid_Temp_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value" 
+            
+      <<: *compaction-definition-sensors
+
+    - ID: Sensor.Power
+      InfoList:
+        - ID: PWR-GB-HSC
+          <<: *hscDefaults
+          FetchFreqSecs: 1
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_Chassis_0_HSC_$hscid_Power_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value" 
+
+      <<: *compaction-definition-sensors
+
+    # TODO
+    # - ID: Error
+    #   InfoList:
+    #     - &hscDefaults
+    #       ID: HSC-FAULT-REG-ARG80
+    #       FetchFreqSecs: 30
+    #       FetchPolicy: Periodic
+    #       StorePolicy: OnChange
+    #       DataType: string
+    #       FetchMethod: DBUS
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG81
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG82
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG83
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG84
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG85
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG86
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG87
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG88
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG89
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG8A
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+    #     - ID: HSC-FAULT-REG-ARG8B
+    #       <<: *hscDefaults
+    #       DbusParams:
+    #         Service: "xyz.openbmc_project.Logging"
+    #         ObjectPath: "/xyz/openbmc_project/logging"
+    #         Interface: "org.freedesktop.DBus.ObjectManager"
+    #         Property: "GetManagedObjects" 
+
+
+
+PCIeSwitch: &pcieswitch
+  Params:
+    - name: pcieswitch
+      values: 0
+  InfoGroups:
+    - ID: Config
+      InfoList:
+        - &pcieswitchDefaults
+          ID: FW-VER
+          FetchPolicy: Periodic
+          FetchFreqSecs: 3600  
+          FetchMethod: DBUS
+          StorePolicy: OnChange
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/software/HGX_FW_PCIeSwitch_$pcieswitchid"
+            Interface: "xyz.openbmc_project.Software.Version"
+            Property: "Version"
 
 Sections:
-  - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance
-    Components:
-      - ID: BOOTEVENT
-        <<: *bootevent
-        Params:           #and change parameter values
-          - name: logbasepath
-            value: *LogsBasePath
-
   - ID: GPU
     Components:
-      - ID: GPU0
-        <<: *gpu          #Inherit all definitions from template
-        Params:           #and change parameter values
-          - name: gpuid
-            value: 0
       - ID: GPU1
         <<: *gpu
         Params:
@@ -319,35 +2238,190 @@ Sections:
         Params:
           - name: gpuid
             value: 3
-  - ID: NIC
-    Components:
-      - ID: NIC1
-        <<: *nic
+      - ID: GPU4
+        <<: *gpu
         Params:
-          - name: nicid
-            value: 1
+          - name: gpuid
+            value: 4
+      - ID: GPU5
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 5
+      - ID: GPU6
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 6
+      - ID: GPU7
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 7
+      - ID: GPU8
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 8
+
   - ID: NVSwitch
     Components:
       - ID: NVSwitch0
         <<: *nvswitch
         Params:
-          - name: switchid
+          - name: nvswitchid
             value: 0
       - ID: NVSwitch1
         <<: *nvswitch
         Params:
-          - name: switchid
+          - name: nvswitchid
             value: 1
       - ID: NVSwitch2
         <<: *nvswitch
         Params:
-          - name: switchid
+          - name: nvswitchid
             value: 2
       - ID: NVSwitch3
         <<: *nvswitch
         Params:
-          - name: switchid
+          - name: nvswitchid
             value: 3
+
+  - ID: Retimer
+    Components:
+      - ID: Retimer0
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 0
+
+      - ID: Retimer1
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 1
+
+      - ID: Retimer2
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 2
+
+      - ID: Retimer3
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 3
+
+      - ID: Retimer4
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 4
+
+      - ID: Retimer5
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 5
+
+      - ID: Retimer6
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 6
+
+      - ID: Retimer7
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 7
+
+  - ID: FPGA
+    Components:
+      - ID: FPGA0
+        <<: *fpga
+        Params:
+          - name: fpgaid
+            value: 0
+
+  - ID: HSC
+    Components:
+      - ID: HSC0
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 0
+
+      - ID: HSC1
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 1
+
+      - ID: HSC2
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 2
+
+      - ID: HSC3
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 3
+
+      - ID: HSC4
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 4
+
+      - ID: HSC5
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 5
+
+      - ID: HSC6
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 6
+
+      - ID: HSC7
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 7
+
+      - ID: HSC8
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 8
+
+      - ID: HSC9
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 9
+
+  - ID: Baseboard
+    Components:
+      - ID: Baseboard0
+        <<: *baseboard
+        Params: 
+          - name: baseboardid
+            value: 0
+
+  - ID: PCIeSwitch
+    Components:
+      - ID: PCIeSwitch0
+        <<: *pcieswitch
+        Params: 
+          - name: pcieswitchid
+            value: 0
 
 #NVSwitch:
 #PCIeSwitch:
