@@ -7,7 +7,8 @@ FingerPrint:
 GeneralConfig:
   LogsFormat: JSON  #Choices=JSON|BINARY|DB
   #DatabaseName: "Database.db"   #Only used if logs format is DB
-  LogsBasePath: "/home/root/"
+  LogsBasePath: &LogsBasePath
+    - "/home/root/"
   DefaultCompactionSensors: &compaction-definition-sensors
     CompactionFreqSecs: 60 #1 min
     CompactionPolicy: Periodic
@@ -2094,21 +2095,23 @@ HSC: &hsc
 
       <<: *compaction-definition-sensors
 
-    # TODO
-    # - ID: Error
-    #   InfoList:
-    #     - &hscDefaults
-    #       ID: HSC-FAULT-REG-ARG80
-    #       FetchFreqSecs: 30
-    #       FetchPolicy: Periodic
-    #       StorePolicy: OnChange
-    #       DataType: string
-    #       FetchMethod: DBUS
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+    #TODO
+    - ID: Error
+      InfoList:
+        - &hscDefaultsError
+          ID: HSC-FAULT-REG-ARG80
+          FetchFreqSecs: 3600
+          FetchPolicy: Periodic
+          StorePolicy: OnChange
+          DataType: string
+          FetchMethod: DBUS-DGD
+          DbusDGDParams:
+            Service: "xyz.openbmc_project.Logging"
+            ObjectPath: "/xyz/openbmc_project/logging"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            DevId: 1
+            Property: "hsc.device.alert"
+
 
     #     - ID: HSC-FAULT-REG-ARG81
     #       <<: *hscDefaults
@@ -2220,7 +2223,25 @@ PCIeSwitch: &pcieswitch
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
 
+BOOTEVENT: &bootevent
+  InfoGroups:
+    - ID: bootevent
+      InfoList:
+        - ID: BootEventLog
+          FetchPolicy: OnBoot
+          FetchFreqSecs: 5
+          StorePolicy: EveryFetch
+          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
+            Command: "./tools/FdrBootCounter.sh $logbasepath; echo ';'; uptime -s"
+
 Sections:
+  - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance
+    Components:
+      - ID: BOOTEVENT
+        <<: *bootevent
+        Params:           #and change parameter values
+          - name: logbasepath
+            value: *LogsBasePath
   - ID: GPU
     Components:
       - ID: GPU1
