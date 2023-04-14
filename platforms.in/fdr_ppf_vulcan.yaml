@@ -23,9 +23,10 @@ GPU: &gpu
       InfoList:
         - &defaults
           ID: VENDOR #Name of the this info/parameter/metric inside the log file
+          ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: string
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
+          #FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
           FetchFreqSecs: 3600         #Sampling freq in seconds    #1 hour
           StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
           FetchMethod: DBUS
@@ -37,6 +38,7 @@ GPU: &gpu
 
         - ID: BRD-PART-NUM
           <<: *defaults
+          ParamID: 1
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -45,6 +47,7 @@ GPU: &gpu
 
         - ID: SERIAL
           <<: *defaults
+          ParamID: 2
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0"
@@ -54,6 +57,7 @@ GPU: &gpu
   
         - ID: PART-NUM[0]
           <<: *defaults
+          ParamID: 3
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
@@ -62,6 +66,7 @@ GPU: &gpu
 
         - ID: PART-NUM[1]
           <<: *defaults
+          ParamID: 4
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
@@ -70,6 +75,7 @@ GPU: &gpu
 
         - ID: PART-NUM[2]
           <<: *defaults
+          ParamID: 5
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
@@ -78,6 +84,7 @@ GPU: &gpu
 
         - ID: GPU-GUID
           <<: *defaults
+          ParamID: 6
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -86,6 +93,7 @@ GPU: &gpu
 
         - ID: PCI-DEV-ID
           <<: *defaults
+          ParamID: 7
           DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -95,6 +103,7 @@ GPU: &gpu
 
         - ID: HW_REV
           <<: *defaults
+          ParamID: 8
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -103,6 +112,7 @@ GPU: &gpu
 
         - ID: MODEL
           <<: *defaults
+          ParamID: 9
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -111,6 +121,7 @@ GPU: &gpu
 
         - ID: PCI-VENDOR-ID
           <<: *defaults
+          ParamID: 10
           DataType: string #Integer - catalog
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -120,6 +131,7 @@ GPU: &gpu
 
         - ID: BUILD-DATE
           <<: *defaults
+          ParamID: 11
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/Assembly1"
@@ -131,6 +143,7 @@ GPU: &gpu
 
         - ID: DRVR-VER
           <<: *defaults
+          ParamID: 0
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory_software/HGX_Driver_GPU_SXM_$gpuid"
@@ -139,6 +152,7 @@ GPU: &gpu
 
         - ID: FW-VER
           <<: *defaults
+          ParamID: 1
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -147,6 +161,7 @@ GPU: &gpu
 
         - ID: INFOROM-VER
           <<: *defaults
+          ParamID: 2
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/HGX_InfoROM_GPU_SXM_$gpuid"
@@ -155,6 +170,7 @@ GPU: &gpu
 
         - ID: PWR-LIMIT-REQUESTED
           <<: *defaults
+          ParamID: 3
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -164,6 +180,7 @@ GPU: &gpu
 
         - ID: PWR-LIMIT-ENFORCED
           <<: *defaults
+          ParamID: 4
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -173,6 +190,7 @@ GPU: &gpu
 
         - ID: FW-WP-MODE
           <<: *defaults
+          ParamID: 5
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -182,6 +200,7 @@ GPU: &gpu
 
         - ID: ECC-MODE
           <<: *defaults
+          ParamID: 6
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -194,6 +213,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-REPLAY
           <<: *defaults
+          ParamID: 0
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -204,6 +224,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-REPLAY
           <<: *defaults
+          ParamID: 1
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -214,6 +235,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-REPLAY
           <<: *defaults
+          ParamID: 2
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -224,6 +246,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-RECOVERY
           <<: *defaults
+          ParamID: 3
           FetchFreqSecs: 30
           DataType: Uint64
 
@@ -235,6 +258,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-RECOVERY
           <<: *defaults
+          ParamID: 4
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -245,6 +269,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-RECOVERY
           <<: *defaults
+          ParamID: 5
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -255,6 +280,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-FLIT-CRC
           <<: *defaults
+          ParamID: 6
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -265,6 +291,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-FLIT-CRC
           <<: *defaults
+          ParamID: 7
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -275,6 +302,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-FLIT-CRC
           <<: *defaults
+          ParamID: 8
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -285,6 +313,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-DATA-CRC
           <<: *defaults
+          ParamID: 9
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -295,6 +324,7 @@ GPU: &gpu
         
         - ID: NVLINK-ERR-CTR-DATA-CRC
           <<: *defaults
+          ParamID: 10
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -305,6 +335,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-CTR-DATA-CRC
           <<: *defaults
+          ParamID: 11
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -326,6 +357,7 @@ GPU: &gpu
 
         - ID: ECC-ERR-CTR-CE
           <<: *defaults
+          ParamID: 12
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -336,6 +368,7 @@ GPU: &gpu
 
         - ID: ECC-ERR-CTR-UCE
           <<: *defaults
+          ParamID: 13
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -346,6 +379,7 @@ GPU: &gpu
 
         - ID: ROW-REMAPPED-CTR-UE
           <<: *defaults
+          ParamID: 14
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -356,6 +390,7 @@ GPU: &gpu
 
         - ID: ROW-REMAPPED-CTR-CE
           <<: *defaults
+          ParamID: 15
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -366,6 +401,7 @@ GPU: &gpu
 
         - ID: ROW-REMAP-FAILED[0]
           <<: *defaults
+          ParamID: 16
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -376,6 +412,7 @@ GPU: &gpu
 
         - ID: ROW-REMAP-FAILED[1]
           <<: *defaults
+          ParamID: 17
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -386,6 +423,7 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-CORR
           <<: *defaults
+          ParamID: 18
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -396,6 +434,7 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-FATAL
           <<: *defaults
+          ParamID: 19
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -406,6 +445,7 @@ GPU: &gpu
       
         - ID: PCI-ERR-CTR-L0-TO-RECOVERY
           <<: *defaults
+          ParamID: 20
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -416,8 +456,8 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-NAK-RECVD
           <<: *defaults
+          ParamID: 21
           FetchFreqSecs: 30
-
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -427,6 +467,7 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-NAK-SENT
           <<: *defaults
+          ParamID: 22
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -437,6 +478,7 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-NON-FATAL
           <<: *defaults
+          ParamID: 23
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -447,6 +489,7 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
           <<: *defaults
+          ParamID: 24
           FetchFreqSecs: 3600
           DataType: Uint64
           DbusParams: 
@@ -457,6 +500,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-TRAINING[0]
           <<: *defaults
+          ParamID: 25
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -467,6 +511,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-TRAINING[1]
           <<: *defaults
+          ParamID: 26
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -477,6 +522,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-TRAINING[2]
           <<: *defaults
+          ParamID: 27
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -487,6 +533,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-RUNTIME[0]
           <<: *defaults
+          ParamID: 28
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -497,6 +544,7 @@ GPU: &gpu
             
         - ID: NVLINK-ERR-RUNTIME[1]
           <<: *defaults
+          ParamID: 29
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -507,6 +555,7 @@ GPU: &gpu
 
         - ID: NVLINK-ERR-RUNTIME[2]
           <<: *defaults
+          ParamID: 30
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -517,6 +566,7 @@ GPU: &gpu
 
         - ID: ECC-ERR-CTR-CE-CACHE
           <<: *defaults
+          ParamID: 31
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -527,6 +577,7 @@ GPU: &gpu
 
         - ID: ECC-ERR-CTR-UE-CACHE
           <<: *defaults
+          ParamID: 32
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -538,6 +589,7 @@ GPU: &gpu
 
         - ID: ECC-ERR-CTR-SBE
           <<: *defaults
+          ParamID: 33
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -548,6 +600,7 @@ GPU: &gpu
 
         - ID: ECC-ERR-CTR-DBE
           <<: *defaults
+          ParamID: 34
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -558,6 +611,7 @@ GPU: &gpu
 
         - ID: PCI-ERR-CTR-REPLAY
           <<: *defaults
+          ParamID: 35
           FetchFreqSecs: 30
           DataType: Uint64
           DbusParams: 
@@ -571,6 +625,7 @@ GPU: &gpu
       InfoList:
         - ID: CURR-CLK-GFX
           <<: *defaults
+          ParamID: 0
           FetchFreqSecs: 10
           DataType: Uint64
           DbusParams: 
@@ -581,6 +636,7 @@ GPU: &gpu
 
         - ID: CURR-CLK-MEM
           <<: *defaults
+          ParamID: 1
           FetchFreqSecs: 10
           DataType: Uint64
           DbusParams: 
@@ -596,6 +652,7 @@ GPU: &gpu
 
         - ID: CTR-ENERGY
           <<: *defaults
+          ParamID: 0
           FetchFreqSecs: 1
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -607,6 +664,7 @@ GPU: &gpu
 
         - ID: PWR-CURR
           <<: *defaults
+          ParamID: 1
           FetchFreqSecs: 1
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -618,6 +676,7 @@ GPU: &gpu
 
         - ID: PWR-MEM
           <<: *defaults
+          ParamID: 2
           FetchFreqSecs: 1
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -633,6 +692,7 @@ GPU: &gpu
 
         - ID: TEMP-DIFF-MAX
           <<: *defaults
+          ParamID: 0
           FetchFreqSecs: 1
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -645,6 +705,7 @@ GPU: &gpu
 
         - ID: TEMP-GB-GPU[0]
           <<: *defaults
+          ParamID: 1
           FetchFreqSecs: 1
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -656,6 +717,7 @@ GPU: &gpu
 
         - ID: TEMP-GB-GPU[1]
           <<: *defaults
+          ParamID: 2
           FetchFreqSecs: 1
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -667,6 +729,7 @@ GPU: &gpu
 
         - ID: TEMP-MEM
           <<: *defaults
+          ParamID: 3
           FetchFreqSecs: 1 
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -682,6 +745,7 @@ GPU: &gpu
       InfoList:     
         - ID: VOLTAGE
           <<: *defaults
+          ParamID: 0
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -698,6 +762,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-TX[0]
           <<: *defaults
+          ParamID: 0
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -709,6 +774,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-TX[1]
           <<: *defaults
+          ParamID: 1
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -720,6 +786,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-TX[2]
           <<: *defaults
+          ParamID: 2
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -731,6 +798,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-RX[0]
           <<: *defaults
+          ParamID: 3
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -742,6 +810,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-RX[1]
           <<: *defaults
+          ParamID: 4
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -753,6 +822,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-RX[2]
           <<: *defaults
+          ParamID: 5
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -764,6 +834,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX[0]
           <<: *defaults
+          ParamID: 6
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -775,6 +846,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX[1]
           <<: *defaults
+          ParamID: 7
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -786,6 +858,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX[2]
           <<: *defaults
+          ParamID: 8
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -797,6 +870,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX[0]
           <<: *defaults
+          ParamID: 9
           FetchFreqSecs: 10
           StorePolicy: EveryFetch
           DataType: Uint64
@@ -808,6 +882,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX[1]
           <<: *defaults
+          ParamID: 10
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -819,6 +894,7 @@ GPU: &gpu
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX[2]
           <<: *defaults
+          ParamID: 11
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -830,6 +906,7 @@ GPU: &gpu
 
         - ID: UTIL-SM
           <<: *defaults
+          ParamID: 12
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -841,6 +918,7 @@ GPU: &gpu
 
         - ID: UTIL-MEM
           <<: *defaults
+          ParamID: 13
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -852,6 +930,7 @@ GPU: &gpu
 
         - ID: PCI-LINK-WIDTH-CURR
           <<: *defaults
+          ParamID: 14
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -863,6 +942,7 @@ GPU: &gpu
 
         - ID: NVLINK-BANDWIDTH[0]
           <<: *defaults
+          ParamID: 15
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -874,6 +954,7 @@ GPU: &gpu
 
         - ID: NVLINK-BANDWIDTH[1]
           <<: *defaults
+          ParamID: 16
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -885,6 +966,7 @@ GPU: &gpu
 
         - ID: NVLINK-BANDWIDTH[2]
           <<: *defaults
+          ParamID: 17
           FetchFreqSecs: 10
           DataType: Uint64
           StorePolicy: EveryFetch
@@ -900,6 +982,7 @@ GPU: &gpu
       InfoList:
         - ID: NVLINK-STATUS[0]
           <<: *defaults
+          ParamID: 0
           DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -909,6 +992,7 @@ GPU: &gpu
 
         - ID: NVLINK-STATUS[1]
           <<: *defaults
+          ParamID: 1
           DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -918,6 +1002,7 @@ GPU: &gpu
 
         - ID: NVLINK-STATUS[2]
           <<: *defaults
+          ParamID: 2
           DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -927,6 +1012,7 @@ GPU: &gpu
 
         - ID: ECC-MODE-PENDING
           <<: *defaults
+          ParamID: 3
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -936,6 +1022,7 @@ GPU: &gpu
 
         - ID: NVLINK-SUBLINK-WIDTH-RX[0]
           <<: *defaults
+          ParamID: 4
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -945,6 +1032,7 @@ GPU: &gpu
 
         - ID: NVLINK-SUBLINK-WIDTH-RX[1]
           <<: *defaults
+          ParamID: 5
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -954,6 +1042,7 @@ GPU: &gpu
 
         - ID: NVLINK-SUBLINK-WIDTH-RX[2]
           <<: *defaults
+          ParamID: 6
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -963,6 +1052,7 @@ GPU: &gpu
 
         - ID: NVLINK-SUBLINK-WIDTH-TX[0]
           <<: *defaults
+          ParamID: 7
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -972,6 +1062,7 @@ GPU: &gpu
 
         - ID: NVLINK-SUBLINK-WIDTH-TX[1]
           <<: *defaults
+          ParamID: 8
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -981,6 +1072,7 @@ GPU: &gpu
 
         - ID: NVLINK-SUBLINK-WIDTH-TX[2]
           <<: *defaults
+          ParamID: 9
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -990,6 +1082,7 @@ GPU: &gpu
 
         - ID: ROW-REMAP-PENDING
           <<: *defaults
+          ParamID: 10
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -999,6 +1092,7 @@ GPU: &gpu
 
         - ID: PCI-LINK-SPEED-CURR
           <<: *defaults
+          ParamID: 11
           DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1008,6 +1102,7 @@ GPU: &gpu
 
         - ID: MIG-MODE-CURR
           <<: *defaults
+          ParamID: 12
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1017,6 +1112,7 @@ GPU: &gpu
 
         - ID: MIG-MODE-PENDING
           <<: *defaults
+          ParamID: 13
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1033,6 +1129,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &switchDefaults
           ID: FW-VER
+          ParamID: 0
           FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           FetchMethod: DBUS
@@ -1046,6 +1143,7 @@ NVSwitch: &nvswitch
 
         - ID: TEMP-THRESH-SHUTDOWN
           <<: *switchDefaults
+          ParamID: 1
           DataType: Uint64
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1055,6 +1153,7 @@ NVSwitch: &nvswitch
 
         - ID: FW-WP-MODE
           <<: *switchDefaults
+          ParamID: 2
           DataType: Uint64
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1064,6 +1163,7 @@ NVSwitch: &nvswitch
 
         - ID: INFOROM-VER
           <<: *switchDefaults
+          ParamID: 3
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/HGX_InfoROM_NVSwitch_$nvswitchid"
@@ -1072,6 +1172,7 @@ NVSwitch: &nvswitch
 
         - ID: DRVR-VER
           <<: *switchDefaults
+          ParamID: 4
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid"
@@ -1080,6 +1181,7 @@ NVSwitch: &nvswitch
 
         - ID: TYPE
           <<: *switchDefaults
+          ParamID: 5
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1089,6 +1191,7 @@ NVSwitch: &nvswitch
 
         - ID: PROTOCOL
           <<: *switchDefaults
+          ParamID: 6
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1098,6 +1201,7 @@ NVSwitch: &nvswitch
 
         - ID: FW-REV
           <<: *switchDefaults
+          ParamID: 7
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1106,6 +1210,7 @@ NVSwitch: &nvswitch
 
         - ID: ENABLED
           <<: *switchDefaults
+          ParamID: 8
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1117,6 +1222,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &ErrorDefaults
           ID: PCI-ERR-CTR-CORR
+          ParamID: 0
           DataType: Uint64
           FetchPolicy: Periodic
           FetchFreqSecs: 30
@@ -1130,6 +1236,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-FATAL
           <<: *ErrorDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1138,6 +1245,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-ERR-CTR-REPLAY
           <<: *ErrorDefaults
+          ParamID: 2
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1146,6 +1254,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-ERR-CTR-RECOVERY
           <<: *ErrorDefaults
+          ParamID: 3
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1154,6 +1263,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-ERR-CTR-FLIT-CRC
           <<: *ErrorDefaults
+          ParamID: 4
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1162,6 +1272,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-ERR-CTR-DATA-CRC
           <<: *ErrorDefaults
+          ParamID: 5
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1170,6 +1281,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-ERR-TRAINING
           <<: *ErrorDefaults
+          ParamID: 6
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1178,6 +1290,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-ERR-RUNTIME
           <<: *ErrorDefaults
+          ParamID: 7
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1186,6 +1299,7 @@ NVSwitch: &nvswitch
 
         - ID: ECC-ERR-CTR-CE
           <<: *ErrorDefaults
+          ParamID: 8
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1194,6 +1308,7 @@ NVSwitch: &nvswitch
 
         - ID: ECC-ERR-CTR-UE
           <<: *ErrorDefaults
+          ParamID: 9
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1202,6 +1317,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-L0-TO-RECOVERY
           <<: *ErrorDefaults
+          ParamID: 10
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1210,6 +1326,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-NAK-RECVD
           <<: *ErrorDefaults
+          ParamID: 11
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1218,6 +1335,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-NAK-SENT
           <<: *ErrorDefaults
+          ParamID: 12
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1226,6 +1344,7 @@ NVSwitch: &nvswitch
             
         - ID: PCI-ERR-CTR-NAK-SENT
           <<: *ErrorDefaults
+          ParamID: 13
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1234,6 +1353,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-NON-FATAL
           <<: *ErrorDefaults
+          ParamID: 14
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1242,6 +1362,7 @@ NVSwitch: &nvswitch
       
         - ID: PCI-ERR-CTR-REPLAY
           <<: *ErrorDefaults
+          ParamID: 15
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1250,6 +1371,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
           <<: *ErrorDefaults
+          ParamID: 16
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1258,6 +1380,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-UNSUPP-REQ
           <<: *ErrorDefaults
+          ParamID: 17
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1268,6 +1391,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &InventoryDefaults
           ID: GUID
+          ParamID: 0
           DataType: string
           FetchPolicy: Periodic
           FetchFreqSecs: 3600
@@ -1281,6 +1405,7 @@ NVSwitch: &nvswitch
 
         - ID: VERSION
           <<: *InventoryDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1290,6 +1415,7 @@ NVSwitch: &nvswitch
 
         - ID: DEV-ID
           <<: *InventoryDefaults
+          ParamID: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
@@ -1298,6 +1424,7 @@ NVSwitch: &nvswitch
 
         - ID: GUID
           <<: *InventoryDefaults
+          ParamID: 3
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
@@ -1309,6 +1436,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &statusDefaults
           ID: NVLINK-STATUS-V1
+          ParamID: 0
           DataType: string
           FetchPolicy: Periodic
           FetchFreqSecs: 3600
@@ -1322,6 +1450,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-STATUS-V2
           <<: *statusDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1330,6 +1459,7 @@ NVSwitch: &nvswitch
 
         - ID: LINK-STATUS
           <<: *statusDefaults
+          ParamID: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1342,6 +1472,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &SensorDefaults
           ID: NVLINK-BANDWIDTH
+          ParamID: 0
           DataType: Uint64
           FetchPolicy: Periodic
           FetchFreqSecs: 10
@@ -1355,6 +1486,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-THROUGHPUT-TX
           <<: *SensorDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1363,6 +1495,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-THROUGHPUT-RX
           <<: *SensorDefaults
+          ParamID: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1371,6 +1504,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX
           <<: *SensorDefaults
+          ParamID: 3
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1379,6 +1513,7 @@ NVSwitch: &nvswitch
 
         - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX
           <<: *SensorDefaults
+          ParamID: 4
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1387,6 +1522,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-LINK-SPEED-CURR
           <<: *SensorDefaults
+          ParamID: 5
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1396,6 +1532,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-LINK-WIDTH-CURR
           <<: *SensorDefaults
+          ParamID: 6
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
@@ -1404,6 +1541,7 @@ NVSwitch: &nvswitch
 
         - ID: SPEED-CURR
           <<: *SensorDefaults
+          ParamID: 7
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -1416,6 +1554,7 @@ NVSwitch: &nvswitch
       InfoList:
         - ID: TEMP-CURR
           <<: *SensorDefaults
+          ParamID: 0
           FetchFreqSecs: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1434,6 +1573,7 @@ Retimer: &retimer
       InfoList:
         - &retimerDefaults
           ID: TEMP-RETIMER
+          ParamID: 0
           FetchPolicy: Periodic
           FetchFreqSecs: 1 
           FetchMethod: DBUS
@@ -1452,6 +1592,7 @@ Retimer: &retimer
       InfoList:
         - ID: FW-VER
           <<: *retimerDefaults
+          ParamID: 0
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           DataType: string
@@ -1470,6 +1611,7 @@ HMC: &hmc
       InfoList:
         - &hmcDefaults
           ID: BRD-MFG-DATE[0]
+          ParamID: 0
           DataType: string
           FetchPolicy: Periodic
           FetchFreqSecs: 3600
@@ -1483,6 +1625,7 @@ HMC: &hmc
 
         - ID: BRD-MFG-DATE[1]
           <<: *hmcDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
@@ -1491,6 +1634,7 @@ HMC: &hmc
 
         - ID: BRD-MFG-DATE[2]
           <<: *hmcDefaults
+          ParamID: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
@@ -1499,6 +1643,7 @@ HMC: &hmc
 
         - ID: BRD-SERIAL[0]
           <<: *hmcDefaults
+          ParamID: 3
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
@@ -1507,6 +1652,7 @@ HMC: &hmc
 
         - ID: BRD-SERIAL[1]
           <<: *hmcDefaults
+          ParamID: 4
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
@@ -1515,6 +1661,7 @@ HMC: &hmc
 
         - ID: BRD-SERIAL[2]
           <<: *hmcDefaults
+          ParamID: 5
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
@@ -1523,6 +1670,7 @@ HMC: &hmc
 
         - ID: PRDCT-NAME[0]
           <<: *hmcDefaults
+          ParamID: 6
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
@@ -1531,6 +1679,7 @@ HMC: &hmc
 
         - ID: PRDCT-NAME[1]
           <<: *hmcDefaults
+          ParamID: 7
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
@@ -1539,6 +1688,7 @@ HMC: &hmc
 
         - ID: PRDCT-NAME[2]
           <<: *hmcDefaults
+          ParamID: 8
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
@@ -1547,6 +1697,7 @@ HMC: &hmc
 
         - ID: PRDCT-PART-NUM[0]
           <<: *hmcDefaults
+          ParamID: 9
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
@@ -1555,6 +1706,7 @@ HMC: &hmc
 
         - ID: PRDCT-PART-NUM[1]
           <<: *hmcDefaults
+          ParamID: 10
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
@@ -1563,6 +1715,7 @@ HMC: &hmc
 
         - ID: PRDCT-PART-NUM[2]
           <<: *hmcDefaults
+          ParamID: 11
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
@@ -1571,6 +1724,7 @@ HMC: &hmc
 
         - ID: PRDCT-SERIAL[0]
           <<: *hmcDefaults
+          ParamID: 12
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0"
@@ -1579,6 +1733,7 @@ HMC: &hmc
       
         - ID: PRDCT-SERIAL[2]
           <<: *hmcDefaults
+          ParamID: 13
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly1"
@@ -1587,6 +1742,7 @@ HMC: &hmc
 
         - ID: PRDCT-SERIAL[3]
           <<: *hmcDefaults
+          ParamID: 14
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly2"
@@ -1597,6 +1753,7 @@ HMC: &hmc
       InfoList:
         - ID: FW-VER
           <<: *hmcDefaults
+          ParamID: 0
           DbusParams:
             Service: "xyz.openbmc_project.Software.BMC.Inventory"
             ObjectPath: "/xyz/openbmc_project/software/HGX_FW_BMC_0"
@@ -1613,6 +1770,7 @@ FPGA: &fpga
       InfoList:
         - &fpgaDefaults
           ID: FW-VER
+          ParamID: 0
           DataType: string
           FetchPolicy: Periodic
           FetchFreqSecs: 3600
@@ -1628,6 +1786,7 @@ FPGA: &fpga
       InfoList:
         - ID: VENDOR
           <<: *fpgaDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/FPGA_$fpgaid"
@@ -1638,6 +1797,7 @@ FPGA: &fpga
       InfoList:
         - ID: TEMP-GB-FPGA
           <<: *fpgaDefaults
+          ParamID: 0
           DataType: Uint64
           FetchFreqSecs: 1 
           StorePolicy: Periodic
@@ -1659,6 +1819,7 @@ Baseboard: &baseboard
       InfoList:
         - &baseboardDefaults
           ID: EEPROM-WP-STATUS
+          ParamID: 0
           FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           FetchMethod: DBUS
@@ -1672,6 +1833,7 @@ Baseboard: &baseboard
 
         - ID: TEMP-THRESH-ALERT
           <<: *baseboardDefaults
+          ParamID: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_Chassis_$baseboardid_PCB_0_Temp_0"
@@ -1682,6 +1844,7 @@ Baseboard: &baseboard
       InfoList:
         - ID: CHAS-TYPE
           <<: *baseboardDefaults
+          ParamID: 0
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1691,6 +1854,7 @@ Baseboard: &baseboard
 
         - ID: CHAS-PART-NUM
           <<: *baseboardDefaults
+          ParamID: 1
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1700,6 +1864,7 @@ Baseboard: &baseboard
 
         - ID: CHAS-SERIAL
           <<: *baseboardDefaults
+          ParamID: 2
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1709,6 +1874,7 @@ Baseboard: &baseboard
 
         - ID: BRD-MFG-DATE
           <<: *baseboardDefaults
+          ParamID: 3
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1718,6 +1884,7 @@ Baseboard: &baseboard
 
         - ID: BRD-PRDCT-NAME
           <<: *baseboardDefaults
+          ParamID: 4
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1727,6 +1894,7 @@ Baseboard: &baseboard
 
         - ID: BRD-SERIAL
           <<: *baseboardDefaults
+          ParamID: 5
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1736,6 +1904,7 @@ Baseboard: &baseboard
 
         - ID: BRD-PART-NUM
           <<: *baseboardDefaults
+          ParamID: 6
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1745,6 +1914,7 @@ Baseboard: &baseboard
 
         - ID: PRDCT-NAME
           <<: *baseboardDefaults
+          ParamID: 7
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1754,6 +1924,7 @@ Baseboard: &baseboard
 
         - ID: PRDCT-PART-NUM
           <<: *baseboardDefaults
+          ParamID: 8
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1763,6 +1934,7 @@ Baseboard: &baseboard
 
         - ID: PRDCT-VER
           <<: *baseboardDefaults
+          ParamID: 9
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1772,6 +1944,7 @@ Baseboard: &baseboard
 
         - ID: PRDCT-SERIAL
           <<: *baseboardDefaults
+          ParamID: 10
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1781,6 +1954,7 @@ Baseboard: &baseboard
 
         - ID: PARTNUM
           <<: *baseboardDefaults
+          ParamID: 11
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1790,6 +1964,7 @@ Baseboard: &baseboard
 
         - ID: HW-REV
           <<: *baseboardDefaults
+          ParamID: 12
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1799,6 +1974,7 @@ Baseboard: &baseboard
 
         - ID: SERIAL
           <<: *baseboardDefaults
+          ParamID: 13
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1808,6 +1984,7 @@ Baseboard: &baseboard
 
         - ID: VENDOR
           <<: *baseboardDefaults
+          ParamID: 14
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1820,6 +1997,7 @@ Baseboard: &baseboard
       InfoList:
         - ID: TEMP-PCB-CURR
           <<: *baseboardDefaults
+          ParamID: 0
           DataType: Uint64
           StorePolicy: Periodic
           StoreFreqSecs: 3600
@@ -1836,6 +2014,7 @@ Baseboard: &baseboard
       InfoList:
         - ID: ALT-PRESSURE
           <<: *baseboardDefaults
+          ParamID: 0
           DataType: Uint64
           FetchFreqSecs: 10
           StoreFreqSecs: 3600
@@ -1852,6 +2031,7 @@ Baseboard: &baseboard
       InfoList:
         - ID: ALT-PRESSURE
           <<: *baseboardDefaults
+          ParamID: 0
           DataType: Uint64
           FetchFreqSecs: 1
           StoreFreqSecs: 3600
@@ -1868,6 +2048,7 @@ Baseboard: &baseboard
       InfoList:
         - ID: ALT-PRESSURE
           <<: *baseboardDefaults
+          ParamID: 0
           DataType: Uint64
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -2068,6 +2249,7 @@ HSC: &hsc
       InfoList:
         - &hscDefaults
           ID: TEMP-GB-HSC
+          ParamID: 0
           FetchPolicy: Periodic
           FetchFreqSecs: 1
           FetchMethod: DBUS
@@ -2086,6 +2268,7 @@ HSC: &hsc
       InfoList:
         - ID: PWR-GB-HSC
           <<: *hscDefaults
+          ParamID: 0
           FetchFreqSecs: 1
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -2100,6 +2283,7 @@ HSC: &hsc
       InfoList:
         - &hscDefaultsError
           ID: HSC-FAULT-REG-ARG80
+          ParamID: 0
           FetchFreqSecs: 3600
           FetchPolicy: Periodic
           StorePolicy: OnChange
@@ -2212,6 +2396,7 @@ PCIeSwitch: &pcieswitch
       InfoList:
         - &pcieswitchDefaults
           ID: FW-VER
+          ParamID: 0
           FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           FetchMethod: DBUS
@@ -2228,6 +2413,8 @@ BOOTEVENT: &bootevent
     - ID: bootevent
       InfoList:
         - ID: BootEventLog
+          ParamID: 0
+          DataType: string
           FetchPolicy: OnBoot
           FetchFreqSecs: 5
           StorePolicy: EveryFetch

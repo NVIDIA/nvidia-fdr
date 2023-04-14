@@ -18,6 +18,8 @@ GPU: &gpu
       InfoList:
         - &defaults
           ID: Model                   #Name of the this info/parameter/metric inside the log file
+          ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
+          DataType: string
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
           FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
           FetchFreqSecs: 5            #Sampling freq in seconds
@@ -26,64 +28,77 @@ GPU: &gpu
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
         - ID: Serial
           <<: *defaults
+          ParamID: 1
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=serial"
         - ID: UUID
           <<: *defaults
+          ParamID: 2
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=uuid"
     - ID: Versions
       InfoList:
         - ID: Driver
           <<: *defaults
+          ParamID: 0
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=driver_version"
         - ID: VBIOS
           <<: *defaults
+          ParamID: 1
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=vbios_version"
         - ID: Inforom
           <<: *defaults
+          ParamID: 2
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=inforom.oem,inforom.ecc,inforom.pwr"
     - ID: Config
       InfoList:
         - ID: PowerManagementEnabled
           <<: *defaults
+          ParamID: 1
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.management"
         - ID: MIGMode
           <<: *defaults
+          ParamID: 2
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=mig.mode.current"
         - ID: UserConfiguredGraphicsClock
           <<: *defaults
+          ParamID: 3
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.gr"
         - ID: UserConfiguredMemoryClock
           <<: *defaults
+          ParamID: 4
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.applications.mem"
     - ID: Errors
       InfoList:
         - ID: L1CacheErrorsCorrected
           <<: *defaults
+          ParamID: 0
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l1_cache"
         - ID: L2CacheErrorsCorrected
           <<: *defaults
+          ParamID: 1
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
     - ID: Sensors
       InfoList:
         - ID: GPUTemp
           <<: *defaults
+          ParamID: 0
           StorePolicy: EveryFetch
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
         - ID: MemTemp
           <<: *defaults
+          ParamID: 1
           StorePolicy: EveryFetch
           DataType: Uint64
           CommandParams:
@@ -100,6 +115,7 @@ NIC: &nic
     - ID: Stats
       InfoList:
         - ID: RxBytes
+          ParamID: 0
           DataType: Uint64
           FetchPolicy: Periodic
           FetchFreqSecs: 5
@@ -120,6 +136,7 @@ BOOTEVENT: &bootevent
       InfoList:
         - ID: BootEventLog
           <<: *defaults
+          ParamID: 0
           FetchPolicy: OnBoot
           StorePolicy: EveryFetch
           CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path

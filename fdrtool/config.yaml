@@ -12,6 +12,9 @@ json: False
 influx: False
 sqlite: False
 
+# json option
+key_name: False
+
 # influx option
 influx_url: http://afsanac-dev-01.nvidia.com:8086/ # temporary for testing. Will be pushed to AWS later.
 influx_org: NVIDIA

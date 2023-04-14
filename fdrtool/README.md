@@ -35,6 +35,7 @@ The confuration file template is provided as *[config.yaml](https://gitlab-maste
 | --username, -u | String | Username for Authentication |
 | --password, -p | String | Password for Authentication |
 | --json, --influx, --sqlite | Boolean | Set one of these to True for specifying decoded files destination. |
+| --key_name, -kn | Boolean | default=False. Set to True if we want to replace the ParamIDs with ParamName in the decoded logs. |
 | --influx_url | String | InfluxDB Host URL |
 | --influx_org | String | InfluxDB Host Orginization |
 | --influx_token | String | Token for authenticating to InfluxDB Host |
@@ -84,6 +85,8 @@ options can be used at a time.
 ```
 **Note:** If the decoding is successful, the json logs will be located under *./fdr_logs* directory. Otherwise, the binary logs
 may be found under the same directory given that the API calls or the unzipping of the tar archive is successful.
+
+Add the "-kn" or "--key_name" flag as cmdline arg, or set the value to True in config.yaml to to replace the ParamIDs with ParamName in the decoded logs.
 ## To write logs to InfluxDB
 
 ```bash

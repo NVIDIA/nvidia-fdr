@@ -27,7 +27,7 @@ tool_version = '1.0.0'
 '''
 Main method
 '''
-def main(arglist=None, configFile=None):
+def main(arglist=None):
   """Main command
 
   Args:
@@ -59,6 +59,9 @@ def main(arglist=None, configFile=None):
   group_decode_format.add_argument("--influx", default=False, action="store_const", const = DECODE_FORMAT.INFLUX, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to InfluxDB server.", dest = 'decode_format')
   group_decode_format.add_argument("--sqlite", default=False, action="store_const", const = DECODE_FORMAT.SQLITE, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to local SQLite database.", dest = 'decode_format')
 
+  # json info
+  argget.add_argument('-kn', '--key_name', default=False, action='store_true', help='Option to replace the ParamIDs with ParamName in the decoded logs.')
+    
   # influxDB info
   argget.add_argument("--influx_url", type=str, help="InfluxDB Host URL")
   argget.add_argument("--influx_org", type=str, help="InfluxDB Host Orginization")
@@ -80,6 +83,10 @@ def main(arglist=None, configFile=None):
     
   if args.use_local and not args.local_file:
     logging.error('Missing local logs file information.')
+    arg_error = True
+    
+  if args.key_name and args.decode_format != DECODE_FORMAT.JSON:
+    logging.error('--key_name should be provided only while decoding to json.')
     arg_error = True
   
   if args.decode_format == DECODE_FORMAT.INFLUX and (not args.influx_url or not args.influx_token or not args.influx_org):
@@ -143,7 +150,9 @@ def CollectFdrDump(host_ip, username, password):
   print('Logged in to host {}'.format(host_ip))
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}
-  response = REDFISH_OBJ.post("/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/", body=body)
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
+  print(f"Triggering FDR dump: {url} {body}")
+  response = REDFISH_OBJ.post(url, body=body)
   entry_id = response.dict['Id']
   if response.is_processing:
     # Wait for the dump to be ready
@@ -159,14 +168,18 @@ def CollectFdrDump(host_ip, username, password):
     raise Exception("FDR dump request failed! Response received: {}.".format(response))
   # To-do: need to add other cases?
   # Verify the dump status
-  task = REDFISH_OBJ.get(response.dict['@odata.id'])
+  url = response.dict['@odata.id']
+  print(f'Checking FDR dump task status: {url}')
+  task = REDFISH_OBJ.get(url)
   if task.dict['TaskState'] == 'Completed':
     print('FDR dump is ready to be downloaded!')
   else:
     raise Exception("FDR dump request failed! Task status received: {}.".format(task))
   # Collect dump after TaskState becomes "Completed"
   binary_log_tar_file = f'fdr_dump_{entry_id}.tar.xz'
-  response = REDFISH_OBJ.get(f"/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Entries/{entry_id}/attachment")
+  url = f"/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Entries/{entry_id}/attachment"
+  print(f'Downloading FDR dump {binary_log_tar_file}: {url}')
+  response = REDFISH_OBJ.get(url)
   with open(binary_log_tar_file, 'w') as fd:
     fd.write(response.text)
   REDFISH_OBJ.logout()

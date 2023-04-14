@@ -186,7 +186,7 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateParamDescriptionLog(void)
 
     // Only used if encoding type is binary/json
     std::string logdir = profile.GeneralConfig.LogsBasePath + "/Schema/";
-    std::string logfile = "Params.log";
+    std::string logfile = "ParamDescription.log";
 
 	std::string logfilepath;
     if (logsformat == ENCODING_CHOICE_DB){
@@ -250,7 +250,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 					data.set_compclass(section.ID);
 					data.set_paramclass(infogroup.ID);
 					data.set_paramname(info.ID);
-					// data.set_paramid(***); // TO-DO
+					data.set_paramid(info.ParamID);
 					data.set_paramtype(info.DataType);
 					// data.set_paramunits(info.ID); // TO-DO
 					// data.set_paramnotes(info.ID); // TO-DO
@@ -340,29 +340,30 @@ void FlightDataRecorder_c::Compactor(void)
 					std::string logfile = infogroup.ID + ".log";
 					std::string statsfile = infogroup.ID + ".stats";
 
-					// Create a map info.ID --> {n,min,max,sum,}
-					std::map<std::string, fdr::fdr_stat> stats_so_far;
+					// Create a map info.ParamID --> {n,min,max,sum,}
+					std::map<unsigned int, fdr::fdr_stat> stats_so_far;
 
 					FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat);
 					fdr::fdr_sample readrec;
 					while (fdrlogs.readnext(&readrec))
 					{
-						stats_so_far[readrec.paramname()].set_paramname(readrec.paramname());
-						stats_so_far[readrec.paramname()].set_numsamples(stats_so_far[readrec.paramname()].numsamples() + 1);
-						stats_so_far[readrec.paramname()].set_avg(stats_so_far[readrec.paramname()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
-						if (stats_so_far[readrec.paramname()].min() != 0)
-							stats_so_far[readrec.paramname()].set_min(std::min(stats_so_far[readrec.paramname()].min(), readrec.paramvalueint64()));
+						stats_so_far[readrec.paramid()].set_paramid(readrec.paramid());
+						//stats_so_far[readrec.paramid()].set_paramname(readrec.paramname());
+						stats_so_far[readrec.paramid()].set_numsamples(stats_so_far[readrec.paramid()].numsamples() + 1);
+						stats_so_far[readrec.paramid()].set_avg(stats_so_far[readrec.paramid()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
+						if (stats_so_far[readrec.paramid()].min() != 0)
+							stats_so_far[readrec.paramid()].set_min(std::min(stats_so_far[readrec.paramid()].min(), readrec.paramvalueint64()));
 						else
-							stats_so_far[readrec.paramname()].set_min(readrec.paramvalueint64());
-						stats_so_far[readrec.paramname()].set_max(std::max(stats_so_far[readrec.paramname()].max(), readrec.paramvalueint64()));
-						stats_so_far[readrec.paramname()].set_fromtime(stats_so_far[readrec.paramname()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.paramname()].fromtime());
-						stats_so_far[readrec.paramname()].set_totime(readrec.timestamp());
+							stats_so_far[readrec.paramid()].set_min(readrec.paramvalueint64());
+						stats_so_far[readrec.paramid()].set_max(std::max(stats_so_far[readrec.paramid()].max(), readrec.paramvalueint64()));
+						stats_so_far[readrec.paramid()].set_fromtime(stats_so_far[readrec.paramid()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.paramid()].fromtime());
+						stats_so_far[readrec.paramid()].set_totime(readrec.timestamp());
 					}
 					for (auto &stat : stats_so_far)
 					{
 						stat.second.set_avg(stat.second.avg() / stat.second.numsamples());
 
-						std::cout << "-----Stats for ID: " << stat.first << std::endl;
+						std::cout << "-----Stats for ParamID: " << stat.first << std::endl;
 						std::cout << "Num: " << stat.second.numsamples() << std::endl;
 						std::cout << "Min: " << stat.second.min() << std::endl;
 						std::cout << "Max: " << stat.second.max() << std::endl;
@@ -389,23 +390,24 @@ void FlightDataRecorder_c::Compactor(void)
 					std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
 					std::string logfile = profile.GeneralConfig.DatabaseName;
 
-					// Create a map info.ID --> {n,min,max,sum,}
-					std::map<std::string, fdr_stat_sql> stats_so_far;
+					// Create a map info.ParamID --> {n,min,max,sum,}
+					std::map<unsigned int, fdr_stat_sql> stats_so_far;
 
 					FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
 					fdr_sample_sql readrec;
 					while (fdrlogs.readnext(&readrec))
 					{
-						stats_so_far[readrec.paramName].paramName = readrec.paramName;
-						stats_so_far[readrec.paramName].numsamples += 1;
-						stats_so_far[readrec.paramName].avg += readrec.paramValueInt64; // TODO: using avg field as sum. avoid overflow.
-						if (stats_so_far[readrec.paramName].min != 0)
-							stats_so_far[readrec.paramName].min = std::min(stats_so_far[readrec.paramName].min, readrec.paramValueInt64);
+						stats_so_far[readrec.paramID].paramID = readrec.paramID;
+						//stats_so_far[readrec.paramID].paramName = readrec.paramName;
+						stats_so_far[readrec.paramID].numsamples += 1;
+						stats_so_far[readrec.paramID].avg += readrec.paramValueInt64; // TODO: using avg field as sum. avoid overflow.
+						if (stats_so_far[readrec.paramID].min != 0)
+							stats_so_far[readrec.paramID].min = std::min(stats_so_far[readrec.paramID].min, readrec.paramValueInt64);
 						else
-							stats_so_far[readrec.paramName].min = readrec.paramValueInt64;
-						stats_so_far[readrec.paramName].max = std::max(stats_so_far[readrec.paramName].max, readrec.paramValueInt64);
-						stats_so_far[readrec.paramName].fromtime = stats_so_far[readrec.paramName].fromtime == 0 ? readrec.timestamp : stats_so_far[readrec.paramName].fromtime;
-						stats_so_far[readrec.paramName].totime = readrec.timestamp;
+							stats_so_far[readrec.paramID].min = readrec.paramValueInt64;
+						stats_so_far[readrec.paramID].max = std::max(stats_so_far[readrec.paramID].max, readrec.paramValueInt64);
+						stats_so_far[readrec.paramID].fromtime = stats_so_far[readrec.paramID].fromtime == 0 ? readrec.timestamp : stats_so_far[readrec.paramID].fromtime;
+						stats_so_far[readrec.paramID].totime = readrec.timestamp;
 					}
 
 					FDRStore fdrstats(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
@@ -415,7 +417,7 @@ void FlightDataRecorder_c::Compactor(void)
 					{
 						stat.second.avg = stat.second.avg / stat.second.numsamples;
 
-						std::cout << "-----Stats for ID: " << stat.first << std::endl;
+						std::cout << "-----Stats for ParamID: " << stat.first << std::endl;
 						std::cout << "Num: " << stat.second.numsamples << std::endl;
 						std::cout << "Min: " << stat.second.min << std::endl;
 						std::cout << "Max: " << stat.second.max << std::endl;

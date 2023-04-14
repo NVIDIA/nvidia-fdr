@@ -98,7 +98,8 @@ void Record::Refresh(void)
 
     std::time_t current_time = std::time(nullptr);
     data.set_timestamp(current_time);
-    data.set_paramname(info.ID);
+    //data.set_paramname(info.ID);
+    data.set_paramid(info.ParamID);
     LastFetchedAt = current_time;
 
 /*
@@ -217,7 +218,7 @@ void Record::Refresh(void)
 
 bool same_data_values(const fdr::fdr_sample &left, const fdr::fdr_sample &right)
 {
-    if ((left.paramname() != right.paramname()) || (left.paramtype() != right.paramtype()))
+    if ((left.paramid() != right.paramid()) || (left.paramtype() != right.paramtype()))
         return false;
 
     if (left.paramtype() == "Uint64"){
@@ -247,7 +248,8 @@ void print_data(const std::string name, const fdr::fdr_sample &dat)
 {
 
     std::cout << "Name: " + name << std::endl;
-    std::cout << "dat.paramName: " + dat.paramname() << std::endl;
+    //std::cout << "dat.paramName: " + dat.paramname() << std::endl;
+    std::cout << "dat.paramID: " + dat.paramid() << std::endl;
     std::cout << "dat.paramType: " + dat.paramtype() << std::endl;
     if (dat.paramtype() == "Uint64")
         std::cout << "dat.paramValueint64: " + dat.paramvalueint64() << std::endl;
@@ -290,6 +292,7 @@ void Record::Store(void)
         fdr_sample_sql sqlDat;
         sqlDat.timestamp = data.timestamp();
         sqlDat.paramName = data.paramname();
+        sqlDat.paramID = data.paramid();
         sqlDat.paramType = data.paramtype();
         if (data.paramtype() == "Uint64"){
             sqlDat.paramValueInt64 = data.paramvalueint64();
@@ -313,7 +316,7 @@ void Record::Load(void)
         fdr::fdr_sample readrec;
         while (fdrreaderwriter->readnext(&readrec))
         { // TODO: read the file from last to first
-            if (readrec.paramname() == info.ID)
+            if (readrec.paramid() == info.ParamID)
             {
                 data = last_stored_data = readrec;
             }
@@ -323,10 +326,11 @@ void Record::Load(void)
         fdr_sample_sql readrec;
         while (fdrreaderwriter->readnext(&readrec))
         { // TODO: read the file from last to first
-            if (readrec.paramName == info.ID)
+            if (readrec.paramID == info.ParamID)
             {
                 data.set_timestamp(readrec.timestamp);
                 data.set_paramname(readrec.paramName);
+                data.set_paramid(readrec.paramID);
                 if (data.paramtype() == "Uint64"){
                     data.set_paramvalueint64(readrec.paramValueInt64);
                 }
