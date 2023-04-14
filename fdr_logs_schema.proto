@@ -21,3 +21,13 @@ message fdr_stat {
   int64 Max = 6;        // Maximum value seen across all samples
   int64 Avg = 7;        // Average values for the sample set
 }
+
+message fdr_params {
+  string CompClass = 1; // e.g. GPU, NVSWITCH, FPGA etc.
+  string ParamClass = 2; // e.g. Config, Inventory etc.
+  string ParamName = 3; // e.g. VENDOR, CURR-CLK-MEM etc.
+  uint64 ParamID = 4; // Unique parameter ID (Used to identify parameter name)
+  string ParamType = 5;  // Type of this sample Uint64|String|Binary etc.
+  string ParamUnit = 6; // Unit of the sample, e.g. Celsius, Hz, Watts etc.
+  string ParamNotes = 7; // Additional notes about the parameter
+}
