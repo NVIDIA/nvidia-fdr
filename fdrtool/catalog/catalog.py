@@ -47,6 +47,9 @@ class Catalog:
     self.CatalogEntries = {key: [] for key in MessageClasses}
     self.decode_format = config['decode_format']
     self.length_delimited_binary = config['length_delimited']
+    self.json_key_name = config['key_name']
+  
+    self.CreateParamDescriptions()
     self.CreateCatalog()
 
     self.catalog_name = self.GetCatalogName()
@@ -61,7 +64,7 @@ class Catalog:
     for root, dirs, files in os.walk(LOG_DIRECTORY):
       for filename in files:
         file_extension = os.path.splitext(filename)[1]
-        if file_extension != '.log' and file_extension != '.stats': # To ignore any non-log and non-stats files (e.g. BirthCertificate.tar)
+        if (file_extension != '.log' and file_extension != '.stats') or filename.endswith('ParamDescription.log'): # To ignore any non-log and non-stats files (e.g. BirthCertificate.tar)
           continue
         try:
           self.decode_binary_file(os.path.join(root, filename))
@@ -81,7 +84,7 @@ class Catalog:
     
     if self.decode_format == DECODE_FORMAT.JSON:
       from .json import JSONCatalogEntry
-      entry = JSONCatalogEntry(filepath)
+      entry = JSONCatalogEntry(filepath, self.json_key_name)
     elif self.decode_format == DECODE_FORMAT.INFLUX:  
       from .influx import InfluxDBCatalogEntry
       entry = InfluxDBCatalogEntry(filepath)
@@ -132,6 +135,29 @@ class Catalog:
     if self.sqliteClient:
       from .sqlite import CreateCombinedViews
       CreateCombinedViews(self.sqliteClient)
+      
+  def CreateParamDescriptions(self):
+    param_filename = os.path.join(LOG_DIRECTORY, "Schema/ParamDescription.log")
+    self.decode_binary_file(param_filename)
+    
+    global ParamDescription
+    ParamDescription = {}
+    for entry in self.CatalogEntries[PROTO_MSG_TYPE.fdr_params.name]:
+      for message in entry.messages:
+        message_dict = entry.GetMessageDict(message)
+        message_CompClass = message_dict.get("CompClass")
+        message_ParamClass = message_dict.get("ParamClass")
+        message_ParamID = message_dict.get("ParamID")
+        if not message_CompClass or not message_ParamClass or message_ParamID is None: # Can't do "if not message_ParamID" as 0 raises wrong condition
+          raise Exception(f"Parameter Descriptions log is not complete. CompClass: {message_CompClass}, ParamClass: {message_ParamClass}, ParamID: {message_ParamID}")
+        if not ParamDescription.get(message_CompClass):
+          ParamDescription[message_CompClass] = {}
+        if not ParamDescription[message_CompClass].get(message_ParamClass):
+          ParamDescription[message_CompClass][message_ParamClass] = {}
+        parameter = {}
+        for key in ["ParamName", "DataType", "Units", "Notes"]:
+          parameter[key] = message_dict.get(key)
+        ParamDescription[message_CompClass][message_ParamClass][message_ParamID] = parameter
 
   def Close(self):
     if self.influxClient:
@@ -150,7 +176,7 @@ class CatalogEntry:
     # Check the message type from file extension
     if filepath.endswith('.stats'):
       self.msg_type = PROTO_MSG_TYPE.fdr_stat
-    elif filepath.endswith('Params.log'):
+    elif filepath.endswith('ParamDescription.log'):
       self.msg_type = PROTO_MSG_TYPE.fdr_params
     else:
       self.msg_type = PROTO_MSG_TYPE.fdr_sample
@@ -206,6 +232,12 @@ class CatalogEntry:
     else:
       tablename = 'Unknown'
     return tablename
+  
+  def GetParamName(self, paramID):
+    result = ParamDescription.get(self.compClass, {}).get(self.paramClass, {}).get(str(paramID), {}).get("ParamName")
+    if not result:
+      print(f"WARNING: {self.compClass}.{self.paramClass}.{paramID} not found in PDT.")
+    return result
 
   @staticmethod
   def parse_param_and_component(filepath):

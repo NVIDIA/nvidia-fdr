@@ -48,6 +48,7 @@ struct RedfishParams_t
 struct Info_t
 {
 	std::string ID;				   // Unique ID for this information piece
+	unsigned int ParamID;		   // Unique ID to be used instead of ParamName when needed
 	std::string FetchPolicy;	   // Periodic|OnEvent
 	std::string FetchMethod;	   // Fetch method (Command|File|DBUS|GPIO)
 	std::string StorePolicy;	   // Storage policy (EveryFetch|OnChange|etc.)
@@ -213,10 +214,8 @@ namespace YAML
 		static bool decode(const Node &node, Info_t &rhs)
 		{
 			rhs.ID = node["ID"].as<std::string>();
-			if (node["DataType"])
-			{
-				rhs.DataType = node["DataType"].as<std::string>();
-			}
+			rhs.ParamID = node["ParamID"].as<unsigned int>();
+			rhs.DataType = node["DataType"].as<std::string>();
 			if (node["FetchMethod"])
 			{
 				rhs.FetchMethod = node["FetchMethod"].as<std::string>();

@@ -178,14 +178,18 @@ class SQLiteDBCatalogEntry(CatalogEntry):
     table_columns = FDR_TABLE_SCHEMA[self.tabletype.name]
     values = CatalogEntry.get_message_values(proto_msg, list(table_columns.keys()))
     self.messages.append(values)
+  
+  def GetMessageDict(self, message):
+    return message
     
   def UpdateParamID(self, sqliteClient):
     for message in self.messages:
-      sql_cmd = "SELECT ParamID from PDT WHERE CompClass = '" +  str(self.compClass) + "' AND ParamClass = '" +\
-                str(self.paramClass) + "' AND ParamName = '" + str(message["ParamName"]) + "'"
-      res = sqliteClient.ExecuteCmd(sqliteClient.connection.execute, sql_cmd)
-      #print('Updating PAramID for {}'.format(self.tablename))
-      message["ParamID"] = res[0][0] if res else None
+      if message.get("ParamName") and message.get("ParamID") is None:
+        sql_cmd = "SELECT ParamID from PDT WHERE CompClass = '" +  str(self.compClass) + "' AND ParamClass = '" +\
+                  str(self.paramClass) + "' AND ParamName = '" + str(message["ParamName"]) + "'"
+        res = sqliteClient.ExecuteCmd(sqliteClient.connection.execute, sql_cmd)
+        print('Updating ParamID for {}'.format(self.tablename))
+        message["ParamID"] = res[0][0] if res else None
         
   def GetParamValue(self, message, paramName):
     paramValue = None
