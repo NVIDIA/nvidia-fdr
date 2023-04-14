@@ -31,6 +31,7 @@ private:
 	int FindAndLoadPlatformProfile(void);
 	int ConvertPPFToStruct(const std::string filename);
 	int ExecuteFingerPrintRules(void);
+	std::unique_ptr<FDRStore> CreateParamDescriptionLog(void);
 
 public:
 	Profile_t profile;
@@ -179,8 +180,49 @@ int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
 	return FDR_SUCCESS;
 }
 
+std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateParamDescriptionLog(void)
+{
+	std::string logsformat = profile.GeneralConfig.LogsFormat;
+
+    // Only used if encoding type is binary/json
+    std::string logdir = profile.GeneralConfig.LogsBasePath + "/Schema/";
+    std::string logfile = "Params.log";
+
+	std::string logfilepath;
+    if (logsformat == ENCODING_CHOICE_DB){
+        logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
+    }
+    else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON){
+        logfilepath = logdir + logfile;
+    }
+	// Create log directory if missing
+    std::filesystem::path dir;
+    if (logsformat == ENCODING_CHOICE_DB){
+        dir = profile.GeneralConfig.LogsBasePath;
+    }
+    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
+        dir = logdir;
+    }
+    if (!(std::filesystem::exists(dir)))
+    {
+        if (!(std::filesystem::create_directories(dir)))
+            std::cout << "Failed to create directory: " << dir << std::endl;
+        // TODO: error handling
+    }
+
+    std::unique_ptr<FDRStore> fdrParamsWriter;
+    if (logsformat == ENCODING_CHOICE_DB){
+        fdrParamsWriter.reset(new FDRStore(logfilepath, logsformat, "Param", "Description", "Table")); // TO-DO: CHANGE TABLENAME!!!
+    }
+    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
+        fdrParamsWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
+    }
+	return fdrParamsWriter;
+}
+
 void FlightDataRecorder_c::CreateRecords(void)
 {
+	std::unique_ptr<FDRStore> fdrParamsWriter = CreateParamDescriptionLog();
 	for (auto &section : profile.Sections)
 	{
 		// std::cout << "Section.ID: " << section.ID << "\n";
@@ -202,6 +244,17 @@ void FlightDataRecorder_c::CreateRecords(void)
 
 					// Append it to the list
 					RecList.push_back(resource);
+
+					// Create fdr_params data
+					fdr::fdr_params data;
+					data.set_compclass(section.ID);
+					data.set_paramclass(infogroup.ID);
+					data.set_paramname(info.ID);
+					// data.set_paramid(***); // TO-DO
+					data.set_paramtype(info.DataType);
+					// data.set_paramunits(info.ID); // TO-DO
+					// data.set_paramnotes(info.ID); // TO-DO
+					fdrParamsWriter->append(data);
 				}
 			}
 		}
