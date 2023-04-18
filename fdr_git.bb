@@ -31,3 +31,4 @@ EXTRA_OECMAKE = "-DYOCTO=ON -DCMAKE_INSTALL_PREFIX:PATH=/usr"
 
 DEPENDS = "yaml-cpp protobuf protobuf-native sqlite3 boost systemd sdbusplus nlohmann-json curl python3 python3-pyyaml"
 RDEPENDS_${PN} = "yaml-cpp protobuf sqlite3 boost systemd sdbusplus curl"
+RDEPENDS:${PN} += "bash"
