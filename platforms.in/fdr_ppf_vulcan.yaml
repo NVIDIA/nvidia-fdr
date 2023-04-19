@@ -26,10 +26,9 @@ GPU: &gpu
           ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: string
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          #FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
+          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
           FetchFreqSecs: 3600         #Sampling freq in seconds    #1 hour
           StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
-          FetchMethod: DBUS
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0"
