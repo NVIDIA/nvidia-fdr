@@ -210,7 +210,7 @@ GPU: &gpu
     - ID: Errors
       InfoList:
 
-        - ID: NVLINK-ERR-CTR-REPLAY
+        - ID: NVLINK-ERR-CTR-REPLAY[0]
           <<: *defaults
           ParamID: 0
           FetchFreqSecs: 30
@@ -221,7 +221,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "ReplayErrorsCount"
 
-        - ID: NVLINK-ERR-CTR-REPLAY
+        - ID: NVLINK-ERR-CTR-REPLAY[1]
           <<: *defaults
           ParamID: 1
           FetchFreqSecs: 30
@@ -232,7 +232,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "ReplayErrorsCount"
 
-        - ID: NVLINK-ERR-CTR-REPLAY
+        - ID: NVLINK-ERR-CTR-REPLAY[2]
           <<: *defaults
           ParamID: 2
           FetchFreqSecs: 30
@@ -243,7 +243,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "ReplayErrorsCount"
 
-        - ID: NVLINK-ERR-CTR-RECOVERY
+        - ID: NVLINK-ERR-CTR-RECOVERY[0]
           <<: *defaults
           ParamID: 3
           FetchFreqSecs: 30
@@ -255,7 +255,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "RecoveryCount"
 
-        - ID: NVLINK-ERR-CTR-RECOVERY
+        - ID: NVLINK-ERR-CTR-RECOVERY[1]
           <<: *defaults
           ParamID: 4
           FetchFreqSecs: 30
@@ -266,7 +266,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "RecoveryCount"
 
-        - ID: NVLINK-ERR-CTR-RECOVERY
+        - ID: NVLINK-ERR-CTR-RECOVERY[2]
           <<: *defaults
           ParamID: 5
           FetchFreqSecs: 30
@@ -277,7 +277,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "RecoveryCount"
 
-        - ID: NVLINK-ERR-CTR-FLIT-CRC
+        - ID: NVLINK-ERR-CTR-FLIT-CRC[0]
           <<: *defaults
           ParamID: 6
           FetchFreqSecs: 30
@@ -288,7 +288,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "FlitCRCCount"
 
-        - ID: NVLINK-ERR-CTR-FLIT-CRC
+        - ID: NVLINK-ERR-CTR-FLIT-CRC[1]
           <<: *defaults
           ParamID: 7
           FetchFreqSecs: 30
@@ -299,7 +299,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "FlitCRCCount"
 
-        - ID: NVLINK-ERR-CTR-FLIT-CRC
+        - ID: NVLINK-ERR-CTR-FLIT-CRC[2]
           <<: *defaults
           ParamID: 8
           FetchFreqSecs: 30
@@ -310,7 +310,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "FlitCRCCount"
 
-        - ID: NVLINK-ERR-CTR-DATA-CRC
+        - ID: NVLINK-ERR-CTR-DATA-CRC[0]
           <<: *defaults
           ParamID: 9
           FetchFreqSecs: 30
@@ -321,7 +321,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "DataCRCCount"
         
-        - ID: NVLINK-ERR-CTR-DATA-CRC
+        - ID: NVLINK-ERR-CTR-DATA-CRC[1]
           <<: *defaults
           ParamID: 10
           FetchFreqSecs: 30
@@ -332,7 +332,7 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "DataCRCCount"
 
-        - ID: NVLINK-ERR-CTR-DATA-CRC
+        - ID: NVLINK-ERR-CTR-DATA-CRC[2]
           <<: *defaults
           ParamID: 11
           FetchFreqSecs: 30
@@ -1340,19 +1340,10 @@ NVSwitch: &nvswitch
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "NAKSentCount"
-            
-        - ID: PCI-ERR-CTR-NAK-SENT
-          <<: *ErrorDefaults
-          ParamID: 13
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
-            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "NAKSentCount"
 
         - ID: PCI-ERR-CTR-NON-FATAL
           <<: *ErrorDefaults
-          ParamID: 14
+          ParamID: 13
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1361,7 +1352,7 @@ NVSwitch: &nvswitch
       
         - ID: PCI-ERR-CTR-REPLAY
           <<: *ErrorDefaults
-          ParamID: 15
+          ParamID: 14
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1370,7 +1361,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
           <<: *ErrorDefaults
-          ParamID: 16
+          ParamID: 15
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1379,7 +1370,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-UNSUPP-REQ
           <<: *ErrorDefaults
-          ParamID: 17
+          ParamID: 16
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -1421,7 +1412,7 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
             Property: "Function0DeviceId"
 
-        - ID: GUID
+        - ID: UUID
           <<: *InventoryDefaults
           ParamID: 3
           DbusParams:
