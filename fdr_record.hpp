@@ -8,6 +8,12 @@
 #include "fdr_policy.hpp"
 #include "fdr_store.hpp"
 
+struct fdr_sample_ext { // Extended version of the fdr_sample proto message
+    fdr::fdr_sample fdr_sample_data;
+    std::string paramtype;
+    std::string paramname;
+};
+
 class Record
 {
 private:
@@ -29,8 +35,8 @@ private:
 public:
     Info_t &info; // How to create/update this record
 
-    fdr::fdr_sample data;             // Data that will actually land in the DB
-    fdr::fdr_sample last_stored_data; // Last fetched value. Used to determine if anything changed
+    fdr_sample_ext data;             // Data that will actually land in the DB
+    fdr_sample_ext last_stored_data; // Last fetched value. Used to determine if anything changed
 
     Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info);
 

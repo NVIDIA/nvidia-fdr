@@ -15,14 +15,12 @@ const std::string ENCODING_CHOICE_DB = "DB";
 struct fdr_sample_sql {
     uint64_t timestamp;     // Time at which this sample was captured
 	unsigned int paramID;	// Unique ID to be used instead of ParamName when needed
-    std::string paramName;   // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
     std::string paramType;   // Type of this sample Uint64|String|Binary etc.
     uint64_t paramValueInt64;        // Applicable when paramType==Uint64
     std::string paramValueString;    // Applicable when paramType==string
 };
 
 struct fdr_stat_sql {
-    std::string paramName;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
 	unsigned int paramID;	// Unique ID to be used instead of ParamName when needed
     uint64_t fromtime;   // Start of time period within which samples lie
     uint64_t totime;     // End of time period within which samples lie
