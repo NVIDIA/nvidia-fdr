@@ -20,11 +20,21 @@ make -j24 -C build/
 ```
 ## Run
 
+### Option 1: 
 ```bash
-./build/fdr
+cd build
+./fdr
 ```
+### Option 2:
+```bash
+export PLATFORMS_PATH=/path/to/platforms
+./fdr
+```
+FDR data would start landing under the path (LogsBasePath) provided in PPF.
 
-FDR data would start landing under /tmp/fdr/
+**Note:** *PLATFORMS_PATH* gets precedence over *./platforms* in the working directory.
+So, even if the working directory has *platforms* directory under it, if the *PLATFORMS_PATH* environment var
+is set, FDR will use *PLATFORMS_PATH* for finding PPF.
 
 # Build (ARM cross compile with bitbake)
 
@@ -36,11 +46,10 @@ This is a one time step, and it would be no longer needed once it is committed t
 git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/bmc/openbmc.git
 cd openbmc
 
-. setup hgx
+# Switch to the branch with FDR support
+git checkout fdr-integration 
 
-# Copy the fdr_git.bb from this repo to openbmc, make necessary changes first
-mkdir -p ../../meta-nvidia/recipes-nvidia/fdr
-cp /path/to/nvidia-fdr/fdr_git.bb openbmc/meta-nvidia/recipes-nvidia/fdr
+. setup hgx
 ```
 
 ## Building fdr
@@ -53,16 +62,24 @@ bitbake fdr
 Once the command succeed:
 
 - The rpm can be found under `openbmc/build/hgx/tmp/deploy/rpm/armv7ahf_vfpv4d16`
-- The unpackage files(including the fdr binary) are loacated in `openbmc/build/hgx/tmp/work/armv7ahf-vfpv4d16-openbmc-linux-gnueabi/fdr/git-r0/package` if you wish to scp them into openbmc
+- The unpackage files(including the fdr binary) are loacated in `openbmc/build/hgx/tmp/work/armv7ahf-vfpv4d16-openbmc-linux-gnueabi/nvidia-fdr/git-r0/package` if you wish to scp them into openbmc
 
-Otherwise, if errors occur, checkout the logs under `openbmc/build/hgx/tmp/work/armv7ahf-vfpv4d16-openbmc-linux-gnueabi/fdr/git-r0/temp`
+Otherwise, if errors occur, checkout the logs under `openbmc/build/hgx/tmp/work/armv7ahf-vfpv4d16-openbmc-linux-gnueabi/nvidia-fdr/git-r0/temp`
 
 ## Build fdr along with openbmc
-
-Append `IMAGE_INSTALL:append = "fdr"` to `openbmc/build/hgx/conf/local.conf`, then build the image
 
 ```
 bitbake obmc-phosphor-image
 ```
 
-Run the image with qemu, and the fdr command will be already there.
+Run the image with qemu, and the fdr service should be running already.
+```bash
+# To check the service status
+systemctl status nvidia-fdr.service
+
+# If any changes are made in the service file (e.g. PLATFORMS_PATH has changed), or in the PPF,
+# OR if the fdr binary has been replaced,
+# restart the service using following:
+systemctl restart nvidia-fdr.service
+```
+
