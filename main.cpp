@@ -16,6 +16,7 @@
 #include "fdr_record.hpp"
 #include "fdr_store.hpp"
 #include "fdr_redfish.hpp"
+#include "ppf_sanity.hpp"
 
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
@@ -27,7 +28,9 @@ private:
 	/* data */
 	std::vector<Record *> RecList;
 
+	std::string PPFName;
 	std::string birthCertFilePath;
+	std::unique_ptr<PPFSanity> SanityChecker;
 	int FindAndLoadPlatformProfile(void);
 	int ConvertPPFToStruct(const std::string filename);
 	int ExecuteFingerPrintRules(void);
@@ -75,12 +78,21 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 	if (! filename.empty()) {
 		std::cout << "Specified PPF file " << filename << ", PPF detection skipped" << std::endl;
 		retVal = ConvertPPFToStruct(filename);
+		PPFName = filename;
 	} else {
 		// have to identify the platform
 		retVal = FindAndLoadPlatformProfile();
 	}
 	if (retVal != FDR_SUCCESS) {
 		std::cout << "Error loading PPF file..Exiting!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// perform a sanity check of the PPF file
+	SanityChecker.reset(new PPFSanity());
+	retVal = SanityChecker->SanityTestPPF(PPFName);
+	if (retVal != FDR_SUCCESS) {
+		std::cout << "Error: PPF failed sanity test! Please fix the above issue(s) in the PPF " << PPFName << "." << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
@@ -135,6 +147,7 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		retVal = ExecuteFingerPrintRules();
 		if (retVal == FDR_SUCCESS) {
 			std::cout << "Found the PPF file: " << filename << std::endl;
+			PPFName = filename;
 			// now Data struct have all the values from this PPF file. Hence return FDR_SUCCESS.
 			return FDR_SUCCESS;
 		}
@@ -436,6 +449,8 @@ void FlightDataRecorder_c::Compactor(void)
 
 FlightDataRecorder_c::~FlightDataRecorder_c()
 {
+    PPFSanity* fds = SanityChecker.release();
+    delete fds;
 }
 
 static inline const char *strna(const char *s)
