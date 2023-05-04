@@ -17,22 +17,45 @@
 
 extern RedfishClient *rfc;
 
-Record::Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info) : profile(profile), section(section), component(component), infogroup(infogroup), info(info)
-{
-    logsformat = profile.GeneralConfig.LogsFormat;
+void CreateLog(Profile_t &profile, std::unique_ptr<FDRStore> &fdrLogWriter, std::string paramClass, std::string compClass, std::string compID) {
+	std::string logsformat = profile.GeneralConfig.LogsFormat;
 
-    // Only used if encoding type is binary/json
-    logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
-    logfile = infogroup.ID + ".log";
+	// Only used if encoding type is binary/json
+    std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + compClass + "/" + compID + "/"; // base directory for logs
+    std::string logfile = paramClass + ".log"; // relative filename of logs
 
-    if (logsformat == ENCODING_CHOICE_DB){
+    std::string logfilepath; // full filepath of logs
+	if (logsformat == ENCODING_CHOICE_DB){
         logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
     }
     else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON){
         logfilepath = logdir + logfile;
     }
-    
+	// Create log directory if missing
+    std::filesystem::path dir;
+    if (logsformat == ENCODING_CHOICE_DB){
+        dir = profile.GeneralConfig.LogsBasePath;
+    }
+    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
+        dir = logdir;
+    }
+    if (!(std::filesystem::exists(dir)))
+    {
+        if (!(std::filesystem::create_directories(dir)))
+            std::cout << "Failed to create directory: " << dir << std::endl;
+        // TODO: error handling
+    }
 
+    if (logsformat == ENCODING_CHOICE_DB){
+        fdrLogWriter.reset(new FDRStore(logfilepath, logsformat, paramClass, compClass, compID));
+    }
+    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
+        fdrLogWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
+    }
+}
+
+Record::Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info) : profile(profile), section(section), component(component), infogroup(infogroup), info(info)
+{   
     LastFetchedAt = 0; // Init last read time to epoch
     LastStoredAt = 0;  // Init last store time to epoch
 
@@ -53,29 +76,13 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
         }
     }
 
-    // Create log directory if missing
-    std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_DB){
-        dir = profile.GeneralConfig.LogsBasePath;
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        dir = logdir;
-    }
-    if (!(std::filesystem::exists(dir)))
-    {
-        if (!(std::filesystem::create_directories(dir)))
-            std::cout << "Failed to create directory: " << dir << std::endl;
-        // TODO: error handling
-    }
+    logsformat = profile.GeneralConfig.LogsFormat;
 
-    // Init the encoder to file
-    //  FDREncoder fdrreaderwriter(logfilepath, "JSON");
-    if (logsformat == ENCODING_CHOICE_DB){
-        fdrreaderwriter.reset(new FDRStore(logfilepath, logsformat, infogroup.ID, section.ID, component.ID));
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrreaderwriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
-    }
+    std::string paramClass = infogroup.ID;
+    std::string compClass = section.ID;
+    std::string compID = component.ID;
+
+    CreateLog(profile, fdrreaderwriter, paramClass, compClass, compID);
 
     // for debugging purpose
     // Print();
@@ -368,9 +375,6 @@ void Record::Print(void)
               << "\t\t\t\tDbusParams.Property: " << info.DbusParams.Property << std::endl
               << "\t\t\t\tDataType: " << info.DataType << std::endl;
 
-    std::cout << "logdir: " << logdir << std::endl;
-    std::cout << "logfile: " << logfile << std::endl;
-    std::cout << "logfilepath: " << logfilepath << std::endl;
     std::cout << "logsformat: " << logsformat << std::endl;
     std::cout << "fdrreaderwriter: " << fdrreaderwriter.get() << std::endl;
 }

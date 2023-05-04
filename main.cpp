@@ -109,9 +109,12 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 	struct stat sb;
 	int retVal;
   
-	std::string SupportedPlatformsDir = "./platforms"; //Most relevant path if/when a developer is running fdr from source directory
-	if (!(std::filesystem::exists("./platforms"))) {
-		SupportedPlatformsDir = "/mnt/source/fdr/platform"; //Applicable when FDR is running from a installed location
+	const char* platforms_path = getenv("PLATFORMS_PATH"); //Applicable when FDR is running from a installed location
+	// if the Environment Variable isn't set, we'll look into the most relevant path if/when a developer is running fdr from build directory
+	std::string SupportedPlatformsDir = (platforms_path != NULL ? platforms_path : "./platforms");
+	if (!(std::filesystem::exists(SupportedPlatformsDir))) {
+		std::cout << "Not able to find the 'Platform Profile File' directory" << std::endl;
+		return FDR_ERR_GENFAILURE; 
 	}
 
     // step 1: get all the PPF files
@@ -195,41 +198,13 @@ int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
 
 std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateParamDescriptionLog(void)
 {
-	std::string logsformat = profile.GeneralConfig.LogsFormat;
+	std::unique_ptr<FDRStore> fdrParamsWriter;
+	std::string paramClass = "ParamDescription";
+    std::string compClass = "Schema";
+    std::string compID = "";
 
-    // Only used if encoding type is binary/json
-    std::string logdir = profile.GeneralConfig.LogsBasePath + "/Schema/";
-    std::string logfile = "ParamDescription.log";
-
-	std::string logfilepath;
-    if (logsformat == ENCODING_CHOICE_DB){
-        logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
-    }
-    else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON){
-        logfilepath = logdir + logfile;
-    }
-	// Create log directory if missing
-    std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_DB){
-        dir = profile.GeneralConfig.LogsBasePath;
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        dir = logdir;
-    }
-    if (!(std::filesystem::exists(dir)))
-    {
-        if (!(std::filesystem::create_directories(dir)))
-            std::cout << "Failed to create directory: " << dir << std::endl;
-        // TODO: error handling
-    }
-
-    std::unique_ptr<FDRStore> fdrParamsWriter;
-    if (logsformat == ENCODING_CHOICE_DB){
-        fdrParamsWriter.reset(new FDRStore(logfilepath, logsformat, "Param", "Description", "Table")); // TO-DO: CHANGE TABLENAME!!!
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrParamsWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
-    }
+	CreateLog(profile, fdrParamsWriter, paramClass, compClass, compID);
+    
 	return fdrParamsWriter;
 }
 

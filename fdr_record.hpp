@@ -8,6 +8,8 @@
 #include "fdr_policy.hpp"
 #include "fdr_store.hpp"
 
+void CreateLog(Profile_t &profile, std::unique_ptr<FDRStore> &fdrLogWriter, std::string paramClass, std::string compClass, std::string compID);
+
 struct fdr_sample_ext { // Extended version of the fdr_sample proto message
     fdr::fdr_sample fdr_sample_data;
     std::string paramtype;
@@ -25,9 +27,6 @@ private:
     std::time_t LastFetchedAt; // Time of last fetch
     std::time_t LastStoredAt;  // Time of last store
 
-    std::string logdir;      // base directory for logs
-    std::string logfile;     // relative filename of logs
-    std::string logfilepath; // full filepath of logs
     std::string logsformat;  // encoding format for logfiles
 
     std::unique_ptr<FDRStore> fdrreaderwriter;
