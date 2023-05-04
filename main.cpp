@@ -348,7 +348,6 @@ void FlightDataRecorder_c::Compactor(void)
 					while (fdrlogs.readnext(&readrec))
 					{
 						stats_so_far[readrec.paramid()].set_paramid(readrec.paramid());
-						//stats_so_far[readrec.paramid()].set_paramname(readrec.paramname());
 						stats_so_far[readrec.paramid()].set_numsamples(stats_so_far[readrec.paramid()].numsamples() + 1);
 						stats_so_far[readrec.paramid()].set_avg(stats_so_far[readrec.paramid()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
 						if (stats_so_far[readrec.paramid()].min() != 0)

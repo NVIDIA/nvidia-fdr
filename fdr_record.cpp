@@ -36,8 +36,6 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
     LastFetchedAt = 0; // Init last read time to epoch
     LastStoredAt = 0;  // Init last store time to epoch
 
-    data.set_paramtype(info.DataType); 
-
     // Search & replace all params with values in the commands/paths
     for (auto &param : component.Params)
     {
@@ -97,9 +95,10 @@ void Record::Refresh(void)
         return;
 
     std::time_t current_time = std::time(nullptr);
-    data.set_timestamp(current_time);
+    data.fdr_sample_data.set_timestamp(current_time);
     //data.set_paramname(info.ID);
-    data.set_paramid(info.ParamID);
+    data.paramtype = info.DataType;
+    data.fdr_sample_data.set_paramid(info.ParamID);
     LastFetchedAt = current_time;
 
 /*
@@ -119,16 +118,16 @@ void Record::Refresh(void)
 		}
 
         std::string commandresult = cmdResult.cmdOutput;
-        if (data.paramtype() == "Uint64")
+        if (data.paramtype == "Uint64")
         {
             std::istringstream str2num(commandresult);
             uint64_t val;
             str2num >> val;
-            data.set_paramvalueint64(val);
+            data.fdr_sample_data.set_paramvalueint64(val);
         }
         else
         {
-            data.set_paramvaluestring(commandresult);
+            data.fdr_sample_data.set_paramvaluestring(commandresult);
         }
     }
     else if (info.FetchMethod == "DBUS")
@@ -142,42 +141,42 @@ void Record::Refresh(void)
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
 
-         if (data.paramtype() == "Uint64")
+         if (data.paramtype == "Uint64")
         {
             if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
                 printf("int64 = %ld\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
             {
                 printf("uint32 = %u\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
             {
                 printf("uint64 = %lu\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint16_t>(&val)); ptr)
             {
                 printf("uint16 = %u\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<int16_t>(&val)); ptr)
             {
                 printf("int16 = %d\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<double>(&val)); ptr)
             {
                 printf("double = %lf\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<bool>(&val)); ptr)
             {
                 printf("bool = %d\n", *ptr);
-                data.set_paramvalueint64((uint64_t) *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else {
                 printf("DBus read failed: Unknown numerical variant type\n");
@@ -189,7 +188,7 @@ void Record::Refresh(void)
             if (auto ptr (std::get_if<std::string>(&val)); ptr) 
             {
                 printf("val =%s\n", ptr->c_str());
-                data.set_paramvaluestring(*ptr);
+                data.fdr_sample_data.set_paramvaluestring(*ptr);
             }
         }
     } else if (info.FetchMethod == "Redfish") {
@@ -202,13 +201,13 @@ void Record::Refresh(void)
         std::cout << "RedfishParams URI: " << uri << " JSONPointer: " << json_pointer << std::endl;
 
         try {
-            if (data.paramtype() == "Uint64") {
+            if (data.paramtype == "Uint64") {
                 uint64_t u = rfc->query_uint64t (uri, json_pointer);
-                data.set_paramvalueint64(u);
+                data.fdr_sample_data.set_paramvalueint64(u);
             } else {
                 // string
                 std::string s = rfc->query_string (uri, json_pointer);
-                data.set_paramvaluestring(s);
+                data.fdr_sample_data.set_paramvaluestring(s);
             }
         } catch (const std::exception &e) {
             std::cerr << "Error fetching redfish: " << e.what() << std::endl;
@@ -216,16 +215,16 @@ void Record::Refresh(void)
     }
 }
 
-bool same_data_values(const fdr::fdr_sample &left, const fdr::fdr_sample &right)
+bool same_data_values(const fdr_sample_ext &left, const fdr_sample_ext &right)
 {
-    if ((left.paramid() != right.paramid()) || (left.paramtype() != right.paramtype()))
+    if ((left.fdr_sample_data.paramid() != right.fdr_sample_data.paramid()) || (left.paramtype != right.paramtype))
         return false;
 
-    if (left.paramtype() == "Uint64"){
-        return (left.paramvalueint64() == right.paramvalueint64());
+    if (left.paramtype == "Uint64"){
+        return (left.fdr_sample_data.paramvalueint64() == right.fdr_sample_data.paramvalueint64());
     }
     else{
-        return (left.paramvaluestring() == right.paramvaluestring());
+        return (left.fdr_sample_data.paramvaluestring() == right.fdr_sample_data.paramvaluestring());
     }
 
     /*switch (left.paramType)
@@ -244,22 +243,20 @@ bool same_data_values(const fdr::fdr_sample &left, const fdr::fdr_sample &right)
     }*/
 }
 
-void print_data(const std::string name, const fdr::fdr_sample &dat)
+void print_data(const std::string name, const fdr_sample_ext &dat)
 {
 
     std::cout << "Name: " + name << std::endl;
-    //std::cout << "dat.paramName: " + dat.paramname() << std::endl;
-    std::cout << "dat.paramID: " + dat.paramid() << std::endl;
-    std::cout << "dat.paramType: " + dat.paramtype() << std::endl;
-    if (dat.paramtype() == "Uint64")
-        std::cout << "dat.paramValueint64: " + dat.paramvalueint64() << std::endl;
+    std::cout << "dat.paramID: "  << dat.fdr_sample_data.paramid() << std::endl;
+    std::cout << "paramtype: " << dat.paramtype << std::endl;
+    if (dat.paramtype == "Uint64")
+        std::cout << "dat.paramValueint64: " << dat.fdr_sample_data.paramvalueint64() << std::endl;
     else
-        std::cout << "dat.paramValuestring: " + dat.paramvaluestring() << std::endl;
+        std::cout << "dat.paramValuestring: " << dat.fdr_sample_data.paramvaluestring() << std::endl;
 }
 
 void Record::Store(void)
-{
-    
+{   
     // Skip if update not necessary per the policy
     if ((info.StorePolicy == "OnChange") && (same_data_values(data, last_stored_data)))
     {
@@ -286,19 +283,18 @@ void Record::Store(void)
     // }
 
     if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrreaderwriter->append(data);
+        fdrreaderwriter->append(data.fdr_sample_data);
     }
     else if (logsformat == ENCODING_CHOICE_DB){
         fdr_sample_sql sqlDat;
-        sqlDat.timestamp = data.timestamp();
-        sqlDat.paramName = data.paramname();
-        sqlDat.paramID = data.paramid();
-        sqlDat.paramType = data.paramtype();
-        if (data.paramtype() == "Uint64"){
-            sqlDat.paramValueInt64 = data.paramvalueint64();
+        sqlDat.timestamp = data.fdr_sample_data.timestamp();
+        sqlDat.paramID = data.fdr_sample_data.paramid();
+        sqlDat.paramType = data.paramtype;
+        if (data.paramtype == "Uint64"){
+            sqlDat.paramValueInt64 = data.fdr_sample_data.paramvalueint64();
         }
         else{
-            sqlDat.paramValueString = data.paramvaluestring();
+            sqlDat.paramValueString = data.fdr_sample_data.paramvaluestring();
         }
         fdrreaderwriter->append(sqlDat);
     }
@@ -318,7 +314,7 @@ void Record::Load(void)
         { // TODO: read the file from last to first
             if (readrec.paramid() == info.ParamID)
             {
-                data = last_stored_data = readrec;
+                data.fdr_sample_data = last_stored_data.fdr_sample_data = readrec;
             }
         }
     }
@@ -328,14 +324,13 @@ void Record::Load(void)
         { // TODO: read the file from last to first
             if (readrec.paramID == info.ParamID)
             {
-                data.set_timestamp(readrec.timestamp);
-                data.set_paramname(readrec.paramName);
-                data.set_paramid(readrec.paramID);
-                if (data.paramtype() == "Uint64"){
-                    data.set_paramvalueint64(readrec.paramValueInt64);
+                data.fdr_sample_data.set_timestamp(readrec.timestamp);
+                data.fdr_sample_data.set_paramid(readrec.paramID);
+                if (data.paramtype == "Uint64"){
+                    data.fdr_sample_data.set_paramvalueint64(readrec.paramValueInt64);
                 }
                 else{
-                    data.set_paramvaluestring(readrec.paramValueString);
+                    data.fdr_sample_data.set_paramvaluestring(readrec.paramValueString);
                 }
                 last_stored_data = data;
             }

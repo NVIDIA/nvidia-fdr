@@ -37,7 +37,7 @@ FDRStore::FDRStore(std::string file, std::string fileformat, std::string pClass,
     errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
     //Create the SQL statement used to read values from the DB
-    std::string sqlStmt = "SELECT vt.timestamp, vt.paramvalue, p.paramname, p.datatype from " + tableName + " as vt inner join PDT as p where p.paramId = vt.paramId and p.compclass = '" + compClass + "' AND p.paramClass = '" + paramClass + "';";
+    std::string sqlStmt = "SELECT vt.timestamp, vt.paramvalue, vt.paramid, p.datatype from " + tableName + " as vt inner join PVT_Param_Description_Table as p where p.paramId = vt.paramId and p.compclass = '" + compClass + "' AND p.paramClass = '" + paramClass + "';";
 
     errCode = sqlite3_prepare_v2(DB, sqlStmt.c_str(), -1, &sampleFetchStmt, NULL);
 
@@ -94,13 +94,14 @@ void FDRStore::append(const fdr_sample_sql &data)
         std::string tableName = "PVT_" + paramClass + "_" + compClass + "_" + compID;
 
         /*
-            INSERT INTO <Table> SELECT <TimeStamp>, p.paramID, <Value>, BootCounter FROM PDT as p where p.CompClass = <compClass> AND p.ParamClass = <paramClass> AND p.ParamName = <paramName>.
+            INSERT INTO <Table> SELECT <TimeStamp>, <ParamID>, <Value>, BootCounter FROM PDT as p where p.CompClass = <compClass> AND p.ParamClass = <paramClass> AND p.ParamName = <paramName>.
 
             The subquery is used to fetch the param ID corresponding to the compClass, paramClass and paramName.
         */
+        //std::string sql = "INSERT INTO " + tableName + " SELECT " + std::to_string(data.timestamp) + ", p.ParamID, \"" + (data.paramType == "Uint64" ? std::to_string(data.paramValueInt64) : data.paramValueString) + "\"," + "0" /* TODO: Boot counter */ + " FROM PDT as p where p.CompClass = '" + compClass + "' AND p.ParamClass = '" + paramClass + "' AND p.ParamName = '" + data.paramName + "'";
 
-        std::string sql = "INSERT INTO " + tableName + " SELECT " + std::to_string(data.timestamp) + ", p.ParamID, \"" + (data.paramType == "Uint64" ? std::to_string(data.paramValueInt64) : data.paramValueString) + "\"," + "0" /* TODO: Boot counter */ + " FROM PDT as p where p.CompClass = '" + compClass + "' AND p.ParamClass = '" + paramClass + "' AND p.ParamName = '" + data.paramName + "'";
-
+        std::string sql = "INSERT INTO " + tableName + " (TimeStamp, ParamID, ParamValue)" + " VALUES (" + std::to_string(data.timestamp) + ", " + std::to_string(data.paramID) + ", \"" + (data.paramType == "Uint64" ? std::to_string(data.paramValueInt64) : data.paramValueString) + "\"" + ")";
+        
         errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
 		if(errCode){
@@ -174,7 +175,7 @@ int FDRStore::readnext(fdr_sample_sql *datap)
         // vt.timestamp, vt.paramvalue, p.paramname, p.datatype
         datap->timestamp = sqlite3_column_int64(sampleFetchStmt,0);
 
-        datap->paramName = std::string(reinterpret_cast<const char*>(sqlite3_column_text(sampleFetchStmt,2)));
+        datap->paramID = sqlite3_column_int(sampleFetchStmt,2);
         std::string datType =  std::string(reinterpret_cast<const char*>(sqlite3_column_text(sampleFetchStmt,3)));
 
         datap->paramType = datType == "Integer" ? "Uint64" : "String";
@@ -268,9 +269,10 @@ void FDRStore::appendStat(const fdr_stat_sql &data){
 
         The subquery is used to fetch the param ID corresponding to the compClass, paramClass and paramName.
     */
+    //std::string sql = "INSERT INTO " + tableName + " SELECT p.ParamID, " + std::to_string(data.fromtime) + ", " + std::to_string(data.totime) + ", " + std::to_string(data.numsamples) + ", " + std::to_string(data.min) + ", " + std::to_string(data.max) + ", " + std::to_string(data.avg) + " FROM PDT as p where p.CompClass = '" + compClass + "' AND p.ParamClass = '" + paramClass + "' AND p.ParamName = '" + data.paramName + "'";
 
-    std::string sql = "INSERT INTO " + tableName + " SELECT p.ParamID, " + std::to_string(data.fromtime) + ", " + std::to_string(data.totime) + ", " + std::to_string(data.numsamples) + ", " + std::to_string(data.min) + ", " + std::to_string(data.max) + ", " + std::to_string(data.avg) + " FROM PDT as p where p.CompClass = '" + compClass + "' AND p.ParamClass = '" + paramClass + "' AND p.ParamName = '" + data.paramName + "'";
-
+    std::string sql = "INSERT INTO " + tableName + " (ParamID, FromTimeStamp, ToTimeStamp, Num, Min, Max, Average)" + " VALUES (" + std::to_string(data.paramID) + ", " + std::to_string(data.fromtime) + ", " + std::to_string(data.totime) + ", " + std::to_string(data.numsamples) + ", " + std::to_string(data.min) + ", " + std::to_string(data.max) + ", " + std::to_string(data.avg) + ");";
+    
     errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
     if(errCode){

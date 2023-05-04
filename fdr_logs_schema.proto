@@ -4,24 +4,21 @@ package fdr;
 
 message fdr_sample {
   uint64 TimeStamp = 1; // Time at which this sample was captured
-  string ParamType = 2;  // Type of this sample Uint64|String|Binary etc.
-  string ParamName = 3;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
   oneof ParamValue {     // Value of this sample
-    string ParamValueString = 4; // Applicable when InfoType==string
-    int64 ParamValueInt64 = 5;   // Applicable when InfoType==Uint64
+    string ParamValueString = 2; // Applicable when InfoType==string
+    int64 ParamValueInt64 = 3;   // Applicable when InfoType==Uint64
   }
-  optional uint64 ParamID = 6; // Unique parameter ID (Used to identify parameter name)
+  optional uint64 ParamID = 4; // Unique parameter ID (Used to identify parameter name)
 }
 
 message fdr_stat {
-  string ParamName = 1;  // Name of this sample eg. CPU0_TEMP, GPU0_APPCLOCK etc.
-  int64 FromTime = 2;   // Start of time period within which samples lie
-  int64 ToTime = 3;     // End of time period within which samples lie
-  int64 NumSamples = 4; // Number of samples this stat took into consideration
-  int64 Min = 5;        // Minimum value seen across all samples
-  int64 Max = 6;        // Maximum value seen across all samples
-  int64 Avg = 7;        // Average values for the sample set
-  optional uint64 ParamID = 8; // Unique parameter ID (Used to identify parameter name)
+  int64 FromTime = 1;   // Start of time period within which samples lie
+  int64 ToTime = 2;     // End of time period within which samples lie
+  int64 NumSamples = 3; // Number of samples this stat took into consideration
+  int64 Min = 4;        // Minimum value seen across all samples
+  int64 Max = 5;        // Maximum value seen across all samples
+  int64 Avg = 6;        // Average values for the sample set
+  optional uint64 ParamID = 7; // Unique parameter ID (Used to identify parameter name)
 }
 
 message fdr_params {
