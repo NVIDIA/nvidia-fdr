@@ -62,6 +62,8 @@ target_link_libraries(fdr PRIVATE -lsqlite3)
 target_link_libraries(fdr PRIVATE -lsdbusplus)
 target_link_libraries(fdr PRIVATE -lsystemd)
 target_link_libraries(fdr PRIVATE -lcurl)
+target_link_libraries(fdr PRIVATE -lspdlog)
+target_link_libraries(fdr PRIVATE -lfmt)
 
 if (NOT YOCTO)
   add_dependencies (fdr sdbusplus)

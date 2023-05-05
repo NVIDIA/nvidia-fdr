@@ -58,6 +58,10 @@ int main(int argc, char *argv[])
 		filename = argv[1];
 	}
 	fdr = new FlightDataRecorder_c(filename);
+	if (fdr == nullptr) {
+		std::cerr << "Error instantiating fdr instance" << std::endl;
+		exit(1);
+	}
 
 	// Read in the last recorded values from log files
 	fdr->ReadOldRecords();

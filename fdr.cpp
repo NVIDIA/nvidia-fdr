@@ -36,21 +36,31 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	birthCertFilePath = profile.GeneralConfig.LogsBasePath + "/BirthCertificate.tar";
 
+	spdlog::level::level_enum level = spdlog::level::from_str(profile.GeneralConfig.LoggingLevel);
+	this->log = spdlog::rotating_logger_mt("fdr",
+										   this->profile.GeneralConfig.LogsBasePath + "/fdr.log",
+										   this->profile.GeneralConfig.LoggingFileMaxSize,
+										   this->profile.GeneralConfig.LoggingFileNumber);
+	this->log->flush_on(level);
+	this->log->set_level(level);
+
 	this->rfc = nullptr;
 	if (!this->profile.GeneralConfig.RedfishSchema.empty())
 	{
 		try
 		{
-			this->rfc = new RedfishClient(this->profile.GeneralConfig.RedfishSchema, this->profile.GeneralConfig.RedfishUser, this->profile.GeneralConfig.RedfishPassword);
+			this->rfc = new RedfishClient(this->profile.GeneralConfig.RedfishSchema,
+										  this->profile.GeneralConfig.RedfishUser,
+										  this->profile.GeneralConfig.RedfishPassword);
 		}
 		catch (const std::exception &e)
 		{
-			std::cerr << "Error creating redfish client " << e.what() << std::endl;
+			this->log->error("Error creating redfish client: {}", e.what());
 		}
 	}
 	else
 	{
-		std::cout << "No redfish configuration found, skipped creating redfish client." << std::endl;
+		this->log->info("No redfish configuration found, skipped creating redfish client.");
 	}
 
 	// create the records from the PPF file

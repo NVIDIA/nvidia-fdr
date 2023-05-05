@@ -8,6 +8,23 @@ GeneralConfig:
   #DatabaseName: "Database.db"   #Only used if logs format is DB
   LogsBasePath: &LogsBasePath
     - "/tmp/fdr/"
+  # The maximum size of the log file, it will be rotated once its size exceed this value
+  # Default: 1048576(1MB)
+  LoggingFileMaxSize: 1048576
+  # How many log files to keep
+  # Default: 3
+  LoggingFileNumber: 3
+  # The logging level, valid options are:
+  #   trace, debug, info, warn, err, critical, off
+  # Default: info
+  LoggingLevel: info
+  # Uncomment the following if redfish related support is required.
+  # RedfishSchema examples are: http://192.168.1.31, or https://192.168.1.31.
+  # If the Redfish server require authentication,
+  #   set RedfishUser and  RedfishPassword as well
+  #RedfishSchema: 
+  #RedfishUser: 
+  #RedfishPassword:  
 
 GPU: &gpu
   Params:

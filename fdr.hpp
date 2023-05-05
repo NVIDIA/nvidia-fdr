@@ -1,5 +1,7 @@
 #pragma once
 
+#include <spdlog/sinks/rotating_file_sink.h>
+
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
 #include "fdr_store.hpp"
@@ -22,6 +24,7 @@ private:
 
 public:
 	Profile_t profile;
+	std::shared_ptr<spdlog::logger> log;
 	RedfishClient *rfc;
 	FlightDataRecorder_c(const std::string filename = std::string{});
 	~FlightDataRecorder_c();
