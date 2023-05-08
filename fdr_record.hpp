@@ -28,14 +28,18 @@ private:
     std::time_t LastStoredAt;  // Time of last store
 
     std::string logsformat;  // encoding format for logfiles
+    std::string bookoferrorspath;  // full filepath of book of errors
 
     std::unique_ptr<FDRStore> fdrreaderwriter;
+
+    std::unique_ptr<FDRStore> fdrbookoferrorswriter;
 
 public:
     Info_t &info; // How to create/update this record
 
     fdr_sample_ext data;             // Data that will actually land in the DB
     fdr_sample_ext last_stored_data; // Last fetched value. Used to determine if anything changed
+    fdr::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 
     Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info);
 
@@ -46,4 +50,6 @@ public:
     void Store(void);   // Write the record out to the file
 
     void Print(void);
+
+
 };

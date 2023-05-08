@@ -37,6 +37,11 @@ struct DbusParams_t
 	std::string ObjectPath;
 	std::string Interface;
 	std::string Property;
+	int64_t DevId;
+	int Opcode;
+	int Arg1;
+	int Arg2;
+
 };
 
 struct RedfishParams_t
@@ -184,6 +189,22 @@ namespace YAML
 			if (node["Property"])
 			{
 				rhs.Property = node["Property"].as<std::string>();
+			}
+			if (node["DevId"])
+			{
+				rhs.DevId = node["DevId"].as<std::uint64_t>();
+			}
+			if (node["Opcode"])
+			{
+				rhs.Opcode = node["Opcode"].as<uint8_t>();
+			}
+			if (node["Arg1"])
+			{
+				rhs.Arg1 = node["Arg1"].as<uint8_t>();
+			}
+			if (node["Arg2"])
+			{
+				rhs.Arg2 = node["Arg2"].as<uint8_t>();
 			}
 
 			return true;
