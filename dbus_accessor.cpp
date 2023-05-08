@@ -70,6 +70,99 @@ PropertyVariant readDbusProperty(const std::string& service, const std::string& 
     return value;
 }
 
+RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& objPath, 
+                                 const std::string& interface, const std::string& property, const std::int64_t& devId)
+{
+
+    constexpr auto accMode = 1;
+    uint64_t value = 0;
+    std::string valueStr = "";
+    std::tuple<int, std::string, std::vector<uint32_t>> response;
+
+    auto bus = sdbusplus::bus::new_default();
+    try{
+        auto method = bus.new_method_call(service.c_str(), objPath.c_str(),
+                                          interface.c_str(), callName);
+
+        method.append((int)devId);
+        method.append(property);
+        method.append(accMode);
+        auto reply = bus.call(method);
+        reply.read(response);
+    }
+    catch (const sdbusplus::exception::exception& e){
+        printf("readDbusProperty() Failed to get property: error = %s\n", e.what());
+    }
+    auto rc = std::get<int>(response);
+    auto data = std::get<std::vector<uint32_t>>(response);
+
+    if (rc != 0){
+        printf("deviceGetCoreAPI(): bad return");
+    }
+    else{
+        auto data = std::get<std::vector<uint32_t>>(response);
+        if (data.size() >= 2){
+            // Per SMBPBI spec: data[0]:dataOut, data[1]:exDataOut
+            value = ((uint64_t)data[1] << 32 | data[0]);
+        }
+
+        // msg example: "Baseboard GPU over temperature info : 0001"
+        valueStr = std::get<std::string>(response);
+    }
+
+    return std::make_tuple(rc, valueStr, value);
+}
+
+PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string& objPath, 
+                                 const std::string& interface, const uint8_t& opcode,
+                                 const std::uint8_t& arg1, const std::uint8_t& arg2)
+{
+
+    std::vector<uint32_t> dataIn;
+    int deviceId = 0;
+
+    std::tuple<int, std::vector<uint32_t>> response;
+    std::vector<uint32_t> dataOut;
+    int rc;
+    uint64_t fpgavalue;
+
+    auto bus = sdbusplus::bus::new_default();
+
+    try{
+        auto method = bus.new_method_call(service.c_str(), objPath.c_str(),
+                                          interface.c_str(), "PassthroughFpga");
+        method.append(deviceId);
+        method.append(opcode);
+        method.append(arg1);
+        method.append(arg2);
+        method.append(dataIn);
+        auto reply = bus.call(method);
+        reply.read(response);
+        std::tie (rc, dataOut) = response;
+
+    }
+    catch (const sdbusplus::exception::exception& e){
+        printf("readDbusProperty() Failed to get property: error = %s\n", e.what());
+    }
+
+    if (rc != 0){
+        printf("deviceGetCoreAPI(): bad return");
+    }
+    else{
+        if (dataOut.size() == 4){
+            fpgavalue = ((uint64_t)dataOut[3] << 32 | (uint64_t)dataOut[2]);
+            
+        }
+        else{
+            printf("PassthroughFpga: Unknown SMBPBI response");
+        }
+
+    }
+
+    return std::make_tuple(rc, fpgavalue);
+
+}
+
 bool setDbusProperty(const std::string& service, const std::string& objPath,
                      const std::string& interface, const std::string& property,
                      const PropertyVariant& val)

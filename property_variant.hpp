@@ -35,10 +35,16 @@ using InvalidMonoState =
 /**
  *  Variant type used for Dbus blocking 'get' and 'set' properties
  */
+
 using PropertyVariant =
     std::variant<InvalidMonoState, bool, uint8_t, int16_t, uint16_t,
                  int32_t, uint32_t, int64_t, uint64_t, double, std::string,
-                 std::vector<std::string>, std::vector<Association>>;
+                 std::vector<std::string>, std::vector<Association>, std::tuple<bool, uint32_t>>;
+
+
+using RetCoreApi = std::tuple<int, std::string, uint64_t>;
+
+using PassthroughFPGA = std::tuple<int, uint64_t>;
 
 /**
  * @brief returns true if the PropertyVariant has a valid value

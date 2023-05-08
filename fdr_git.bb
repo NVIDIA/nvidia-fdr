@@ -13,7 +13,7 @@ LICENSE = "CLOSED"
 LIC_FILES_CHKSUM = ""
 
 # Use below if local development repo is prefered, please commit the change first.
-#SRC_URI = "git:///path/to/nvidia-fdr;protocol=file;;branch=<branch name>"
+#SRC_URI = "git:///home/skandi/flight-data-recorder/nvidia-fdr;protocol=file;branch=skandi/book-of-errors"
 SRC_URI = "git://git@gitlab-master.nvidia.com:12051/dgx/nvidia-fdr.git;protocol=ssh;branch=master"
 
 # Modify these as desired

@@ -344,7 +344,7 @@ GPU: &gpu
             Property: "DataCRCCount"
 
         #TODO: Array of string
-        # - ID: CLK-THROTTLE-REASON
+        # - ID: CLK-EVENT-REASON
         #   <<: *defaults
         #   FetchFreqSecs: 30
         #   FetchMethod: DBUS
@@ -619,6 +619,28 @@ GPU: &gpu
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "ReplayCount"
 
+        - ID: ERR-ABSENT
+          <<: *defaults
+          ParamID: 36
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.State.Decorator.OperationalStatus"
+            Property: "State"
+
+        - ID: PCI-ERR-CTR-UNSUPP-REQ
+          <<: *defaults
+          ParamID: 37
+          FetchFreqSecs: 30
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.PCIe.PCIeECC"
+            Property: "feCount"
+
 
     - ID: Sensor.Clock
       InfoList:
@@ -643,6 +665,28 @@ GPU: &gpu
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
             Interface: "xyz.openbmc_project.Inventory.Item.Dimm"
             Property: "MemoryConfiguredSpeedInMhz"
+
+        - ID: IBUSER-ENFORCED-CLK-LIMIT-MAX
+          <<: *defaults
+          ParamID: 2
+          FetchFreqSecs: 10
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig"
+            Property: "SpeedConfig"
+
+        - ID: OOBUSER-ENFORCED-CLK-LIMIT-MAX
+          <<: *defaults
+          ParamID: 3
+          FetchFreqSecs: 10
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig"
+            Property: "SpeedConfig"
 
       <<: *compaction-definition-sensors
 
@@ -684,18 +728,18 @@ GPU: &gpu
             ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_GPU_SXM_$gpuid_DRAM_0_Power_0" #0,1 -> tempid
             Interface: "xyz.openbmc_project.Sensor.Value"
             Property: "Value"
+
       <<: *compaction-definition-sensors
 
     - ID: Sensor.Thermal
       InfoList:         
 
-        - ID: TEMP-DIFF-MAX
+        - ID: TEMP-TLIMIT
           <<: *defaults
           ParamID: 0
           FetchFreqSecs: 1
           DataType: Uint64
           StorePolicy: EveryFetch
-          # SensorType: "Thermal"
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_TEMP_1"
@@ -1119,6 +1163,16 @@ GPU: &gpu
             Interface: "com.nvidia.MigMode"
             Property: "PendingMIGState"
 
+        - ID: PGOOD
+          <<: *defaults
+          ParamID: 14
+          DataType: Uint64
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
+            Interface: "xyz.openbmc_project.State.Decorator.OperationalStatus"
+            Property: "State"
+
 NVSwitch: &nvswitch
   Params:
     - name: switchid
@@ -1456,7 +1510,23 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "LinkStatus"
 
+        - ID: HEALTH
+          <<: *statusDefaults
+          ParamID: 3
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
 
+        - ID: HEALTH-ROLLUP
+          <<: *statusDefaults
+          ParamID: 4
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
 
     - ID: Sensor.Perf
       InfoList:
@@ -1516,7 +1586,7 @@ NVSwitch: &nvswitch
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_0/PCIeDevices/NVSwitch_0"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.Inventory.Item.PCIeDevice"
             Property: "PCIeType"
 
@@ -1554,7 +1624,7 @@ NVSwitch: &nvswitch
 
       <<: *compaction-definition-sensors
 
-Retimer: &retimer
+PCIeRetimer: &retimer
   Params:
     - name: retimerid
       values: 1
@@ -1592,6 +1662,20 @@ Retimer: &retimer
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
 
+    - ID: Status
+      InfoList:
+        - ID: HEALTH
+          <<: *retimerDefaults
+          ParamID: 0
+          FetchFreqSecs: 3600
+          StorePolicy: OnChange
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_PCIeRetimer_$retimerid"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
+            
 HMC: &hmc
   Params:
     - name: hmcid
@@ -1750,6 +1834,20 @@ HMC: &hmc
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
 
+    - ID: Status
+      InfoList:
+        - ID: HEALTH
+          <<: *hmcDefaults
+          FetchFreqSecs: 3600
+          ParamID: 0
+          StorePolicy: EveryFetch
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.EntityManager"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/bmc/HGX_BMC_0"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
+
 
 FPGA: &fpga
   Params:
@@ -1797,8 +1895,22 @@ FPGA: &fpga
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_FPGA_$fpgaid_TEMP_0"
             Interface: "xyz.openbmc_project.Sensor.Value"
             Property: "Value"
-
+      
       <<: *compaction-definition-sensors
+
+    - ID: Status
+      InfoList:
+        - ID: HEALTH
+          <<: *fpgaDefaults
+          ParamID: 0
+          FetchFreqSecs: 3600
+          StorePolicy: OnChange
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_PCIeRetimer_$fpgaid"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
 
 Baseboard: &baseboard
   Params:
@@ -2019,7 +2131,7 @@ Baseboard: &baseboard
 
     - ID: Sensor.Power
       InfoList:
-        - ID: ALT-PRESSURE
+        - ID: PWR-GB-HSC-TOTAL
           <<: *baseboardDefaults
           ParamID: 0
           DataType: Uint64
@@ -2036,7 +2148,7 @@ Baseboard: &baseboard
 
     - ID: Status
       InfoList:
-        - ID: ALT-PRESSURE
+        - ID: WP-JMPR-PRESENCE
           <<: *baseboardDefaults
           ParamID: 0
           DataType: Uint64
@@ -2046,188 +2158,276 @@ Baseboard: &baseboard
             Interface: "xyz.openbmc_project.Software.Settings"
             Property: "WriteProtected"  
 
+        - ID: HEALTH
+          <<: *baseboardDefaults
+          ParamID: 1
+          FetchFreqSecs: 3600
+          StorePolicy: OnChange
+          DataType: string
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_PCIeRetimer_$baseboardid"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
+
     # TODO
-    # - ID: Error
-    #   InfoList:
-    #     - ID: REDFISH-EVENT-LOG
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 30
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+    - ID: Error
+      InfoList:
+        - ID: REDFISH-EVENT-LOG
+          <<: *baseboardDefaults
+          FetchFreqSecs: 30
+          ParamID: 0
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "GetManagedObjects" 
 
-    #     - ID: I2C1-INT-INFO-ARG00
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: I2C1-INT-INFO-ARG00
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 1
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "GetManagedObjects" 
 
-    #     - ID: I2C1-INT-INFO-ARG80
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"        
+        - ID: I2C1-INT-INFO-ARG80
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 2
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr" 
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x80
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG81
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: I2C1-INT-INFO-ARG81
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 3
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x81
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG82
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"    
+        - ID: I2C1-INT-INFO-ARG82
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 4
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x82
+            Arg2: 0x00 
 
-    #     - ID: I2C1-INT-INFO-ARG83
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"    
+        - ID: I2C1-INT-INFO-ARG83
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 5
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x83
+            Arg2: 0x00  
 
-    #     - ID: I2C1-INT-INFO-ARG84
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"   
+        - ID: I2C1-INT-INFO-ARG84
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 6
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x84
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG85
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"   
+        - ID: I2C1-INT-INFO-ARG85
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 7
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x85
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG86
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"   
+        - ID: I2C1-INT-INFO-ARG86
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 8
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB1
+            Arg1: 0x86
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG80
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"  
+        - ID: I2C2-INT-INFO-ARG80
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 9
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x80
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG81
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: I2C2-INT-INFO-ARG81
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 10
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x81
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG82
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"     
+        - ID: I2C2-INT-INFO-ARG82
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 11
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x82
+            Arg2: 0x00 
 
-    #     - ID: I2C1-INT-INFO-ARG83
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"    
+        - ID: I2C2-INT-INFO-ARG83
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 12
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x83
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG84
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"
+        - ID: I2C2-INT-INFO-ARG84
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 13
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x84
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG85
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: I2C2-INT-INFO-ARG85
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 14
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x85
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG86
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: I2C2-INT-INFO-ARG86
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 15
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x86
+            Arg2: 0x00
 
-    #     - ID: I2C1-INT-INFO-ARG87
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"   
+        - ID: I2C2-INT-INFO-ARG87
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 16
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x87
+            Arg2: 0x00 
 
-    #     - ID: I2C1-INT-INFO-ARG88
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"  
+        - ID: I2C2-INT-INFO-ARG88
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 17
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x88
+            Arg2: 0x00 
 
-    #     - ID: I2C1-INT-INFO-ARG89
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"    
+        - ID: I2C1-INT-INFO-ARG89
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 18
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x89
+            Arg2: 0x00  
 
-    #     - ID: I2C1-INT-INFO-ARG8A
-    #       <<: *baseboardDefaults
-    #       FetchFreqSecs: 60
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects"
+        - ID: I2C1-INT-INFO-ARG8A
+          <<: *baseboardDefaults
+          FetchFreqSecs: 60
+          ParamID: 19
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: /xyz/openbmc_project/GpuMgr
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB2
+            Arg1: 0x8A
+            Arg2: 0x00
 
 
 HSC: &hsc
@@ -2268,114 +2468,134 @@ HSC: &hsc
 
       <<: *compaction-definition-sensors
 
-    #TODO
     - ID: Error
       InfoList:
         - &hscDefaultsError
-          ID: HSC-FAULT-REG-ARG80
+          ID: HSC-FAULT-REG-ARG81
           ParamID: 0
-          FetchFreqSecs: 3600
+          FetchFreqSecs: 30
           FetchPolicy: Periodic
           StorePolicy: OnChange
           DataType: string
-          FetchMethod: DBUS-DGD
-          DbusDGDParams:
-            Service: "xyz.openbmc_project.Logging"
-            ObjectPath: "/xyz/openbmc_project/logging"
+          FetchMethod: DBUS_DGD
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
             Interface: "xyz.openbmc_project.GpuMgr.Server"
-            DevId: 1
+            DevId: 0
             Property: "hsc.device.alert"
 
+        - ID: HSC-FAULT-REG-ARG82
+          <<: *hscDefaultsError
+          ParamID: 1
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 1
 
-    #     - ID: HSC-FAULT-REG-ARG81
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG83
+          <<: *hscDefaultsError
+          ParamID: 2
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 2
 
-    #     - ID: HSC-FAULT-REG-ARG82
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG84
+          <<: *hscDefaultsError
+          ParamID: 3
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 3
 
-    #     - ID: HSC-FAULT-REG-ARG83
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG85
+          <<: *hscDefaultsError
+          ParamID: 4
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 4    
 
-    #     - ID: HSC-FAULT-REG-ARG84
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG86
+          <<: *hscDefaultsError
+          ParamID: 5
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 5 
 
-    #     - ID: HSC-FAULT-REG-ARG85
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG87
+          <<: *hscDefaultsError
+          ParamID: 6
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 6     
 
-    #     - ID: HSC-FAULT-REG-ARG86
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG88
+          <<: *hscDefaultsError
+          ParamID: 7
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 7
 
-    #     - ID: HSC-FAULT-REG-ARG87
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG89
+          <<: *hscDefaultsError
+          ParamID: 8
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 8 
 
-    #     - ID: HSC-FAULT-REG-ARG88
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG8A
+          <<: *hscDefaultsError
+          ParamID: 9
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "hsc.device.alert"
+            DevId: 9
 
-    #     - ID: HSC-FAULT-REG-ARG89
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
+        - ID: HSC-FAULT-REG-ARG8B
+          <<: *hscDefaultsError
+          ParamID: 10
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Property: "standbyhsc.device.alert"
+            DevId: 0    
 
-    #     - ID: HSC-FAULT-REG-ARG8A
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
-
-    #     - ID: HSC-FAULT-REG-ARG8B
-    #       <<: *hscDefaults
-    #       DbusParams:
-    #         Service: "xyz.openbmc_project.Logging"
-    #         ObjectPath: "/xyz/openbmc_project/logging"
-    #         Interface: "org.freedesktop.DBus.ObjectManager"
-    #         Property: "GetManagedObjects" 
-
-
+        - ID: HSC-FAULT-REG-ARG80
+          <<: *hscDefaultsError
+          ParamID: 11
+          FetchMethod: DBUS_PT
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/GpuMgr"
+            Interface: "xyz.openbmc_project.GpuMgr.Server"
+            Opcode: 0xB3
+            Arg1: 0x80
+            Arg2: 0x00
 
 PCIeSwitch: &pcieswitch
   Params:
@@ -2397,6 +2617,19 @@ PCIeSwitch: &pcieswitch
             ObjectPath: "/xyz/openbmc_project/software/HGX_FW_PCIeSwitch_$pcieswitchid"
             Interface: "xyz.openbmc_project.Software.Version"
             Property: "Version"
+
+    - ID: Status
+      InfoList:
+        - ID: HEALTH
+          <<: *fpgaDefaults
+          FetchFreqSecs: 3600
+          StorePolicy: EveryFetch
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_PCIeSwitch_$pcieswitchid"
+            Interface: "xyz.openbmc_project.State.Decorator.Health"
+            Property: "Health"
+
 
 BOOTEVENT: &bootevent
   InfoGroups:
@@ -2485,7 +2718,7 @@ Sections:
           - name: nvswitchid
             value: 3
 
-  - ID: Retimer
+  - ID: PCIeRetimer
     Components:
       - ID: Retimer0
         <<: *retimer

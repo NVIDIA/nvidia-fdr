@@ -20,6 +20,7 @@ namespace dbus
 constexpr auto freeDesktopInterface = "org.freedesktop.DBus.Properties";
 constexpr auto getCall = "Get";
 constexpr auto setCall = "Set";
+constexpr auto callName = "DeviceGetData";
 
 /**
  * @brief returns the service assigned with objectPath and interface
@@ -38,6 +39,12 @@ std::string getService(const std::string& objectPath,
  * @return the value based on std::variant
  */
 PropertyVariant readDbusProperty(const std::string& service, const std::string& objPath, const std::string& interface, const std::string& property);
+
+RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& objPath, const std::string& interface, const std::string& property, const std::int64_t& devId);
+
+PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string& objPath, 
+                                 const std::string& interface, const uint8_t& opcode,
+                                 const std::uint8_t& arg1, const std::uint8_t& arg2);
 
 /**
  * @brief setDbusProperty() sets a value for a Dbus property
