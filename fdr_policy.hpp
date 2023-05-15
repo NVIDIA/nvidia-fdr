@@ -1,8 +1,8 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h" //yaml-cpp lib used for parsing input (yaml) files
 #include <vector>
 #include <ctime>
+#include <yaml-cpp/yaml.h>
 
 struct Profile_t;
 struct GeneralConfig_t;

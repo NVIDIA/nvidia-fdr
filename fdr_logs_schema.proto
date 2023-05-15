@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package fdr;
+package fdrpb;
 
 message fdr_sample {
   uint64 TimeStamp = 1; // Time at which this sample was captured

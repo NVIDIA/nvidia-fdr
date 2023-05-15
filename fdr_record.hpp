@@ -5,13 +5,14 @@
 #include <ctime>
 #include <variant>
 
+#include "fdr_logs_schema.pb.h"
 #include "fdr_policy.hpp"
 #include "fdr_store.hpp"
 
 void CreateLog(Profile_t &profile, std::unique_ptr<FDRStore> &fdrLogWriter, std::string paramClass, std::string compClass, std::string compID);
 
 struct fdr_sample_ext { // Extended version of the fdr_sample proto message
-    fdr::fdr_sample fdr_sample_data;
+    fdrpb::fdr_sample fdr_sample_data;
     std::string paramtype;
     std::string paramname;
 };
@@ -39,7 +40,7 @@ public:
 
     fdr_sample_ext data;             // Data that will actually land in the DB
     fdr_sample_ext last_stored_data; // Last fetched value. Used to determine if anything changed
-    fdr::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
+    fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 
     Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info);
 

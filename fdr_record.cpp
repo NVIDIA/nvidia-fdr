@@ -1,22 +1,14 @@
 #include <iostream>
 #include <fstream>
-#include <string.h>
-#include "fdr_common.hpp"
-#include "fdr_policy.hpp"
-#include "fdr_record.hpp"
-#include "fdr_logs_schema.pb.h"
-
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
 
 
-#include "fdr_store.hpp"
 #include "dbus_accessor.hpp"
-#include "fdr_redfish.hpp"
-
-extern RedfishClient *rfc;
+#include "fdr_common.hpp"
+#include "fdr.hpp"
 
 void CreateLog(Profile_t &profile, std::unique_ptr<FDRStore> &fdrLogWriter, std::string paramClass, std::string compClass, std::string compID) {
 	std::string logsformat = profile.GeneralConfig.LogsFormat;
@@ -278,10 +270,8 @@ void Record::Refresh(void)
                 data.fdr_sample_data.set_paramvaluestring(*ptr);
             }
         }
-    } 
-    
-    else if (info.FetchMethod == "Redfish") {
-        if (!rfc) {
+    } else if (info.FetchMethod == "Redfish") {
+        if (!fdr->rfc) {
             std::cout << "Redfish not configured or not connected, skipping" << std::endl;
             return;
         }
@@ -291,11 +281,11 @@ void Record::Refresh(void)
 
         try {
             if (data.paramtype == "Uint64") {
-                uint64_t u = rfc->query_uint64t (uri, json_pointer);
+                uint64_t u = fdr->rfc->query_uint64t (uri, json_pointer);
                 data.fdr_sample_data.set_paramvalueint64(u);
             } else {
                 // string
-                std::string s = rfc->query_string (uri, json_pointer);
+                std::string s = fdr->rfc->query_string (uri, json_pointer);
                 data.fdr_sample_data.set_paramvaluestring(s);
             }
         } catch (const std::exception &e) {
@@ -452,7 +442,7 @@ void Record::Store(void)
 void Record::Load(void)
 {
     if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdr::fdr_sample readrec;
+        fdrpb::fdr_sample readrec;
         while (fdrreaderwriter->readnext(&readrec))
         { // TODO: read the file from last to first
             if (readrec.paramid() == info.ParamID)
