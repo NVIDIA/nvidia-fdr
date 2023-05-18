@@ -46,6 +46,7 @@ private:
     sqlite3 *DB;
     sqlite3_stmt* sampleFetchStmt;
 
+    google::protobuf::io::ZeroCopyInputStream *binaryinzerocopystream;
 
 public:
     FDRStore(std::string filename, std::string fileformat);
