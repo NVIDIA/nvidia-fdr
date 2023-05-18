@@ -15,6 +15,9 @@ FDRStore::FDRStore(std::string filename, std::string fileformat)    //Protobuf/j
     encodingtouse = fileformat;
 
     instream.open(storagefilepath);
+    if (encodingtouse == "BINARY") {
+        binaryinzerocopystream = new google::protobuf::io::IstreamInputStream(&instream);
+    }
 }
 
 FDRStore::FDRStore(std::string file, std::string fileformat, std::string pClass, std::string cClass, std::string ID) :
@@ -53,6 +56,11 @@ FDRStore::~FDRStore()
     if (DB && encodingtouse == ENCODING_CHOICE_DB){
         sqlite3_finalize(sampleFetchStmt);
         sqlite3_close(DB);
+    } else {
+        if (binaryinzerocopystream) {
+            delete binaryinzerocopystream;
+        }
+        instream.close();
     }
 }
 
@@ -133,12 +141,8 @@ int FDRStore::readnext(google::protobuf::Message *datap){
     {
         if (instream.is_open())
         {
-            google::protobuf::io::ZeroCopyInputStream *binaryinzerocopystream = new google::protobuf::io::IstreamInputStream(&instream);
-
             bool clean_eof = true;
             auto ret = google::protobuf::util::ParseDelimitedFromZeroCopyStream(datap, binaryinzerocopystream, &clean_eof);
-
-            delete binaryinzerocopystream;
 
             if (ret == false)
             {
