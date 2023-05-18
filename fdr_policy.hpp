@@ -1,8 +1,8 @@
 #pragma once
 
-#include "yaml-cpp/yaml.h" //yaml-cpp lib used for parsing input (yaml) files
 #include <vector>
 #include <ctime>
+#include <yaml-cpp/yaml.h>
 
 struct Profile_t;
 struct GeneralConfig_t;
@@ -21,6 +21,11 @@ struct GeneralConfig_t
 	std::string LogsBasePath; // Root directory for all logs for this system
 	std::string LogsFormat;	  // Data encoding format to use (JSON|Binary etc.)
 	std::string DatabaseName; // Database name to be used
+
+	size_t LoggingFileMaxSize;   // Rotate the logging file once it exceed the size
+	size_t LoggingFileNumber;    // How many logging files to keep
+	std::string LoggingLevel;    // default log level, possible values are: trace, debug, info, warn, err, critical, off
+
 	std::string RedfishSchema;
 	std::string RedfishUser;
 	std::string RedfishPassword;
@@ -143,6 +148,10 @@ namespace YAML
 			rhs.LogsFormat = node["LogsFormat"].as<std::string>();
 			if (node["DatabaseName"] || rhs.LogsFormat == "DB")
 				rhs.DatabaseName = node["DatabaseName"].as<std::string>();
+
+			rhs.LoggingFileMaxSize = node["LoggingFileMaxSize"] ? node["LoggingFileMaxSize"].as<size_t>() : 1048576; // default 1 MB
+			rhs.LoggingFileNumber = node["LoggingFileNumber"] ? node["LoggingFileNumber"].as<size_t>() : 3; // default 3 log files
+			rhs.LoggingLevel = node["LoggingLevel"] ? node["LoggingLevel"].as<std::string>() : std::string{"info"}; // default log level
 
 			rhs.RedfishSchema = node["RedfishSchema"] ? node["RedfishSchema"].as<std::string>() : std::string{};
 			rhs.RedfishUser = node["RedfishUser"] ? node["RedfishUser"].as<std::string>() : std::string{};

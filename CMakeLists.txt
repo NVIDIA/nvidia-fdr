@@ -53,7 +53,7 @@ if(NOT YOCTO)
   link_directories (${CMAKE_SOURCE_DIR}/sdbusplus/src/sdbusplus/build)
 endif()
 
-add_executable(fdr main.cpp fdr_policy.cpp fdr_record.cpp fdr_store.cpp dbus_accessor.cpp property_variant.hpp fdr_http.cpp fdr_redfish.cpp ppf_sanity.cpp ${PROTO_SRCS} ${PROTO_HDRS})
+add_executable(fdr main.cpp fdr.cpp fdr_common.cpp fdr_policy.cpp fdr_record.cpp fdr_store.cpp dbus_accessor.cpp property_variant.hpp fdr_http.cpp fdr_redfish.cpp ppf_sanity.cpp ${PROTO_SRCS} ${PROTO_HDRS})
 
 target_link_libraries(fdr PRIVATE ${Protobuf_LIBRARIES})
 target_link_libraries(fdr PRIVATE -lyaml-cpp)
@@ -62,6 +62,8 @@ target_link_libraries(fdr PRIVATE -lsqlite3)
 target_link_libraries(fdr PRIVATE -lsdbusplus)
 target_link_libraries(fdr PRIVATE -lsystemd)
 target_link_libraries(fdr PRIVATE -lcurl)
+target_link_libraries(fdr PRIVATE -lspdlog)
+target_link_libraries(fdr PRIVATE -lfmt)
 
 if (NOT YOCTO)
   add_dependencies (fdr sdbusplus)

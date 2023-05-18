@@ -1,0 +1,418 @@
+#include <filesystem>
+#include <sys/stat.h>
+
+#include "fdr_common.hpp"
+#include "fdr.hpp"
+
+FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
+{
+	int retVal;
+
+	if (!filename.empty())
+	{
+		std::cout << "Specified PPF file " << filename << ", PPF detection skipped" << std::endl;
+		retVal = ConvertPPFToStruct(filename);
+		PPFName = filename;
+	}
+	else
+	{
+		// have to identify the platform
+		retVal = FindAndLoadPlatformProfile();
+	}
+	if (retVal != FDR_SUCCESS)
+	{
+		std::cout << "Error loading PPF file..Exiting!" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	// perform a sanity check of the PPF file
+	SanityChecker.reset(new PPFSanity());
+	retVal = SanityChecker->SanityTestPPF(PPFName);
+	if (retVal != FDR_SUCCESS)
+	{
+		std::cout << "Error: PPF failed sanity test! Please fix the above issue(s) in the PPF " << PPFName << "." << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+	birthCertFilePath = profile.GeneralConfig.LogsBasePath + "/BirthCertificate.tar";
+
+	spdlog::level::level_enum level = spdlog::level::from_str(profile.GeneralConfig.LoggingLevel);
+	this->log = spdlog::rotating_logger_mt("fdr",
+										   this->profile.GeneralConfig.LogsBasePath + "/fdr.log",
+										   this->profile.GeneralConfig.LoggingFileMaxSize,
+										   this->profile.GeneralConfig.LoggingFileNumber);
+	this->log->flush_on(level);
+	this->log->set_level(level);
+
+	this->rfc = nullptr;
+	if (!this->profile.GeneralConfig.RedfishSchema.empty())
+	{
+		try
+		{
+			this->rfc = new RedfishClient(this->profile.GeneralConfig.RedfishSchema,
+										  this->profile.GeneralConfig.RedfishUser,
+										  this->profile.GeneralConfig.RedfishPassword);
+		}
+		catch (const std::exception &e)
+		{
+			this->log->error("Error creating redfish client: {}", e.what());
+		}
+	}
+	else
+	{
+		this->log->info("No redfish configuration found, skipped creating redfish client.");
+	}
+
+	// create the records from the PPF file
+	CreateRecords();
+}
+
+int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
+{
+	// Path to the directory
+	std::vector<std::string> SupportedPlatforms;
+	struct stat sb;
+	int retVal;
+
+	const char *platforms_path = getenv("PLATFORMS_PATH"); // Applicable when FDR is running from a installed location
+	// if the Environment Variable isn't set, we'll look into the most relevant path if/when a developer is running fdr from build directory
+	std::string SupportedPlatformsDir = (platforms_path != NULL ? platforms_path : "./platforms");
+	if (!(std::filesystem::exists(SupportedPlatformsDir)))
+	{
+		std::cout << "Not able to find the 'Platform Profile File' directory" << std::endl;
+		return FDR_ERR_GENFAILURE;
+	}
+
+	// step 1: get all the PPF files
+	for (const auto &entry : std::filesystem::directory_iterator(SupportedPlatformsDir))
+	{
+		// Testing whether the path points to a non-directory or not If it does, displays path
+		if (stat(entry.path().c_str(), &sb) == 0 && !(sb.st_mode & S_IFDIR))
+		{
+			SupportedPlatforms.push_back(entry.path());
+		}
+	}
+
+	// sort the list of platform files ascendingly
+	sort(SupportedPlatforms.begin(), SupportedPlatforms.end());
+
+	// step 2: loop through the list of PPFs, execute the rules and find the right PPF
+	for (auto filename : SupportedPlatforms)
+	{
+
+		std::cout << "Trying " + filename << std::endl;
+
+		// HACK: If YAML, convert to JSON because yaml-cpp has trouble parsing yaml with anchors and aliases
+		if (filename.substr(filename.find_last_of(".")) != ".yaml")
+		{
+			std::cout << "skipping non config file: " << filename << std::endl;
+			continue;
+		}
+
+		// convert the given PPF to data structs
+		retVal = ConvertPPFToStruct(filename);
+		if (retVal != FDR_SUCCESS)
+		{
+			std::cout << "ExecuteFingerPrintRules failed...Try another" << std::endl;
+			continue;
+		}
+		// execute the Fingerprint in the PPF
+		retVal = ExecuteFingerPrintRules();
+		if (retVal == FDR_SUCCESS)
+		{
+			std::cout << "Found the PPF file: " << filename << std::endl;
+			PPFName = filename;
+			// now Data struct have all the values from this PPF file. Hence return FDR_SUCCESS.
+			return FDR_SUCCESS;
+		}
+	}
+
+	std::cout << "Not able to find the right PPF file for this platform." << std::endl;
+
+	return FDR_ERR_GENFAILURE;
+}
+
+// convert the Platform Profile File[PPF] file and store the values in the "profile" data struct
+int FlightDataRecorder_c::ConvertPPFToStruct(const std::string filename)
+{
+	// catch any exception while parsing through the yaml or json file
+	try
+	{
+		YAML::Node PlatformProfile = YAML::LoadFile(filename);
+
+		profile.FingerPrint = PlatformProfile["FingerPrint"].as<FingerPrint_t>();
+		profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();
+		profile.Sections = PlatformProfile["Sections"].as<std::vector<Section_t>>();
+
+		return EXIT_SUCCESS;
+	}
+	catch (std::exception &e)
+	{
+		std::cout << "Exception while parsing " << filename << ": " << e.what() << std::endl;
+		return EXIT_FAILURE;
+	}
+}
+
+// use the values from "profile" data struct and execute the rules
+int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
+{
+	for (auto CheckRule : profile.FingerPrint.Checks)
+	{
+		CommandResult_t cmdResult = exec(CheckRule.c_str());
+		// std::cout << "\tcommandresult: "
+		// 		  << "cmdExitstatus: " << cmdResult.cmdExitstatus << std::endl;
+		//   << "; cmdOutput: " << cmdResult.cmdOutput << std::endl;
+		if (cmdResult.cmdExitstatus != FDR_SUCCESS)
+		{
+			// if any of the command failed, then this is not the PPF file for this platform
+			std::cout << "command Failed: " << CheckRule << std::endl;
+			return FDR_ERR_GENFAILURE;
+		}
+	}
+	return FDR_SUCCESS;
+}
+
+std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateParamDescriptionLog(void)
+{
+	std::unique_ptr<FDRStore> fdrParamsWriter;
+	std::string paramClass = "ParamDescription";
+	std::string compClass = "Schema";
+	std::string compID = "";
+
+	CreateLog(profile, fdrParamsWriter, paramClass, compClass, compID);
+
+	return fdrParamsWriter;
+}
+
+void FlightDataRecorder_c::CreateRecords(void)
+{
+	std::unique_ptr<FDRStore> fdrParamsWriter = CreateParamDescriptionLog();
+	for (auto &section : profile.Sections)
+	{
+		// std::cout << "Section.ID: " << section.ID << "\n";
+		section.parent_profile = &profile;
+		for (auto &component : section.Components)
+		{
+			// std::cout << "\tComponent.ID: " << component.ID << "\n";
+			component.parent_section = &section;
+			for (auto &infogroup : component.InfoGroups)
+			{
+				infogroup.parent_component = &component;
+				for (auto &info : infogroup.InfoList)
+				{
+					// Save link to the parent
+					info.parent_infogroup = &infogroup;
+
+					// Create a record object
+					Record *resource = new Record(profile, section, component, infogroup, info);
+
+					// Append it to the list
+					RecList.push_back(resource);
+
+					// Create fdr_params data
+					fdrpb::fdr_params data;
+					data.set_compclass(section.ID);
+					data.set_paramclass(infogroup.ID);
+					data.set_paramname(info.ID);
+					data.set_paramid(info.ParamID);
+					data.set_paramtype(info.DataType);
+					// data.set_paramunits(info.ID); // TO-DO
+					// data.set_paramnotes(info.ID); // TO-DO
+					fdrParamsWriter->append(data);
+				}
+			}
+		}
+	}
+}
+
+// This method will creates a snapshot of all Inventory.log, config.log and Versions.log
+// of all the inventory only for the very first time when fdr booted
+void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
+{
+	// 1. execute all the records irrespective of whether birth certificate got created or not
+	RefreshAndRecord(false);
+
+	// 2. create the birth certificate archieve, if not already present
+	if (!(std::filesystem::exists(birthCertFilePath)))
+	{
+		std::string fdrDumpPath = profile.GeneralConfig.LogsBasePath;
+		std::string commandStr = "find " + fdrDumpPath + " | grep -e Inventory.log -e Config.log -e Versions.log | xargs tar -cJf " + birthCertFilePath;
+
+		// std::cout << "tarCmd: " << commandStr << std::endl;
+		CommandResult_t cmdResult = exec(commandStr.c_str());
+		if (cmdResult.cmdExitstatus != FDR_SUCCESS)
+		{
+			std::cout << "tarCmd command Failed: " << commandStr << std::endl;
+			return;
+		}
+		std::cout << "Successfully created Birth certificate: " << birthCertFilePath << std::endl;
+	}
+	else
+	{
+		// std::cout << "exist: " << birthCertFilePath << "..so no need to create Birthcertificate again!!" << std::endl;
+	}
+}
+
+void FlightDataRecorder_c::ReadOldRecords(void)
+{
+	for (auto &rec : RecList)
+	{
+		if (rec->info.FetchPolicy.compare("Periodic") == 0)
+		{
+			rec->Load();
+		}
+	}
+}
+
+void FlightDataRecorder_c::RefreshAndRecord(bool skipOnBootRec)
+{
+	for (auto &rec : RecList)
+	{
+		if (rec->info.FetchPolicy.compare("OnBoot") == 0 && skipOnBootRec == true)
+		{
+			continue;
+		}
+		rec->Refresh();
+		rec->Store();
+	}
+}
+
+void FlightDataRecorder_c::Compactor(void)
+{
+	for (auto &section : profile.Sections)
+	{
+		for (auto &component : section.Components)
+		{
+			for (auto &infogroup : component.InfoGroups)
+			{
+				if (infogroup.CompactionMethod != "Average")
+					continue; // Only numerical stats can be compacted not text etc. for now
+
+				double timeSinceLastCompaction = difftime(std::time(nullptr), infogroup.LastCompactedAt);
+				// std::cout << "LastCompactedAt: " << infogroup.LastCompactedAt
+				// 		  << "\tCurrentTime: " << std::time(nullptr)
+				// 		  << "\tCompactionFreqSecs: " << infogroup.CompactionFreqSecs
+				// 		  << "\ttimeSinceLastCompaction: " << timeSinceLastCompaction
+				// 		  << "\tCompactionPolicy: " << infogroup.CompactionPolicy
+				// 		  << std::endl;
+
+				// Skip if its not time to compact yet
+				if ((infogroup.CompactionPolicy == "Periodic") && (timeSinceLastCompaction < infogroup.CompactionFreqSecs))
+				{
+					// std::cout << "Skippping Compaction" << std::endl;
+					continue;
+				}
+				else
+				{
+					// std::cout << "Proceeding with Compaction" << std::endl;
+				}
+
+				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON || profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY)
+				{
+					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + section.ID + "/" + component.ID + "/";
+					std::string logfile = infogroup.ID + ".log";
+					std::string statsfile = infogroup.ID + ".stats";
+
+					// Create a map info.ParamID --> {n,min,max,sum,}
+					std::map<unsigned int, fdrpb::fdr_stat> stats_so_far;
+
+					FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat);
+					fdrpb::fdr_sample readrec;
+					while (fdrlogs.readnext(&readrec))
+					{
+						stats_so_far[readrec.paramid()].set_paramid(readrec.paramid());
+						stats_so_far[readrec.paramid()].set_numsamples(stats_so_far[readrec.paramid()].numsamples() + 1);
+						stats_so_far[readrec.paramid()].set_avg(stats_so_far[readrec.paramid()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
+						if (stats_so_far[readrec.paramid()].min() != 0)
+							stats_so_far[readrec.paramid()].set_min(std::min(stats_so_far[readrec.paramid()].min(), readrec.paramvalueint64()));
+						else
+							stats_so_far[readrec.paramid()].set_min(readrec.paramvalueint64());
+						stats_so_far[readrec.paramid()].set_max(std::max(stats_so_far[readrec.paramid()].max(), readrec.paramvalueint64()));
+						stats_so_far[readrec.paramid()].set_fromtime(stats_so_far[readrec.paramid()].fromtime() == 0 ? readrec.timestamp() : stats_so_far[readrec.paramid()].fromtime());
+						stats_so_far[readrec.paramid()].set_totime(readrec.timestamp());
+					}
+					for (auto &stat : stats_so_far)
+					{
+						stat.second.set_avg(stat.second.avg() / stat.second.numsamples());
+
+						std::cout << "-----Stats for ParamID: " << stat.first << std::endl;
+						std::cout << "Num: " << stat.second.numsamples() << std::endl;
+						std::cout << "Min: " << stat.second.min() << std::endl;
+						std::cout << "Max: " << stat.second.max() << std::endl;
+						std::cout << "Avg: " << stat.second.avg() << std::endl;
+
+						FDRStore fdrstats(logdir + statsfile, profile.GeneralConfig.LogsFormat);
+						fdrstats.append(stat.second);
+						infogroup.LastCompactedAt = std::time(nullptr);
+						// Delete the records we just compacted
+						std::string filetodelete = logdir + logfile;
+						if (remove(filetodelete.c_str()) != 0)
+						{
+							perror("Error deleting file");
+							std::cout << "Failed to delete: " << filetodelete << std::endl;
+						}
+						else
+						{
+							std::cout << "Succesfully deleted: " << filetodelete << std::endl;
+						}
+					}
+				}
+				else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB)
+				{
+					std::string logdir = profile.GeneralConfig.LogsBasePath + "/";
+					std::string logfile = profile.GeneralConfig.DatabaseName;
+
+					// Create a map info.ParamID --> {n,min,max,sum,}
+					std::map<unsigned int, fdr_stat_sql> stats_so_far;
+
+					FDRStore fdrlogs(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
+					fdr_sample_sql readrec;
+					while (fdrlogs.readnext(&readrec))
+					{
+						stats_so_far[readrec.paramID].paramID = readrec.paramID;
+						// stats_so_far[readrec.paramID].paramName = readrec.paramName;
+						stats_so_far[readrec.paramID].numsamples += 1;
+						stats_so_far[readrec.paramID].avg += readrec.paramValueInt64; // TODO: using avg field as sum. avoid overflow.
+						if (stats_so_far[readrec.paramID].min != 0)
+							stats_so_far[readrec.paramID].min = std::min(stats_so_far[readrec.paramID].min, readrec.paramValueInt64);
+						else
+							stats_so_far[readrec.paramID].min = readrec.paramValueInt64;
+						stats_so_far[readrec.paramID].max = std::max(stats_so_far[readrec.paramID].max, readrec.paramValueInt64);
+						stats_so_far[readrec.paramID].fromtime = stats_so_far[readrec.paramID].fromtime == 0 ? readrec.timestamp : stats_so_far[readrec.paramID].fromtime;
+						stats_so_far[readrec.paramID].totime = readrec.timestamp;
+					}
+
+					FDRStore fdrstats(logdir + logfile, profile.GeneralConfig.LogsFormat, infogroup.ID, section.ID, component.ID);
+					fdrstats.createStatesTable();
+
+					for (auto &stat : stats_so_far)
+					{
+						stat.second.avg = stat.second.avg / stat.second.numsamples;
+
+						std::cout << "-----Stats for ParamID: " << stat.first << std::endl;
+						std::cout << "Num: " << stat.second.numsamples << std::endl;
+						std::cout << "Min: " << stat.second.min << std::endl;
+						std::cout << "Max: " << stat.second.max << std::endl;
+						std::cout << "Avg: " << stat.second.avg << std::endl;
+
+						fdrstats.appendStat(stat.second);
+						infogroup.LastCompactedAt = std::time(nullptr);
+					}
+					// Delete existing records
+					fdrlogs.deleteRecords();
+				}
+			}
+		}
+	}
+}
+
+FlightDataRecorder_c::~FlightDataRecorder_c()
+{
+	if (this->rfc)
+	{
+		delete this->rfc;
+	}
+
+	PPFSanity *fds = SanityChecker.release();
+	delete fds;
+}
