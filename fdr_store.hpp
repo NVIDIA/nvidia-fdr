@@ -1,3 +1,14 @@
+/*
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+ NVIDIA CORPORATION and its licensors retain all intellectual property
+ and proprietary rights in and to this software, related documentation
+ and any modifications thereto.  Any use, reproduction, disclosure or
+ distribution of this software and related documentation without an express
+ license agreement from NVIDIA CORPORATION is strictly prohibited.
+*
+*/
+
 #pragma once
 
 #include <string>
@@ -6,6 +17,9 @@
 #include <sqlite3.h>
 #include "fdr_logs_schema.pb.h"
 //using namespace fdr;
+
+#define STORE_WRITER 0
+#define STORE_READER 1
 
 const std::string ENCODING_CHOICE_JSON = "JSON";
 const std::string ENCODING_CHOICE_BINARY = "BINARY";
@@ -49,7 +63,7 @@ private:
     google::protobuf::io::ZeroCopyInputStream *binaryinzerocopystream;
 
 public:
-    FDRStore(std::string filename, std::string fileformat);
+    FDRStore(std::string filename, std::string fileformat, int isStoreReaderWriter);
     FDRStore(std::string filename, std::string fileformat, std::string paramClass, std::string compClass, std::string compID);
     ~FDRStore();
 

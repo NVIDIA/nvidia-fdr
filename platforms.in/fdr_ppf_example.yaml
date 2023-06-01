@@ -1,6 +1,22 @@
+#----------------------------------------------------------------------------------
+#  Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+#  NVIDIA CORPORATION and its licensors retain all intellectual property
+#  and proprietary rights in and to this software, related documentation
+#  and any modifications thereto.  Any use, reproduction, disclosure or
+#  distribution of this software and related documentation without an express
+#  license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+# This file contains the parameters which FDR monitors, samples and
+# writes into the specified target directory either periodically or as per
+# the mentioned policy. 
+
+# NOTE: 
+# This file is not customer editable unless under the supervision of NVIDIA.
+#----------------------------------------------------------------------------------
 
 FingerPrint:
-  Checks:   # all conditions needs to be satisified
+  Checks:   # all conditions needs to be satisfied
     - "grep -q -i Ubuntu /etc/os-release"
 
 GeneralConfig:
@@ -25,6 +41,12 @@ GeneralConfig:
   #RedfishSchema: 
   #RedfishUser: 
   #RedfishPassword:  
+  CompactionWindowSecs: 60 # 604800 # 1 week, every week new directory is created
+  CompactionSubWindowSecs: 10 #7200 # 2 hours, every 2 hours stats are created
+  HiFiDataPreserveTimeSecs: 20 #14400 # 4 hours, <-4 hours ---Error--- +4 hours> worth of entires
+  DefaultCompactionSensors: &compaction-definition-sensors
+    RecordRetentionPolicy: Recreate
+    CompactionMethod: Average
 
 GPU: &gpu
   Params:
@@ -104,7 +126,7 @@ GPU: &gpu
           ParamID: 1
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=ecc.errors.corrected.volatile.l2_cache"
-    - ID: Sensors
+    - ID: Sensor.Thermal
       InfoList:
         - ID: GPUTemp
           <<: *defaults
@@ -119,10 +141,49 @@ GPU: &gpu
           StorePolicy: EveryFetch
           DataType: Uint64
           CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
-      CompactionPolicy: Periodic
-      CompactionFreqSecs: 60
-      CompactionMethod: Average
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.memory"
+      <<: *compaction-definition-sensors
+    - ID: Sensor.Clock
+      InfoList:
+        - ID: SM
+          <<: *defaults
+          ParamID: 0
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.sm"
+        - ID: Memory
+          <<: *defaults
+          ParamID: 1
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.memory"
+        - ID: Graphics
+          <<: *defaults
+          ParamID: 2
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.graphics"
+        - ID: Video
+          <<: *defaults
+          ParamID: 3
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.video"
+      <<: *compaction-definition-sensors
+    - ID: Sensor.Power
+      InfoList:
+        - ID: Power
+          <<: *defaults
+          ParamID: 0
+          StorePolicy: EveryFetch
+          DataType: Uint64
+          CommandParams:
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.draw"
+      <<: *compaction-definition-sensors
 
 NIC: &nic
   Params:
@@ -143,21 +204,20 @@ NIC: &nic
             ObjectPath: "/org/freedesktop/NetworkManager/Devices/$nicid"
             Interface: "org.freedesktop.NetworkManager.Device.Statistics"
             Property: "RxBytes"
-      CompactionPolicy: Periodic
-      CompactionFreqSecs: 20
-      CompactionMethod: Average
+      <<: *compaction-definition-sensors
 
 BOOTEVENT: &bootevent
   InfoGroups:
-    - ID: bootevent
+    - ID: BootEvent
       InfoList:
         - ID: BootEventLog
           <<: *defaults
           ParamID: 0
           FetchPolicy: OnBoot
           StorePolicy: EveryFetch
-          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
-            Command: "./tools/FdrBootCounter.sh $logbasepath; echo ';'; uptime -s"
+          CommandParams:
+            Command: "cat $logbasepath/Bookkeeper/BootCount.txt; echo ';'; uptime -s"
+      RecordRetentionPolicy: AfterBootDelete
 
 Sections:
   - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance

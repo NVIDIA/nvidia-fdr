@@ -1,13 +1,17 @@
+/*
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+ NVIDIA CORPORATION and its licensors retain all intellectual property
+ and proprietary rights in and to this software, related documentation
+ and any modifications thereto.  Any use, reproduction, disclosure or
+ distribution of this software and related documentation without an express
+ license agreement from NVIDIA CORPORATION is strictly prohibited.
+*
+*/
 
 #include <unistd.h>
 #include <systemd/sd-bus.h>
-
 #include "fdr.hpp"
-
-static inline const char *strna(const char *s)
-{
-	return s ? s : "n/a";
-}
 
 sd_bus *bus = NULL;
 
@@ -63,9 +67,6 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	// Read in the last recorded values from log files
-	fdr->ReadOldRecords();
-
 #if 0
 	// Install Listeners so we can avoid polling as much as possible
 	sd_bus_match_signal(
@@ -93,7 +94,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		// Start the core engine of fetching and recording
-		fdr->RefreshAndRecord(true);
+		fdr->RefreshAndRecord();
 
 		// Compactor
 		fdr->Compactor();

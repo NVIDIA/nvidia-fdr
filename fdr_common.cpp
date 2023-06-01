@@ -1,5 +1,15 @@
-#include <array>
+/*
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
 
+ NVIDIA CORPORATION and its licensors retain all intellectual property
+ and proprietary rights in and to this software, related documentation
+ and any modifications thereto.  Any use, reproduction, disclosure or
+ distribution of this software and related documentation without an express
+ license agreement from NVIDIA CORPORATION is strictly prohibited.
+*
+*/
+
+#include <array>
 #include "fdr_common.hpp"
 
 CommandResult_t exec(const char *cmd)
@@ -11,6 +21,7 @@ CommandResult_t exec(const char *cmd)
 	FILE *pipe = popen(cmd, "r");
 	if (pipe == nullptr)
 	{
+		std::cout << "exec cmd failed: " << cmd << std::endl;
 		throw std::runtime_error("popen() failed!");
 	}
 	try
@@ -29,4 +40,26 @@ CommandResult_t exec(const char *cmd)
 	exitcode = WEXITSTATUS(pclose(pipe));
 
 	return CommandResult_t{result, exitcode};
+}
+
+std::vector<std::string> split(std::string str, char delimter)
+{
+	std::vector<std::string> retSplitVector;
+	// declaring temp string to store the curr "word" upto del
+	std::string temp = "";
+
+	for(int i=0; i<(int)str.size(); i++) {
+		// If cur char is not del, then append it to the cur "word", otherwise
+		// you have completed the word, print it, and start a new word.
+		if(str[i] != delimter) {
+			temp += str[i];
+		} else {
+			retSplitVector.push_back(temp);
+			temp = "";
+		}
+	}
+
+	retSplitVector.push_back(temp);
+
+	return retSplitVector;
 }

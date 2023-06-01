@@ -1,3 +1,14 @@
+/*
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+ NVIDIA CORPORATION and its licensors retain all intellectual property
+ and proprietary rights in and to this software, related documentation
+ and any modifications thereto.  Any use, reproduction, disclosure or
+ distribution of this software and related documentation without an express
+ license agreement from NVIDIA CORPORATION is strictly prohibited.
+*
+*/
+
 #pragma once
 
 #include <vector>
@@ -29,6 +40,9 @@ struct GeneralConfig_t
 	std::string RedfishSchema;
 	std::string RedfishUser;
 	std::string RedfishPassword;
+	uint64_t CompactionWindowSecs;
+	uint64_t CompactionSubWindowSecs;
+	uint64_t HiFiDataPreserveTimeSecs;
 };
 
 struct CommandParams_t
@@ -82,9 +96,9 @@ struct InfoGroup_t
 {
 	std::string ID;				   // Unique ID for this group eg: Inventory|Config|Versions|Errors|Stats
 	std::vector<Info_t> InfoList;  // List of information related to this component
-	std::string CompactionPolicy;  // Compaction policy (Periodic|OnChange|etc.)
+	std::string RecordRetentionPolicy;  // Compaction policy (Periodic|OnChange|etc.)
 	std::string CompactionMethod;  // Compaction method (Average|Discard|etc.)
-	int CompactionFreqSecs;		   // Seconds between each compaction (if CompactionPolicy==Periodic)
+	int CompactionFreqSecs;		   // Seconds between each compaction (if RecordRetentionPolicy==Periodic)
 	Component_t *parent_component; // Pointer to the component this infogroup belongs to
 	std::time_t LastCompactedAt;   // Time of last compaction
 };
@@ -156,6 +170,10 @@ namespace YAML
 			rhs.RedfishSchema = node["RedfishSchema"] ? node["RedfishSchema"].as<std::string>() : std::string{};
 			rhs.RedfishUser = node["RedfishUser"] ? node["RedfishUser"].as<std::string>() : std::string{};
 			rhs.RedfishPassword = node["RedfishPassword"] ? node["RedfishPassword"].as<std::string>() : std::string{};
+			rhs.CompactionWindowSecs = node["CompactionWindowSecs"] ? node["CompactionWindowSecs"].as<uint64_t>() : 0;
+			rhs.CompactionSubWindowSecs = node["CompactionSubWindowSecs"] ? node["CompactionSubWindowSecs"].as<uint64_t>() : 0;
+			rhs.HiFiDataPreserveTimeSecs = node["HiFiDataPreserveTimeSecs"] ? node["HiFiDataPreserveTimeSecs"].as<uint64_t>() : 0;
+
 			return true;
 		}
 	};
@@ -308,9 +326,9 @@ namespace YAML
 			rhs.ID = node["ID"].as<std::string>();
 			rhs.InfoList = node["InfoList"].as<std::vector<Info_t>>();
 
-			if (node["CompactionPolicy"])
+			if (node["RecordRetentionPolicy"])
 			{
-				rhs.CompactionPolicy = node["CompactionPolicy"].as<std::string>();
+				rhs.RecordRetentionPolicy = node["RecordRetentionPolicy"].as<std::string>();
 			}
 			if (node["CompactionMethod"])
 			{

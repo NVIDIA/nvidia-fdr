@@ -1,5 +1,22 @@
+#----------------------------------------------------------------------------------
+#  Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+#  NVIDIA CORPORATION and its licensors retain all intellectual property
+#  and proprietary rights in and to this software, related documentation
+#  and any modifications thereto.  Any use, reproduction, disclosure or
+#  distribution of this software and related documentation without an express
+#  license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+# This file contains the parameters which FDR monitors, samples and
+# writes into the specified target directory either periodically or as per
+# the mentioned policy. 
+
+# NOTE: 
+# This file is not customer editable unless under the supervision of NVIDIA.
+#----------------------------------------------------------------------------------
+
 FingerPrint:
-  Checks:   # all conditions needs to be satisified
+  Checks:   # all conditions needs to be satisfied
       - "grep -q -i openbmc-phosphor /etc/os-release"
       - "grep -q -i hgx /etc/os-release"
       - "grep -q -i VULCAN /etc/os-release"
@@ -9,9 +26,11 @@ GeneralConfig:
   #DatabaseName: "Database.db"   #Only used if logs format is DB
   LogsBasePath: &LogsBasePath
     - "/home/root/"
+  CompactionWindowSecs: 604800 # 1 week, every week new directory is created
+  CompactionSubWindowSecs: 7200 # 2 hours, every 2 hours stats are created
+  HiFiDataPreserveTimeSecs: 14400 # 4 hours, <-4 hours ---Error--- +4 hours> worth of entires
   DefaultCompactionSensors: &compaction-definition-sensors
-    CompactionFreqSecs: 60 #1 min
-    CompactionPolicy: Periodic
+    RecordRetentionPolicy: Recreate
     CompactionMethod: Average
 
 GPU: &gpu
@@ -2641,8 +2660,9 @@ BOOTEVENT: &bootevent
           FetchPolicy: OnBoot
           FetchFreqSecs: 5
           StorePolicy: EveryFetch
-          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
-            Command: "./tools/FdrBootCounter.sh $logbasepath; echo ';'; uptime -s"
+          CommandParams:
+            Command: "cat $logbasepath/Bookkeeper/BootCount.txt; echo ';'; uptime -s"
+      RecordRetentionPolicy: AfterBootDelete
 
 Sections:
   - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance

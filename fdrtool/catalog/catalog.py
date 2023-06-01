@@ -137,7 +137,7 @@ class Catalog:
       CreateCombinedViews(self.sqliteClient)
       
   def CreateParamDescriptions(self):
-    param_filename = os.path.join(LOG_DIRECTORY, "Schema/ParamDescription.log")
+    param_filename = os.path.join(LOG_DIRECTORY, "Bookkeeper/ParamDescription.log")
     self.decode_binary_file(param_filename)
     
     global ParamDescription
