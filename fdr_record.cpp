@@ -1,55 +1,30 @@
+/*
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+ NVIDIA CORPORATION and its licensors retain all intellectual property
+ and proprietary rights in and to this software, related documentation
+ and any modifications thereto.  Any use, reproduction, disclosure or
+ distribution of this software and related documentation without an express
+ license agreement from NVIDIA CORPORATION is strictly prohibited.
+*
+*/
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <boost/algorithm/string.hpp>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
-
-
-#include "dbus_accessor.hpp"
-#include "fdr_common.hpp"
 #include "fdr.hpp"
 
-void CreateLog(Profile_t &profile, std::unique_ptr<FDRStore> &fdrLogWriter, std::string paramClass, std::string compClass, std::string compID) {
-	std::string logsformat = profile.GeneralConfig.LogsFormat;
 
-	// Only used if encoding type is binary/json
-    std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + compClass + "/" + compID + "/"; // base directory for logs
-    std::string logfile = paramClass + ".log"; // relative filename of logs
-
-    std::string logfilepath; // full filepath of logs
-	if (logsformat == ENCODING_CHOICE_DB){
-        logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
-    }
-    else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON){
-        logfilepath = logdir + logfile;
-    }
-	// Create log directory if missing
-    std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_DB){
-        dir = profile.GeneralConfig.LogsBasePath;
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        dir = logdir;
-    }
-    if (!(std::filesystem::exists(dir)))
-    {
-        if (!(std::filesystem::create_directories(dir)))
-            std::cout << "Failed to create directory: " << dir << std::endl;
-        // TODO: error handling
-    }
-
-    if (logsformat == ENCODING_CHOICE_DB){
-        fdrLogWriter.reset(new FDRStore(logfilepath, logsformat, paramClass, compClass, compID));
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrLogWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat));
-    }
-}
-
-Record::Record(Profile_t &profile, Section_t &section, Component_t &component, InfoGroup_t &infogroup, Info_t &info) : profile(profile), section(section), component(component), infogroup(infogroup), info(info)
+Record::Record(Profile_t &profile, Section_t &section,
+              Component_t &component, std::shared_ptr<FDRStore> &fdrStoreObj,
+              InfoGroup_t &infogroup, Info_t &info) : 
+              profile(profile), section(section), component(component), 
+              fdrreaderwriter(fdrStoreObj), infogroup(infogroup), info(info)
+              
 {   
-    bookoferrorspath = profile.GeneralConfig.LogsBasePath + "BookOfErrors.log";
     LastFetchedAt = 0; // Init last read time to epoch
     LastStoredAt = 0;  // Init last store time to epoch
 
@@ -72,24 +47,19 @@ Record::Record(Profile_t &profile, Section_t &section, Component_t &component, I
 
     logsformat = profile.GeneralConfig.LogsFormat;
 
-    std::string paramClass = infogroup.ID;
-    std::string compClass = section.ID;
-    std::string compID = component.ID;
-
-    CreateLog(profile, fdrreaderwriter, paramClass, compClass, compID);
-
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrbookoferrorswriter.reset(new FDRStore(bookoferrorspath,profile.GeneralConfig.LogsFormat));
-    }
     // for debugging purpose
     // Print();
 }
 
 Record::~Record()
 {
-    // data.release_paramtype();
-    FDRStore* fds = fdrreaderwriter.release();
-    delete fds;
+    // std::cout << "Record Destructor called: " << section.ID 
+    //           << "/" << component.ID 
+    //           << "/" << infogroup.ID
+    //           << "/" << info.ID 
+    //           << "; fdrreaderwriter.use_count: " << fdrreaderwriter.use_count()
+    //           << std::endl;
+    // Print();
 }
 
 void Record::Refresh(void)
@@ -104,17 +74,6 @@ void Record::Refresh(void)
     data.paramtype = info.DataType;
     data.fdr_sample_data.set_paramid(info.ParamID);
     LastFetchedAt = current_time;
-
-
-    // Check for Error Counters
-
-    std::array<std::string, 6> errorsList1 = { "GPU-PCI-ERR-CTR-FATAL", "GPU-PCI-ERR-CTR-NON-FATAL", "GPU-PCI-ERR-CTR-UNSUPP-REQ", 
-            "NVSWITCH-PCI-ERR-CTR-FATAL", "NVSWITCH-PCI-ERR-CTR-NON-FATAL", "NVSWITCH-PCI-ERR-CTR-UNSUPP-REQ" };
-
-    std::array<std::string, 2> errorsList2 = { "GPU-NVLINK-ERR-CTR-RECOVERY" , "NVSWITCH-NVLINK-ERR-CTR-RECOVERY"};
-
-    std::array<std::string, 2> healthFields = { "HEALTH" , "HEALTH-ROLLUP"};
-    std::array<std::string, 2> healthErrorConditions = {  "Warning", "Critical"};
 
     if (info.FetchMethod == "Command")
     {
@@ -139,83 +98,15 @@ void Record::Refresh(void)
     }
     else if (info.FetchMethod == "DBUS")
     {
-        std::cout << "DbusParams Are: " << std::endl
-                  << "\tService: " << info.DbusParams.Service.c_str() << std::endl
-                  << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
-                  << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
-                  << "\tProperty: " << info.DbusParams.Property.c_str() << std::endl;
+        // std::cout << "DbusParams Are: " << std::endl
+        //           << "\tService: " << info.DbusParams.Service.c_str() << std::endl
+        //           << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
+        //           << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
+        //           << "\tProperty: " << info.DbusParams.Property.c_str() << std::endl;
 
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
-
-        // Checking for Error Counters
-
-        if (std::find(std::begin(errorsList1), std::end(errorsList1), info.ID) != std::end(errorsList1))
-        {
-
-            auto err1_int64 = std::get_if<int64_t>(&val);
-            auto err1_uint64 = std::get_if<uint64_t>(&val);
-            auto err1_uint32 = std::get_if<uint32_t>(&val);
-            auto err1_int32 = std::get_if<int32_t>(&val);
-            auto err1_int16 = std::get_if<int16_t>(&val);
-            auto err1_uint16 = std::get_if<uint16_t>(&val);
-
-            if (*err1_int64 <=0 || *err1_uint64 <=0 || *err1_uint32<=2 || *err1_int32<=0 || *err1_uint16<=2 || *err1_int16<=0) 
-            {
-                book_of_errors.set_bootid("1"); //TODO
-                book_of_errors.set_paramid(info.ParamID);
-                book_of_errors.set_devicetype(section.ID);
-                book_of_errors.set_deviceinstance(component.ID);
-                book_of_errors.set_errortype("Error Counter");
-                book_of_errors.set_erroroccurtimestamp(current_time); 
-            }
-            
-        }
-
-        if (std::find(std::begin(errorsList2), std::end(errorsList2), info.ID) != std::end(errorsList2))
-        {
-            auto ptr_int64 = std::get_if<int64_t>(&val);
-            auto ptr_uint64 = std::get_if<uint64_t>(&val);
-            auto ptr_uint32 = std::get_if<uint32_t>(&val);
-            auto ptr_int32 = std::get_if<int32_t>(&val);
-            auto ptr_int16 = std::get_if<int16_t>(&val);
-            auto ptr_uint16 = std::get_if<uint16_t>(&val);
-
-            if (*ptr_int64 <=2 || *ptr_uint64 <=2 || *ptr_uint32<=2 || *ptr_int32<=2 || *ptr_int16<=2 || *ptr_uint16<=2) 
-            {
-                book_of_errors.set_bootid("1"); //TODO
-                book_of_errors.set_paramid(info.ParamID);
-                book_of_errors.set_devicetype(section.ID);
-                book_of_errors.set_deviceinstance(component.ID);
-                book_of_errors.set_errortype("Error Counter");
-                book_of_errors.set_erroroccurtimestamp(current_time); 
-            } 
-        }
-
-        // Code to check NVSWITCH-PCI-ERR-CTR-CORR
-        // Code to check GPU-ROW-REMAP-FAILED
-
-
-        // Overall Health of a component
-        if (std::find(std::begin(healthFields), std::end(healthFields), info.ID) != std::end(healthFields))
-        {
-            if (auto ptr (std::get_if<std::string>(&val)); ptr) {
-                std::string str1 = *ptr;
-                std::size_t found_critical = str1.find("Critical");
-                std::size_t found_warning = str1.find("Warning");
-
-                if (found_critical!=std::string::npos or found_warning!=std::string::npos)
-                {
-                    book_of_errors.set_bootid("1"); //TODO
-                    book_of_errors.set_paramid(info.ParamID);
-                    book_of_errors.set_devicetype(section.ID);
-                    book_of_errors.set_deviceinstance(component.ID);
-                    book_of_errors.set_errortype("Health Related Fault");
-                    book_of_errors.set_erroroccurtimestamp(current_time); 
-                }
-
-            }
-        }
+        // fdr->BookOfErrorEngine(info.ID, info.ParamID, section.ID, component.ID, info.parent_infogroup->ID ,current_time, val);
 
         // Sensors
         
@@ -224,41 +115,44 @@ void Record::Refresh(void)
         {
             if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
-                printf("int64 = %ld\n", *ptr);
+                // printf("int64 = %ld\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
             {
-                printf("uint32 = %u\n", *ptr);
+                // printf("uint32 = %u\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
             {
-                printf("uint64 = %lu\n", *ptr);
+                // printf("uint64 = %lu\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint16_t>(&val)); ptr)
             {
-                printf("uint16 = %u\n", *ptr);
+                // printf("uint16 = %u\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<int16_t>(&val)); ptr)
             {
-                printf("int16 = %d\n", *ptr);
+                // printf("int16 = %d\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<double>(&val)); ptr)
             {
-                printf("double = %lf\n", *ptr);
+                // printf("double = %lf\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<bool>(&val)); ptr)
             {
-                printf("bool = %d\n", *ptr);
+                // printf("bool = %d\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else {
-                printf("DBus read failed: Unknown numerical variant type\n");
+                std::cout << "DBus read failed: Unknown numerical variant type: " 
+                          << "; ObjectPath: " << info.DbusParams.ObjectPath
+                          << "; Property: " << info.DbusParams.Property
+                          << std::endl;
             }
 
         }
@@ -266,7 +160,7 @@ void Record::Refresh(void)
         {
             if (auto ptr (std::get_if<std::string>(&val)); ptr) 
             {
-                printf("val =%s\n", ptr->c_str());
+                // printf("val =%s\n", ptr->c_str());
                 data.fdr_sample_data.set_paramvaluestring(*ptr);
             }
         }
@@ -295,48 +189,40 @@ void Record::Refresh(void)
     
     else if(info.FetchMethod == "DBUS_DGD")
     {
-        std::cout << "DbusDGDParams Are: " << std::endl
-                  << "\tParamID: " << info.ID.c_str() << std::endl
-                  << "\tService: " << info.DbusParams.Service.c_str() << std::endl
-                  << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
-                  << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
-                  << "\tProperty: " << info.DbusParams.Property.c_str() << std::endl
-                  << "\tDevId: " << info.DbusParams.DevId << std::endl;
+        // std::cout << "DbusDGDParams Are: " << std::endl
+        //           << "\tParamID: " << info.ID.c_str() << std::endl
+        //           << "\tService: " << info.DbusParams.Service.c_str() << std::endl
+        //           << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
+        //           << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
+        //           << "\tProperty: " << info.DbusParams.Property.c_str() << std::endl
+        //           << "\tDevId: " << info.DbusParams.DevId << std::endl;
 
         RetCoreApi val = dbus::readDbusDGDProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property, info.DbusParams.DevId);
-        std::cout << "Value of dbus device get property fields: " << std::get<2>(val) << std::endl;        
+        // std::cout << "Value of dbus device get property fields: " << std::get<2>(val) << std::endl;        
         data.fdr_sample_data.set_paramvalueint64(((uint64_t) std::get<2>(val))); 
     }
 
     else if(info.FetchMethod == "DBUS_PT")
     {
-        std::cout << "DbusPTParams Are: " << std::endl
-                  << "\tParamID: " << info.ID.c_str() << std::endl
-                  << "\tService: " << info.DbusParams.Service.c_str() << std::endl
-                  << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
-                  << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
-                  << "\tFetchFreqSecs: " << info.FetchFreqSecs << std::endl
-                  << "\tOpcode: " << info.DbusParams.Opcode << std::endl 
-                  << "\tArg1: " << info.DbusParams.Arg1 << std::endl 
-                  << "\tArg2: " << info.DbusParams.Arg2 << std::endl;
+        // std::cout << "DbusPTParams Are: " << std::endl
+        //           << "\tParamID: " << info.ID.c_str() << std::endl
+        //           << "\tService: " << info.DbusParams.Service.c_str() << std::endl
+        //           << "\tObjectPath: " << info.DbusParams.ObjectPath.c_str() << std::endl
+        //           << "\tInterface: " << info.DbusParams.Interface.c_str() << std::endl
+        //           << "\tFetchFreqSecs: " << info.FetchFreqSecs << std::endl
+        //           << "\tOpcode: " << info.DbusParams.Opcode << std::endl 
+        //           << "\tArg1: " << info.DbusParams.Arg1 << std::endl 
+        //           << "\tArg2: " << info.DbusParams.Arg2 << std::endl;
 
         
         PassthroughFPGA fpga = dbus::readDbusPTProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Opcode, 
                                                      info.DbusParams.Arg1, info.DbusParams.Arg1);
 
-        std::cout << "Value of dbus fpga passthrough fields: " << std::get<1>(fpga) << std::endl;   
+        // std::cout << "Value of dbus fpga passthrough fields: " << std::get<1>(fpga) << std::endl;   
         data.fdr_sample_data.set_paramvalueint64(((uint64_t) std::get<1>(fpga))); 
      
-    }
-
-    std::array<std::string, 6> errorCounters = { "GPU-PCI-ERR-CTR-FATAL", "GPU-PCI-ERR-CTR-NON-FATAL", "GPU-PCI-ERR-CTR-UNSUPP-REQ",
-                "NVSWITCH-PCI-ERR-CTR-FATAL", "NVSWITCH-PCI-ERR-CTR-NON-FATAL", "NVSWITCH-PCI-ERR-CTR-UNSUPP-REQ" };
-
-    if (std::find(std::begin(errorCounters), std::end(errorCounters), info.ID.c_str()) != std::end(errorCounters))
-    {
-        std::cout << "find" << std::endl;
     }
 }
 
@@ -409,13 +295,8 @@ void Record::Store(void)
 
     if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrreaderwriter->append(data.fdr_sample_data);
-
         // Write to book of errors only when there is an error event
-        if (book_of_errors.ByteSize() > 0)
-        {
-            fdrbookoferrorswriter->append(book_of_errors);
-        }
-        
+        // fdr->CheckForErrorsToUpdateBookOfErrors();
     }
 
     else if (logsformat == ENCODING_CHOICE_DB){
@@ -478,14 +359,17 @@ void Record::Print(void)
     //std::cout << "Set last_stored_data.paramValue=" + last_stored_data.paramValueString << std::endl;
     std::cout << "---------------------------------------" << std::endl;
     std::cout << "this: " << this << std::endl;
+    std::cout << "GeneralConfig.LogsFormat: " << profile.GeneralConfig.LogsFormat << std::endl
+              << "\tGeneralConfig.LogsBasePath: " << profile.GeneralConfig.LogsBasePath << std::endl
+              << "\tGeneralConfig.CompactionWindowSecs: " << profile.GeneralConfig.CompactionWindowSecs << std::endl;
     std::cout << "section.ID: " << section.ID << std::endl
               << "\tComponent.ID: " << component.ID << std::endl
               << "\t\tinfogroup.ID: " << infogroup.ID << std::endl
-              << "\t\t\tCompactionPolicy: " << infogroup.CompactionPolicy << std::endl
+              << "\t\t\tRecordRetentionPolicy: " << infogroup.RecordRetentionPolicy << std::endl
               << "\t\t\tCompactionMethod: " << infogroup.CompactionMethod << std::endl
               << "\t\t\tCompactionFreqSecs: " << infogroup.CompactionFreqSecs << std::endl
               << "\t\t\tLastCompactedAt: " << infogroup.LastCompactedAt << std::endl
-              << "\t\t\tCompactionPolicy: " << infogroup.CompactionPolicy << std::endl
+              << "\t\t\tRecordRetentionPolicy: " << infogroup.RecordRetentionPolicy << std::endl
               << "\t\t\tinfo.ID: " << info.ID << std::endl
               << "\t\t\t\tFetchPolicy: " << info.FetchPolicy << std::endl
               << "\t\t\t\tFetchMethod: " << info.FetchMethod << std::endl

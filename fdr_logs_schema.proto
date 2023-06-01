@@ -31,13 +31,18 @@ message fdr_params {
   string ParamNotes = 7; // Additional notes about the parameter
 }
 
+message fdr_compactor_bookkeep {
+  string CompactDirectory = 1; // name of the directory to compact throughout FDR
+}
+
 message fdr_book_of_errors {
-  string BootId = 1; // Boot Index/Counter of the Host
-  string DeviceType = 2; // type of device on which error occured [should be same as Sections.ID like, GPU, NVSwitch, Retimer, etc]
-  string DeviceInstance = 3; // device instance on which error occured [should be same as Sections.Components.ID like, GPU0,GPU1, NVSwitch0, Retimer1, etc]
-  string ErrorType = 4; // type of error [may be of type Threshold, Fault, PCIe, etc]
-  uint64 ParamID = 9999; // Unique parameter ID (Used to identify parameter name)
+  string BootId = 1;          // Boot Index/Counter of the Host
+  string CompClass = 2;      // type of device on which error occured [should be same as Sections.ID like, GPU, NVSwitch, Retimer, etc]
+  string DeviceInstance = 3;  // device instance on which error occured [should be same as Sections.Components.ID like, GPU0,GPU1, NVSwitch0, Retimer1, etc]
+  string ErrorType = 4;       // type of error [may be of type Threshold, Fault, PCIe, etc]
+  optional uint64 ParamID = 9999; // Unique parameter ID (Used to identify parameter name)
   uint64 ErrorOccurTimeStamp = 5; // Time at which this error occured
-  optional uint64 StartHifiTimeStamp = 6; // (optional) ErrorOccurTimeStamp - HiFi-Data-Preserve-Time
-  optional uint64 StopHifiTimeStamp = 7; // (optional) ErrorOccurTimeStamp + HiFi-Data-Preserve-Time
+  uint64 StartHifiTimeStamp = 6;  // ErrorOccurTimeStamp - HiFi-Data-Preserve-Time
+  uint64 StopHifiTimeStamp = 7;   // ErrorOccurTimeStamp + HiFi-Data-Preserve-Time
+  string ParamClass = 8;
 }

@@ -13,6 +13,8 @@ fdr_SOURCES = \
 	fdr_policy.cpp \
 	fdr_record.cpp \
 	fdr_store.cpp \
+	fdr_compact.cpp \
+	fdr_bookoferrors.cpp \
 	fdr_logs_schema.pb.cc
 
 # fdr_LDFLAGS = -static

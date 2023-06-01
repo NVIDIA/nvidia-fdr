@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2021, NVIDIA CORPORATION.  All rights reserved.
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
 
  NVIDIA CORPORATION and its licensors retain all intellectual property
  and proprietary rights in and to this software, related documentation
@@ -9,8 +9,8 @@
 *
 */
 
+#include <iostream>
 #include "dbus_accessor.hpp"
-
 #include <sdbusplus/exception.hpp>
 
 namespace dbus
@@ -91,13 +91,17 @@ RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& ob
         reply.read(response);
     }
     catch (const sdbusplus::exception::exception& e){
-        printf("readDbusProperty() Failed to get property: error = %s\n", e.what());
+        printf("readDbusDGDProperty: Failed to get property: error = %s\n", e.what());
     }
     auto rc = std::get<int>(response);
     auto data = std::get<std::vector<uint32_t>>(response);
 
     if (rc != 0){
-        printf("deviceGetCoreAPI(): bad return");
+        std::cout << "readDbusDGDProperty: bad return: "
+                  << "; objPath: " << objPath
+                  << "; property: " << property
+                  << "; DevId: " << devId
+                  << std::endl;
     }
     else{
         auto data = std::get<std::vector<uint32_t>>(response);
@@ -142,11 +146,16 @@ PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string
 
     }
     catch (const sdbusplus::exception::exception& e){
-        printf("readDbusProperty() Failed to get property: error = %s\n", e.what());
+        printf("readDbusPTProperty: Failed to get property: error = %s\n", e.what());
     }
 
     if (rc != 0){
-        printf("deviceGetCoreAPI(): bad return");
+        std::cout << "readDbusPTProperty: bad return: "
+                  << "; objPath: " << objPath
+                  << "; opcode: " << opcode
+                  << "; arg1: " << arg1
+                  << "; arg2: " << arg2
+                  << std::endl;
     }
     else{
         if (dataOut.size() == 4){
@@ -154,7 +163,13 @@ PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string
             
         }
         else{
-            printf("PassthroughFpga: Unknown SMBPBI response");
+            std::cout << "readDbusPTProperty: PassthroughFpga: Unknown SMBPBI response: "
+                    << dataOut.size()
+                    << "; objPath: " << objPath
+                    << "; opcode: " << opcode
+                    << "; arg1: " << arg1
+                    << "; arg2: " << arg2
+                    << std::endl;
         }
 
     }

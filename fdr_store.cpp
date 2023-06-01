@@ -1,3 +1,13 @@
+/*
+ Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+
+ NVIDIA CORPORATION and its licensors retain all intellectual property
+ and proprietary rights in and to this software, related documentation
+ and any modifications thereto.  Any use, reproduction, disclosure or
+ distribution of this software and related documentation without an express
+ license agreement from NVIDIA CORPORATION is strictly prohibited.
+*
+*/
 
 #include <string>
 #include <sstream>
@@ -8,19 +18,31 @@
 #include <google/protobuf/util/delimited_message_util.h>
 #include <google/protobuf/io/zero_copy_stream.h>
 
-
-FDRStore::FDRStore(std::string filename, std::string fileformat)    //Protobuf/json version
+// This global variable is just for debugging to track the number of FDRStore objects
+// created for the whole FDR instance
+uint64_t numFdsObjs=0;
+FDRStore::FDRStore(std::string filename, std::string fileformat, int isStoreReaderWriter) : binaryinzerocopystream(nullptr)    //Protobuf/json version
 {
     storagefilepath = filename;
     encodingtouse = fileformat;
 
-    instream.open(storagefilepath);
-    if (encodingtouse == "BINARY") {
-        binaryinzerocopystream = new google::protobuf::io::IstreamInputStream(&instream);
+    numFdsObjs++;
+    // std::string readerOrWriterStr = (isStoreReaderWriter == STORE_READER) ? std::string("STORE_READER") : std::string("STORE_WRITER");
+    // std::cout << "FDRStore[construtor]: numFdsObjs: " << numFdsObjs
+    //           << "; storagefilepath: " << storagefilepath
+    //           << "; " << readerOrWriterStr
+    //           << std::endl;
+
+    // open the instream only for the reader requester
+    if (isStoreReaderWriter == STORE_READER) {
+        instream.open(storagefilepath);
+        if (encodingtouse == "BINARY") {
+            binaryinzerocopystream = new google::protobuf::io::IstreamInputStream(&instream);
+        }
     }
 }
 
-FDRStore::FDRStore(std::string file, std::string fileformat, std::string pClass, std::string cClass, std::string ID) :
+FDRStore::FDRStore(std::string file, std::string fileformat, std::string cClass, std::string ID, std::string pClass) :
         encodingtouse(fileformat), dbLoc(file), paramClass(pClass), compClass(cClass), compID(ID)
 {
     DB = NULL;
@@ -53,7 +75,11 @@ FDRStore::FDRStore(std::string file, std::string fileformat, std::string pClass,
 
 FDRStore::~FDRStore()
 {
-    if (DB && encodingtouse == ENCODING_CHOICE_DB){
+    numFdsObjs--;
+    // std::cout << "FDRStore[destrutor]: numFdsObjs: " << numFdsObjs
+    //           << "; storagefilepath: " << storagefilepath
+    //           << std::endl;
+    if (DB && encodingtouse == ENCODING_CHOICE_DB) {
         sqlite3_finalize(sampleFetchStmt);
         sqlite3_close(DB);
     } else {
@@ -61,7 +87,10 @@ FDRStore::~FDRStore()
             delete binaryinzerocopystream;
         }
         instream.close();
+
+        // std::cout << "2. FDRStore Destructor called" << std::endl;
     }
+    // std::cout << "3. FDRStore Destructor called" << std::endl;
 }
 
 void FDRStore::append(const google::protobuf::Message &data)
@@ -124,6 +153,7 @@ void FDRStore::append(const fdr_sample_sql &data)
 }
 
 int FDRStore::readnext(google::protobuf::Message *datap){
+    // std::cout << "readnext:encodingtouse: " << encodingtouse << "; storagefilepath: " << storagefilepath << std::endl;
     if (encodingtouse == ENCODING_CHOICE_JSON)
     {
         if (instream.is_open())
@@ -135,6 +165,7 @@ int FDRStore::readnext(google::protobuf::Message *datap){
                 return 1;
             }
         }
+        // std::cout << "readnext: ENCODING_CHOICE_JSON: instream not open: storagefilepath: " << storagefilepath << std::endl;
         return 0;
     }
     else if(encodingtouse == ENCODING_CHOICE_BINARY)
@@ -162,6 +193,9 @@ int FDRStore::readnext(google::protobuf::Message *datap){
     else{
         // Use the other function for SQLite
     }
+    // std::cout << "readnext: default: failure: return 0: encodingtouse: " << encodingtouse
+    //           << "; storagefilepath: " << storagefilepath 
+    //           << std::endl;
     return 0;
 }
 

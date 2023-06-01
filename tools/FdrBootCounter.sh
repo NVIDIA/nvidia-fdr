@@ -15,10 +15,8 @@ DATAFILE="$DATAFILEDIR"/BootCount.txt
 
 update_data_file() {
   if [ -w "$DATAFILE" ]; then
-    while IFS='=' read key value; do
-      case "$key" in
-        'count') count="$value" ;;
-      esac
+    while read value; do
+      count="$value" ;
     done < "$DATAFILE"
   else if [ ! -d "$DATAFILEDIR" ]; then
     mkdir -p "$DATAFILEDIR"
@@ -26,11 +24,19 @@ update_data_file() {
   fi fi
 
   count=$(($count + 1))
-  echo "count=$count" > "$DATAFILE"
+  echo "$count" > "$DATAFILE" # this echo will update the counter inside the file.
 }
 
-update_data_file
+# need to determine on what condition this script got called,
+# whether its during HMC reboot or during FDR process/service restart?
+#   if "/tmp/.fdrHmcAlive" not exist, then its HMC reboot, else its FDR restart
+# update the boot counter only during HMC reboot or if BootCount.txt doesn't exist.
+if [ ! -f "/tmp/.fdrHmcAlive" ] || [ ! -f $DATAFILE ]; then
+  update_data_file
+else
+  count="$(cat $DATAFILE)"
+fi
 
-echo "$count"
+echo "$count" # this echo will be the return value of this script.
 
 exit 0
