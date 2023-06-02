@@ -34,6 +34,9 @@ typedef struct CommandResult {
 CommandResult_t exec(const char *cmd);
 std::vector<std::string> split(std::string str, char delimter);
 
+void FindAndReplaceFirst(std::string &s, const std::string &search, const std::string &replace);
+void FindAndReplaceAll(std::string &s, const std::string &search, const std::string &replace);
+
 extern std::string bootCounter;
 extern std::string sensorDirTimestamp;
 extern std::string fdrHmcAlivePathName; 
@@ -57,4 +60,3 @@ inline std::string GetDirectoryName(void)
 	std::string directoryName = "BootCount_" + bootCounter + "_DateStamp_" + sensorDirTimestamp;
 	return directoryName;
 }
-

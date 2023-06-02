@@ -29,6 +29,6 @@ inherit cmake
 # Specify any options you want to pass to cmake using EXTRA_OECMAKE:
 EXTRA_OECMAKE = "-DYOCTO=ON -DCMAKE_INSTALL_PREFIX:PATH=/usr"
 
-DEPENDS = "yaml-cpp protobuf protobuf-native sqlite3 boost systemd sdbusplus nlohmann-json curl spdlog python3 python3-pyyaml"
-RDEPENDS_${PN} = "yaml-cpp protobuf sqlite3 boost systemd sdbusplus curl spdlog"
+DEPENDS = "yaml-cpp protobuf protobuf-native sqlite3 systemd sdbusplus nlohmann-json curl spdlog python3 python3-pyyaml"
+RDEPENDS_${PN} = "yaml-cpp protobuf sqlite3 systemd sdbusplus curl spdlog"
 RDEPENDS:${PN} += "bash"

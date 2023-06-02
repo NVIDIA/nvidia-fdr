@@ -14,7 +14,7 @@
 
 void FlightDataRecorder_c::CheckForErrorsToUpdateBookOfErrors(void)
 {
-    if (book_of_errors.ByteSize() > 0)
+    if (book_of_errors.ByteSizeLong() > 0)
     {
         fdrbookoferrorswriter->append(book_of_errors);
     }

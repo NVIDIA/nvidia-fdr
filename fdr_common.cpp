@@ -63,3 +63,21 @@ std::vector<std::string> split(std::string str, char delimter)
 
 	return retSplitVector;
 }
+
+void FindAndReplaceFist(std::string &s, const std::string &search, const std::string &replace)
+{
+    std::size_t pos = s.find(search);
+    if (pos == std::string::npos)
+        return;
+    s.replace(pos, search.length(), replace);
+}
+
+void FindAndReplaceAll(std::string &s, const std::string &search, const std::string &replace)
+{
+    std::size_t pos = s.find(search);
+    while (pos != std::string::npos)
+    {
+        s.replace(pos, search.size(), replace);
+        pos = s.find(search, pos + replace.size());
+    }
+}
