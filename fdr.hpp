@@ -44,6 +44,9 @@ private:
 	void DeleteSpecificRecords(std::string recordSubName);
 	void CreateSpecificRecords(std::string recordSubName);
 
+	LeakyBucket *ExceptionRateLimiter;
+	void InitExceptionRateLimiter();
+
 	// all private functions related to Compactor
 	void CheckCompactionWindowExpiry(void);
 	bool CompactorCheckBookOfErrors(const std::string directoryTocompact,
@@ -85,14 +88,7 @@ public:
 	void CreateRecords(void);
 	void ReadOldRecords(void);
 	void CollectAndArchieveBirthCertificate(void);
-	inline void RefreshAndRecord(void)
-	{
-		for (auto &rec : RecList)
-		{
-			rec->Refresh();
-			rec->Store();
-		}
-	}
+	void RefreshAndRecord(void);
 	inline void Compactor(void)
 	{
 		CheckCompactionWindowExpiry();
@@ -101,6 +97,7 @@ public:
 						   std::string componentID, std::string paramClass,
                 		   time_t current_time, PropertyVariant val);
 	void CheckForErrorsToUpdateBookOfErrors(void);
+    void CheckExceptionRateLimit();
 };
 
 // We have a global fdr variable defined in main.cpp

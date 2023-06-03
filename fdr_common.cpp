@@ -10,6 +10,8 @@
 */
 
 #include <array>
+#include <chrono>
+#include <cmath>
 #include "fdr_common.hpp"
 
 CommandResult_t exec(const char *cmd)
@@ -80,4 +82,70 @@ void FindAndReplaceAll(std::string &s, const std::string &search, const std::str
         s.replace(pos, search.size(), replace);
         pos = s.find(search, pos + replace.size());
     }
+}
+
+LeakyBucket::LeakyBucket(int64_t capacity, double rate) : capacity{capacity}, rate{rate}, e{std::chrono::steady_clock::now()} {};
+
+int64_t LeakyBucket::Capacity()
+{
+    return this->capacity;
+}
+
+float LeakyBucket::Rate()
+{
+    return this->rate;
+}
+
+int64_t LeakyBucket::Count()
+{
+     if (std::chrono::steady_clock::now() >= this->e)
+    {
+        return 0;
+    }
+
+    auto remaining_us = std::chrono::duration_cast<std::chrono::microseconds> (
+            this->e - std::chrono::steady_clock::now()
+        ).count();
+    
+    auto per_drip_us =  std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)).count() / this->rate;
+
+    auto count = int64_t(ceil(double(remaining_us) / double(per_drip_us)));
+
+    return count;
+}
+
+bool LeakyBucket::IsFull()
+{
+    return this->Count() >= this->capacity;
+}
+
+int64_t LeakyBucket::Add(int64_t amount)
+{
+    auto count = this->Count();
+    if (count >= this->capacity)
+    {
+        // The bucket is full.
+        return 0;
+    }
+
+    if (std::chrono::steady_clock::now() >= this->e)
+    {
+        // reset the bucket
+        this->e = std::chrono::steady_clock::now();
+    }
+
+    auto remaining = this->capacity - count;
+    if (amount > remaining)
+    {
+        amount = remaining;
+    }
+
+    auto duration_us = int64_t(
+        std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::seconds(1)).count() 
+        / this->rate * amount);
+
+
+    this->e += std::chrono::microseconds(duration_us);
+
+    return amount;
 }

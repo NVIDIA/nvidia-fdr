@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <ostream>
 #include <string>
 #include <stdlib.h>
@@ -36,6 +37,31 @@ std::vector<std::string> split(std::string str, char delimter);
 
 void FindAndReplaceFirst(std::string &s, const std::string &search, const std::string &replace);
 void FindAndReplaceAll(std::string &s, const std::string &search, const std::string &replace);
+
+
+class LeakyBucket {
+    private:
+        // capacity of the bucket
+        int64_t capacity;
+        // leaking rate or process rate of the bucket, per second
+        // e.g. 0.1 means it take 10 seconds to process a request.
+        double rate;
+        // e is the exact time the bucket will have leaked enough to be empty
+        std::chrono::time_point<std::chrono::steady_clock> e;
+    public:
+
+        LeakyBucket(int64_t capacity, double rate);
+
+        int64_t Capacity();
+        float Rate();
+
+        int64_t Count();
+        bool IsFull();
+
+        // Add 'amount' to the bucket's up to the capacity, and return the actual added amount.
+        // If the the return value is smaller then 'amount', the bucket is full.
+        int64_t Add(int64_t amount);
+};
 
 extern std::string bootCounter;
 extern std::string sensorDirTimestamp;

@@ -93,11 +93,33 @@ int main(int argc, char *argv[])
 
 	while (true)
 	{
-		// Start the core engine of fetching and recording
-		fdr->RefreshAndRecord();
 
-		// Compactor
-		fdr->Compactor();
+		/*
+		   Note: the try catch block is mainly for fdr->Compactor();
+		   fdr->RefreshAndRecord() internally is a simple loop with similar try/catch block,
+	       so that if a record failed, it will proceed to next item.
+
+		   However, fdr->CheckExceptionRateLimit() is more complicated, 
+		   this try/catch block is added here for simplicity.
+		*/
+		bool expt = false;
+		try {
+			// Start the core engine of fetching and recording
+			fdr->RefreshAndRecord();
+
+			// Compactor
+			fdr->Compactor();
+		} catch (const std::exception& e) {
+			expt = true;
+			fdr->log->warn("RefreshAndRecord Got Exception: {}", e.what());
+		} catch (...) {
+			expt = true;
+			fdr->log->warn("RefreshAndRecord Got Unknown Exception !!!");
+		}
+
+		if (expt) {
+			fdr->CheckExceptionRateLimit();
+		}
 
 		sleep(1);
 	}
