@@ -41,6 +41,22 @@ GeneralConfig:
   #RedfishSchema: 
   #RedfishUser: 
   #RedfishPassword:  
+
+  ######################################################################################
+  # FDR allow certain number of uncaught exceptions during refreshing, recording, 
+  # and compacting logs via leaky bucket algorithm, it's controlled by 2 parameters:
+  # - ExceptionAllowNumber: The maximum allowed uncaught exceptions before exiting FDR.
+  #                         Default: 128
+  # - ExceptionAllowRate:   How much uncaught exceptions are allowed per second.
+  #                         Default: 0.5, that means it take 2 seconds to "consume" an exception.
+  #
+  # Especially:
+  # - If ExceptionAllowNumber <= 0, whenever and uncaught exceptions occur,
+  #                                 fdr log the exception and exit.
+  # - If ExceptionAllowRate <= 0.0, FDR disregard ExceptionAllowNumber and never exit.
+  ######################################################################################
+  #ExceptionAllowNumber: 128
+  #ExceptionAllowRate: 0.5     
   CompactionWindowSecs: 60 # 604800 # 1 week, every week new directory is created
   CompactionSubWindowSecs: 10 #7200 # 2 hours, every 2 hours stats are created
   HiFiDataPreserveTimeSecs: 20 #14400 # 4 hours, <-4 hours ---Error--- +4 hours> worth of entires

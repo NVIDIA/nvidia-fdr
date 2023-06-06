@@ -16,6 +16,7 @@
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
 #include "fdr.hpp"
+#include "fdr_common.hpp"
 
 
 Record::Record(Profile_t &profile, Section_t &section,
@@ -34,14 +35,14 @@ Record::Record(Profile_t &profile, Section_t &section,
         //$param.name --> param.value
         if (info.FetchMethod == "Command")
         {
-            boost::replace_all(info.CommandParams.Command, "$" + param.name, param.value);
+            FindAndReplaceAll(info.CommandParams.Command, "$" + param.name, param.value);
         }
         else if (info.FetchMethod == "DBUS")
         {
-            boost::replace_all(info.DbusParams.Service, "$" + param.name, param.value);
-            boost::replace_all(info.DbusParams.ObjectPath, "$" + param.name, param.value);
-            boost::replace_all(info.DbusParams.Interface, "$" + param.name, param.value);
-            boost::replace_all(info.DbusParams.Property, "$" + param.name, param.value);
+            FindAndReplaceAll(info.DbusParams.Service, "$" + param.name, param.value);
+            FindAndReplaceAll(info.DbusParams.ObjectPath, "$" + param.name, param.value);
+            FindAndReplaceAll(info.DbusParams.Interface, "$" + param.name, param.value);
+            FindAndReplaceAll(info.DbusParams.Property, "$" + param.name, param.value);
         }
     }
 

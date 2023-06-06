@@ -61,6 +61,8 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 	this->log->flush_on(level);
 	this->log->set_level(level);
 
+	this->InitExceptionRateLimiter();
+
 	this->rfc = nullptr;
 	if (!this->profile.GeneralConfig.RedfishSchema.empty())
 	{
@@ -98,6 +100,35 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	CompactorBookKeeperCleanEntries();
 	CompactorBookKeeperAppendEntry();
+}
+
+void FlightDataRecorder_c::InitExceptionRateLimiter()
+{
+	this->ExceptionRateLimiter = nullptr;
+	if (this->profile.GeneralConfig.ExceptionAllowRate != 0.0) {
+		this->ExceptionRateLimiter = new LeakyBucket(
+			this->profile.GeneralConfig.ExceptionAllowNumber,
+			this->profile.GeneralConfig.ExceptionAllowRate);
+
+		this->log->debug("ExpRaterLimiter: Capacity {}, Rate {:f}",
+			this->ExceptionRateLimiter->Capacity(), this->ExceptionRateLimiter->Rate() );
+	} else {
+		this->log->debug("ExceptionAllowRate <= 0.0, ExceptionRateLimiter disabled, FDR will never exit.");
+	}
+
+}
+
+void FlightDataRecorder_c::CheckExceptionRateLimit() {
+	if (this->ExceptionRateLimiter) {
+		auto added = this->ExceptionRateLimiter->Add(1);
+		if (added != 1) {
+			// RateLimiter is full,
+			this->log->error("ExceptionRateLimiter: Uncaught exceptions exceeded the capacity {}, exiting!!!", this->ExceptionRateLimiter->Capacity());
+			exit(EXIT_FAILURE);
+		} else {
+			this->log->debug("ExceptionRateLimiter: Uncaught exceptions {}, capacity {}", this->ExceptionRateLimiter->Count(), this->ExceptionRateLimiter->Capacity());
+		}
+	}
 }
 
 int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
@@ -395,6 +426,28 @@ void FlightDataRecorder_c::ReadOldRecords(void)
 		if (rec->info.FetchPolicy.compare("Periodic") == 0)
 		{
 			rec->Load();
+		}
+	}
+}
+
+void FlightDataRecorder_c::RefreshAndRecord(void)
+{
+	for (auto &rec : RecList)
+	{
+		bool expt = false;
+		try {
+			rec->Refresh();
+			rec->Store();
+		} catch (const std::exception& e) {
+			expt = true;
+			this->log->warn("RefreshAndRecord(): {}", e.what());
+		} catch (...) {
+			expt = true;
+			this->log->warn("RefreshAndRecord(): unknown exception !!!");
+		}
+
+		if (expt) {
+			this->CheckExceptionRateLimit();
 		}
 	}
 }

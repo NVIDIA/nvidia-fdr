@@ -40,9 +40,14 @@ struct GeneralConfig_t
 	std::string RedfishSchema;
 	std::string RedfishUser;
 	std::string RedfishPassword;
+
 	uint64_t CompactionWindowSecs;
 	uint64_t CompactionSubWindowSecs;
 	uint64_t HiFiDataPreserveTimeSecs;
+
+	int64_t ExceptionAllowNumber;
+	double ExceptionAllowRate;
+
 };
 
 struct CommandParams_t
@@ -173,6 +178,9 @@ namespace YAML
 			rhs.CompactionWindowSecs = node["CompactionWindowSecs"] ? node["CompactionWindowSecs"].as<uint64_t>() : 0;
 			rhs.CompactionSubWindowSecs = node["CompactionSubWindowSecs"] ? node["CompactionSubWindowSecs"].as<uint64_t>() : 0;
 			rhs.HiFiDataPreserveTimeSecs = node["HiFiDataPreserveTimeSecs"] ? node["HiFiDataPreserveTimeSecs"].as<uint64_t>() : 0;
+
+			rhs.ExceptionAllowNumber = node["ExceptionAllowNumber"] ? node["ExceptionAllowNumber"].as<int64_t>() : 128;
+			rhs.ExceptionAllowRate = node["ExceptionAllowRate"] ? node["ExceptionAllowRate"].as<float>() : 0.5;
 
 			return true;
 		}

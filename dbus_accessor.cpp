@@ -25,7 +25,14 @@ std::string getService(const std::string& objectPath,
 
     std::string ret{""};
     std::vector<std::pair<std::string, std::vector<std::string>>> response;
-    auto bus = sdbusplus::bus::new_default();
+    /*
+      DBUS have 2 kind of buses:
+      - system bus (1 per sysetm)
+      - session bus (1 per user session)
+
+      Explictly connect to system bus
+    */
+    auto bus = sdbusplus::bus::new_default_system();
     try
     {
         auto method = bus.new_method_call(mapperBusBame, mapperObjectPath,

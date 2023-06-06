@@ -8,9 +8,24 @@ sudo apt install git meson libtool pkg-config g++ libsystemd-dev \
     python3 python3-pip python3-yaml python3-mako python3-inflection
 
 # Dependency for fdr
-sudo apt install cmake protobuf-compiler nlohmann-json3-dev libboost-all-dev \
+sudo apt install cmake nlohmann-json3-dev \
     sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml \
     libspdlog-dev libfmt-dev
+```
+
+protobuf3 bundled with the distro is not new engouh to support `optional` keyword
+
+```
+wget https://github.com/protocolbuffers/protobuf/releases/download/v3.20.3/protobuf-all-3.20.3.tar.gz
+tar zxvf protobuf-all-3.20.3.tar.gz
+cd protobuf-3.20.3/
+./configure
+make
+sudo make install
+
+# protobuf by default installed to /usr/local, so you need to export the LD_LIBRARY_PATH env
+# you might also put it into your ~/.bash_profile
+export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ```
 
 # Build (x86 native)
