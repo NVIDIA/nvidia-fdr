@@ -9,6 +9,8 @@ OUTPUT_ARCHIVE_PATH=""
 ARG_DUMP_ID="00000000"
 ARG_DUMP_PATH=""
 
+FDR_LOG_PATH="/tmp/emmc/fdr/"
+
 function help()
 {
     echo "Usage: fdr_dump [-h] -p <file_path> -i <dump_id>"
@@ -22,7 +24,7 @@ function help()
 
 function initialize()
 {
-    F_NAME_TEMPLATE=$"fdrdump_"$ARG_DUMP_ID"_$EPOCHTIME"
+    F_NAME_TEMPLATE=$"obmcdump_"$ARG_DUMP_ID"_$EPOCHTIME"
     TMP_DIR_PATH="$TMP_DIR/$F_NAME_TEMPLATE"
     OUTPUT_ARCHIVE_PATH="$TMP_DIR/$F_NAME_TEMPLATE.tar.xz"
 
@@ -66,8 +68,8 @@ function cleanup()
 
 function main()
 {
-    # TODO : XXX
-    echo "This is a fdr log file" > "$TMP_DIR_PATH/fdr.log"
+    # copy all log files into TMP_DIR_PATH
+    cp -ap $FDR_LOG_PATH $TMP_DIR_PATH
 
     # compress intermediate dir to archive
     tar -Jcf $OUTPUT_ARCHIVE_PATH -C $(dirname "$TMP_DIR_PATH") \
