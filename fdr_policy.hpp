@@ -89,6 +89,7 @@ struct Info_t
 	RedfishParams_t RedfishParams; // If FetchMethod==Redfish
 	std::string DataType;		   // Data Type ()
 	InfoGroup_t *parent_infogroup; // Pointer to the infogroup this info belongs to
+	std::string FetchType;
 };
 
 struct Param_t
@@ -283,6 +284,10 @@ namespace YAML
 			if (node["StorePolicy"])
 			{
 				rhs.StorePolicy = node["StorePolicy"].as<std::string>();
+			}
+			if (node["FetchType"])
+			{
+				rhs.FetchType = node["FetchType"].as<std::string>();
 			}
 			if (node["FetchFreqSecs"])
 			{
