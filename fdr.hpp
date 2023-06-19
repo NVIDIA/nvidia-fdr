@@ -19,6 +19,7 @@
 #include "fdr_redfish.hpp"
 #include "ppf_sanity.hpp"
 #include "dbus_accessor.hpp"
+#include "fdr_events.hpp"
 
 class FlightDataRecorder_c
 {
@@ -103,6 +104,7 @@ public:
                                              time_t current_time, PropertyVariant val);
 	void CheckForErrorsToUpdateBookOfErrors(void);
     void CheckExceptionRateLimit();
+	void initEventsSignalRegistration();
 };
 
 // We have a global fdr variable defined in main.cpp

@@ -655,3 +655,18 @@ FlightDataRecorder_c::~FlightDataRecorder_c()
 	PPFSanity *fds = SanityChecker.release();
 	delete fds;
 }
+
+void FlightDataRecorder_c::initEventsSignalRegistration()
+{
+	auto objPath = profile.GeneralConfig.eventParams.objectPath;
+	auto intf = profile.GeneralConfig.eventParams.interface;
+	auto member = profile.GeneralConfig.eventParams.member;
+
+	// Register AML events watcher only for supported platforms
+	if (!objPath.empty() && !intf.empty() && !member.empty())
+	{
+		std::cout << "Registering events signal watcher" << std::endl;
+		EventSignalHandler* eventHandler = new EventSignalHandler(objPath, intf, member);
+		eventHandler->registerEventsSignal();
+	}
+}
