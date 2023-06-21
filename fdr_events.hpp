@@ -22,6 +22,13 @@ class EventSignalHandler
     std::string eventMember;
     std::unique_ptr<sdbusplus::bus::match_t> eventHandlerMatcher;
 
+    using eventPropertiesType = std::vector<std::pair<
+      std::string, std::vector<std::pair<
+        std::string, std::variant<
+          uint64_t, uint32_t, std::string, bool, std::vector<std::string>>>>>>;
+
+    void eventParser(eventPropertiesType&);
+
   public:
     EventSignalHandler(
         std::string eventObjPath,
