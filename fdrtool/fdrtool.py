@@ -20,7 +20,7 @@ import os
 # Import third-party library modules
 import redfish
 # Import locally developed modules
-from catalog.catalog import DECODE_FORMAT, LOG_DIRECTORY, Catalog
+from catalog.catalog import DECODE_FORMAT, Catalog
 
 tool_version = '1.0.0'
 
@@ -101,6 +101,8 @@ def main(arglist=None):
     argget.print_help()
     return 1
 
+  print("**********************Nvidia fdrtool**********************")
+  print("Selected option: {}".format("Use local tarball." if args.use_local else "Retrieve logs from HMC."))
   # Basic execution flow
   # Step-1: Redfish API call to get the zip file of fdr logs from HMC.
   MyCatalog = None
@@ -108,28 +110,37 @@ def main(arglist=None):
   try:
     binary_log_tar_file = ''
     if not args.use_local:
+      print("\n----------- Collecting FDR dump from host {} -----------".format(args.ip))
       binary_log_tar_file = CollectFdrDump(args.ip, args.username, args.password)
+      #binary_log_tar_file = CollectFdrDump_DEMO(args.ip, args.username, args.password)
     else: # Retrieve the zip file from local machine
       binary_log_tar_file = args.local_file
 
+    
+    print("\n--------------------- Decoding FDR dump -----------------------")
+    print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
     # Remove existing logs directory to avoid issues with overlapping of logs in different formats
-    if os.path.exists(LOG_DIRECTORY):
-      shutil.rmtree(LOG_DIRECTORY)
-     # Step-2: Unzip the .tar file
+    log_root_dir = './fdr_logs/'
+    if os.path.exists(log_root_dir):
+      shutil.rmtree(log_root_dir)
+    # Step-2: Unzip the .tar file
     binary_log = tarfile.open(binary_log_tar_file)
-    binary_log.extractall(LOG_DIRECTORY) # This will create a directory if it's not present already.
+    binary_log.extractall(log_root_dir) # This will create a directory if it's not present already.
     binary_log.close()
-    print('Successfully unzipped the tar archive of binary logs.')
+    print('Successfully unzipped the tar archive of binary logs into {}.'.format(log_root_dir))
 
     # Step-3: Create catalog of decoded binary logs
-    MyCatalog = Catalog(vars(args))
+    MyCatalog = Catalog(vars(args), log_root_dir)
 
+    print("\n---------- Writing decoded FDR logs in {} ----------".format(args.decode_format))
     # Step-4: Write the logs in intended format
     MyCatalog.WriteAllEntries()
 
   except Exception as e:
-    logging.error("fdrtool failed!")
-    traceback.print_exc()
+    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
+    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    #traceback.print_exc()
     status_code = 1
 
   # Step-5: Clean up
@@ -137,23 +148,28 @@ def main(arglist=None):
     MyCatalog.Close()
 
   end_time = datetime.now()
-  print('***********End of fdrtool. Time taken: {} seconds.***********'\
+  print('\n***********End of fdrtool. Time taken: {} seconds.***********'\
           .format((end_time - start_time).total_seconds()))
 
   return status_code
 
 def CollectFdrDump(host_ip, username, password):
+  from datetime import datetime
+  start_time = datetime.now()
+  
+  print(f"Trying to reach the host {host_ip}....")
   # Using Python redfish library (https://github.com/DMTF/python-redfish-library)
   REDFISH_OBJ = redfish.redfish_client(base_url=host_ip, username=username, \
                       password=password, default_prefix='/redfish/v1/')
   REDFISH_OBJ.login(auth="basic")
-  print('Logged in to host {}'.format(host_ip))
+  print('Successfully logged in to host {}'.format(host_ip))
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}
   url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
-  print(f"Triggering FDR dump: {url} {body}")
+  print(f"\nTriggering FDR dump....")
+  print(f"Redfish API: {url} {body}")
   response = REDFISH_OBJ.post(url, body=body)
-  entry_id = response.dict['Id']
+  task_id = response.dict.get('Id')
   if response.is_processing:
     # Wait for the dump to be ready
     task = response.monitor(REDFISH_OBJ)
@@ -165,24 +181,89 @@ def CollectFdrDump(host_ip, username, password):
         time.sleep(retry_time)
         task = response.monitor(REDFISH_OBJ)
   elif response.status != 200:
-    raise Exception("FDR dump request failed! Response received: {}.".format(response))
+    raise Exception("FDR dump request failed! Response received:\n{}.".format(response))
   # To-do: need to add other cases?
   # Verify the dump status
   url = response.dict['@odata.id']
   print(f'Checking FDR dump task status: {url}')
   task = REDFISH_OBJ.get(url)
   if task.dict['TaskState'] == 'Completed':
-    print('FDR dump is ready to be downloaded!')
+    print('\nFDR dump is ready to be downloaded!')
   else:
-    raise Exception("FDR dump request failed! Task status received: {}.".format(task))
+    raise Exception("FDR dump request failed! Task status received:\n{}.".format(task))
   # Collect dump after TaskState becomes "Completed"
-  binary_log_tar_file = f'fdr_dump_{entry_id}.tar.xz'
-  url = f"/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Entries/{entry_id}/attachment"
-  print(f'Downloading FDR dump {binary_log_tar_file}: {url}')
+  entry_location=None
+  for http_header in task.dict['Payload']['HttpHeaders']:
+    if 'Location' in  http_header:
+      entry_location=http_header.split(': ')[1]
+  if entry_location is None:
+    raise Exception("FDR dump path could not be found in the response! Response received:\n{}.".format(task))
+  dump_timestamp = datetime.now()
+  binary_log_tar_file = f'fdr_dump_{dump_timestamp}_{task_id}.tar.xz'
+  url = f"{entry_location}/attachment"
+  print(f"\nDownloading FDR dump {binary_log_tar_file}....")
+  print(f"Redfish API: {url}")
   response = REDFISH_OBJ.get(url)
-  with open(binary_log_tar_file, 'w') as fd:
-    fd.write(response.text)
+  with open(binary_log_tar_file, 'wb') as fd:
+    fd.write(response.read)
+  print(f"\nSuccessfully downloaded the FDR dump!")
   REDFISH_OBJ.logout()
+  print("\nLogged out of host {}".format(host_ip))
+  
+  end_time = datetime.now()
+  print("\nFinished collecting FDR dump from {}. Time taken: {} seconds".format(host_ip, (end_time - start_time).total_seconds()))
+  return binary_log_tar_file
+
+def CollectFdrDump_DEMO(host_ip, username, password):
+  from datetime import datetime
+  start_time = datetime.now()
+  
+  print(f"Trying to reach the host {host_ip}....")
+  # Using Python redfish library (https://github.com/DMTF/python-redfish-library)
+  #REDFISH_OBJ = redfish.redfish_client(base_url=host_ip, username=username, \
+  #                    password=password, default_prefix='/redfish/v1/')
+  #REDFISH_OBJ.login(auth="basic")
+  print('Successfully logged in to host {}'.format(host_ip))
+  # Trigger the FDR dump first.
+  body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
+  print(f"\nTriggering FDR dump....")
+  print(f"Redfish API: {url} {body}")
+  #response = REDFISH_OBJ.post(url, body=body)
+  #task_id = response.dict.get('Id')
+  task_id=5802
+  download_time = 60 # seconds. total time = 4min
+  wait_time = 0
+  import time
+  while wait_time < download_time:
+    retry_time = 30
+    task_status = 'Running'
+    print('FDR Dump Task Status: {}. Retrying after {} seconds...'.format(task_status, retry_time))
+    time.sleep(retry_time)
+    wait_time += retry_time
+  # To-do: need to add other cases?
+  # Verify the dump status
+  print(f'Checking FDR dump task status.')
+  print('\nFDR dump is ready to be downloaded!')
+  
+  # Collect dump after TaskState becomes "Completed"
+  entry_id = 11
+  entry_location=f'/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Entries/{entry_id}/attachment'
+  dump_timestamp = datetime.now()
+  binary_log_tar_file = f'fdr_dump_{task_id}.tar.xz'
+  url = f"{entry_location}/attachment"
+  print(f"\nDownloading FDR dump {binary_log_tar_file}....")
+  print(f"Redfish API: {url}")
+  #response = REDFISH_OBJ.get(url)
+  # with open(binary_log_tar_file, 'wb') as fd:
+  #   fd.write(response.read)
+  print(f"\nSuccessfully downloaded the FDR dump!")
+  #REDFISH_OBJ.logout()
+  print("\nLogged out of host {}".format(host_ip))
+  
+  end_time = datetime.now()
+  print("\nFinished collecting FDR dump from {}. Time taken: {} seconds".format(host_ip, (end_time - start_time).total_seconds()))
+  binary_log_tar_file = '/home/afsanac/fdr/fdr_dumps/fdr_dump_5802.tar.xz'
   return binary_log_tar_file
 
 if __name__ == '__main__':

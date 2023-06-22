@@ -1,6 +1,6 @@
 fdr_logs
 fdr_logs_db
-*.pb2.py
+*_pb2.py
 *.pyc
 fdrtool
 protoc_middleman

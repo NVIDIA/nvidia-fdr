@@ -165,18 +165,21 @@ class SQLiteDBCatalogEntry(CatalogEntry):
     if self.tablename.startswith(tuple(FDR_TABLE_SCHEMA)):
       self.tabletype = [key for key in FDR_TABLE_TYPE if self.tablename.startswith(key.name)][0] # List should have only one item
     else:
-      raise sqlite3.Error("Provided tablename is {}, but tabletype doesn't exist in the Sqlite schema.".format(self.tablename))
+      logging.error("Provided tablename is {}, but tabletype doesn't exist in the Sqlite schema.".format(self.tablename))
 
   @staticmethod
   def AppendToCombinedList(tabletype, fetch_cmd):
     if tabletype is FDR_TABLE_TYPE.PVT:
-      SQLiteDBCatalogEntry.APV_cmd_list.append(fetch_cmd)
-    elif tabletype is FDR_TABLE_TYPE.STATS:
-      SQLiteDBCatalogEntry.ASV_cmd_list.append(fetch_cmd)
+      if fetch_cmd not in SQLiteDBCatalogEntry.APV_cmd_list:
+        SQLiteDBCatalogEntry.APV_cmd_list.append(fetch_cmd)
+    elif tabletype is FDR_TABLE_TYPE.PST:
+      if fetch_cmd not in SQLiteDBCatalogEntry.ASV_cmd_list:
+        SQLiteDBCatalogEntry.ASV_cmd_list.append(fetch_cmd)
       
   def AddMessage(self, proto_msg):
     table_columns = FDR_TABLE_SCHEMA[self.tabletype.name]
     values = CatalogEntry.get_message_values(proto_msg, list(table_columns.keys()))
+    values['BootId'] = self.bootid
     self.messages.append(values)
   
   def GetMessageDict(self, message):
@@ -191,9 +194,9 @@ class SQLiteDBCatalogEntry(CatalogEntry):
         print('Updating ParamID for {}'.format(self.tablename))
         message["ParamID"] = res[0][0] if res else None
         
-  def GetParamValue(self, message, paramName):
+  def GetParamValue(self, message, paramId=None, paramName=None):
     paramValue = None
-    if message.get('ParamName') == paramName:
+    if (paramId is not None and message.get('ParamID') == paramId) or (paramName is not None and message.get('ParamName') == paramName):
       for key in message:
         if 'ParamValue' in key:
           paramValue = message.get(key)
@@ -203,23 +206,18 @@ class SQLiteDBCatalogEntry(CatalogEntry):
   def WriteEntry(self, **kwargs):
     sqliteClient = kwargs.get('sqliteClient')
     if sqliteClient:
-      if self.tabletype is FDR_TABLE_TYPE.PVT or self.tabletype is FDR_TABLE_TYPE.STATS:
-        try:
-          self.UpdateParamID(sqliteClient)
-          sqliteClient.WriteToTable(self.tablename, self.tabletype, self.messages)
-          fetch_cmd = "SELECT *, '" + str(self.paramClass) + "' as ParamClass, '" + str(self.compClass) +\
-                      "' as CompClass, '" + str(self.compID) + "' as CompID"
-          fetch_cmd += " FROM " + self.tablename
-          SQLiteDBCatalogEntry.AppendToCombinedList(self.tabletype, fetch_cmd)
-        except sqlite3.Error as e:
-          logging.error(e)
-          traceback.print_exc()
-      elif self.tabletype is FDR_TABLE_TYPE.PDT:
-        try:
-          sqliteClient.WriteToTable(self.tablename, self.tabletype, self.messages)
-        except sqlite3.Error as e:
-          logging.error(e)
-          traceback.print_exc()
+      if self.tabletype is FDR_TABLE_TYPE.PVT or self.tabletype is FDR_TABLE_TYPE.PST:
+        self.UpdateParamID(sqliteClient)
+        sqliteClient.WriteToTable(self.tablename, self.tabletype, self.messages)
+        
+        # Add the table to Sqlite View creating command as well
+        fetch_cmd = "SELECT *, '" + str(self.paramClass) + "' as ParamClass, '" + str(self.compClass) +\
+                          "' as CompClass, '" + str(self.compID) + "' as CompID"
+        fetch_cmd += " FROM " + self.tablename
+        SQLiteDBCatalogEntry.AppendToCombinedList(self.tabletype, fetch_cmd)  
+      else: # FDR_TABLE_TYPE.PDT, BookKeeper, BookOfError
+        sqliteClient.WriteToTable(self.tablename, self.tabletype, self.messages)
+    
     else:
       print("Missing sqliteClient")
 
@@ -227,7 +225,7 @@ class SQLiteDBCatalogEntry(CatalogEntry):
     return "Logs for {}:\n{}\n".format(self.tablename, self.messages)
     #return "Logs for {}".format(self.tablename)
 
-def CreateOneCombinedView(view_name, create_view_as, sqliteClient):
+def CreateSqliteView(view_name, create_view_as, sqliteClient):
   # Drop any existing view
   drop_view_cmd = "DROP VIEW IF EXISTS " + view_name
   sqliteClient.ExecuteCmd(sqliteClient.connection.execute, drop_view_cmd)
@@ -235,39 +233,36 @@ def CreateOneCombinedView(view_name, create_view_as, sqliteClient):
   create_view_cmd = "CREATE VIEW " +  view_name + " AS " + create_view_as
   sqliteClient.ExecuteCmd(sqliteClient.connection.execute, create_view_cmd)
 
+def CreateOneCombinedView(sqliteClient, all_tables_view_name, all_tables_cmd_list, combined_view_name, combined_view_create_cmd):
+  if all_tables_cmd_list: # list is not empty - so there is at least one table
+    try:
+      create_view_as = " UNION ALL ".join(all_tables_cmd_list)
+      CreateSqliteView(all_tables_view_name, create_view_as, sqliteClient)
+      CreateSqliteView(combined_view_name, combined_view_create_cmd, sqliteClient)
+      
+      # Verify if the view was created successfully
+      sqliteClient.GetTable(combined_view_name)
+      print(f"Created Sqlite View: {combined_view_name}")
+    except sqlite3.Error as e:
+      logging.error(f"Couldn't create Sqlite view {combined_view_name}. {e}") 
+  else:
+    print(f"WARNING: Sqlite view {combined_view_name} is not created as there are no tables to be added to the view.")
+
 def CreateCombinedViews(sqliteClient):
-  try:
-    all_PDTs_view = "APV" # APV (All Parameters View)
-    create_view_as = " UNION ALL ".join(SQLiteDBCatalogEntry.APV_cmd_list)
-    CreateOneCombinedView(all_PDTs_view, create_view_as, sqliteClient)
-    
-    combined_data_view = "CDV" # CDV (Combined Data View)
-    create_view_as = "SELECT datetime(" + all_PDTs_view + ".TimeStamp, 'unixepoch') as Time, \
-                    " + all_PDTs_view + ".ParamValue, " + all_PDTs_view + ".CompID, PDT.* FROM PDT \
-                    INNER JOIN " + all_PDTs_view + " ON " + all_PDTs_view + ".ParamID=PDT.ParamID AND "\
-                    + all_PDTs_view + ".CompClass=PDT.CompClass AND  " + all_PDTs_view + ".ParamClass=PDT.ParamClass"
-    CreateOneCombinedView(combined_data_view, create_view_as, sqliteClient)
-    
-    # Verify if the view was created successfully
-    sqliteClient.GetTable("CDV")
-  except sqlite3.Error as e:
-    logging.error("Couldn't create combined views for PVT. {}".format(e)) 
+  all_tables_view_name = "APV" # APV (All Parameters View)
+  combined_view_name = "CDV" # CDV (Combined Data View)
+  combined_view_create_cmd = "SELECT datetime(" + all_tables_view_name + ".TimeStamp, 'unixepoch') as Time, \
+                      " + all_tables_view_name + ".ParamValue, " + all_tables_view_name + ".CompID, PDT.* FROM PDT \
+                      INNER JOIN " + all_tables_view_name + " ON " + all_tables_view_name + ".ParamID=PDT.ParamID AND "\
+                      + all_tables_view_name + ".CompClass=PDT.CompClass AND  " + all_tables_view_name + ".ParamClass=PDT.ParamClass"
+  CreateOneCombinedView(sqliteClient, all_tables_view_name, SQLiteDBCatalogEntry.APV_cmd_list, combined_view_name, combined_view_create_cmd)
   
-  try:
-    all_Stats_view = "ASV" # ASV (All Stats View)
-    create_view_as = " UNION ALL ".join(SQLiteDBCatalogEntry.ASV_cmd_list)
-    CreateOneCombinedView(all_Stats_view, create_view_as, sqliteClient)
-    
-    combined_stats_view = "CSV" # CSV (Combined Stats View)
-    create_view_as = "SELECT datetime(" + all_Stats_view + ".FromTime, 'unixepoch') as FromTime, \
-                    datetime(" + all_Stats_view + ".ToTime, 'unixepoch') as ToTime, \
-                    " + all_Stats_view + ".Min, " + all_Stats_view + ".Max, " + all_Stats_view + ".Avg, "\
-                    + all_Stats_view + ".CompID, PDT.* FROM PDT \
-                    INNER JOIN " + all_Stats_view + " ON " + all_Stats_view + ".ParamID=PDT.ParamID AND "\
-                    + all_Stats_view + ".CompClass=PDT.CompClass AND  " + all_Stats_view + ".ParamClass=PDT.ParamClass"
-    CreateOneCombinedView(combined_stats_view, create_view_as, sqliteClient)
-    
-    # Verify if the view was created successfully
-    sqliteClient.GetTable("CSV")
-  except sqlite3.Error as e:
-    logging.error("Couldn't create combined views for Stats. {}".format(e)) 
+  all_tables_view_name = "ASV" # ASV (All Stats View)
+  combined_view_name = "CSV" # CSV (Combined Stats View)
+  combined_view_create_cmd = "SELECT datetime(" + all_tables_view_name + ".FromTime, 'unixepoch') as FromTime, \
+                      datetime(" + all_tables_view_name + ".ToTime, 'unixepoch') as ToTime, \
+                      " + all_tables_view_name + ".Min, " + all_tables_view_name + ".Max, " + all_tables_view_name + ".Avg, "\
+                      + all_tables_view_name + ".CompID, PDT.* FROM PDT \
+                      INNER JOIN " + all_tables_view_name + " ON " + all_tables_view_name + ".ParamID=PDT.ParamID AND "\
+                      + all_tables_view_name + ".CompClass=PDT.CompClass AND  " + all_tables_view_name + ".ParamClass=PDT.ParamClass"
+  CreateOneCombinedView(sqliteClient, all_tables_view_name, SQLiteDBCatalogEntry.ASV_cmd_list, combined_view_name, combined_view_create_cmd)

@@ -2,6 +2,7 @@
 use_local: False
 local_file: ../../binary-logs.tar.gz
 
+
 ip: http://127.0.0.1:2080 # host IP
 username: root
 password: 0penBmc
