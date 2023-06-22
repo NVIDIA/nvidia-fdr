@@ -25,26 +25,28 @@ class JSONCatalogEntry(CatalogEntry):
     self.primary_key_name = key_name
 
   def AddMessage(self, proto_msg):
-    if self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params:
+    proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg))
+    if self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params and self.msg_type != PROTO_MSG_TYPE.fdr_compactor_bookkeep:
       # Replace the ParamID with ParamName
-      paramName = self.GetParamName(proto_msg.ParamID)
+      paramName = self.GetParamNameFromMsg(proto_msg)
       if paramName:
-        proto_msg.ClearField("ParamID")
-        proto_msg.ParamName = paramName
+        append_to_json = {"ParamName": paramName}
+        proto_msg_str.update(append_to_json)
+        del proto_msg_str["ParamID"]
       else:
         print(f"NOTE: Skipping the ParamName update in {self.filepath} as it couldn't be retrieved.")
       
     # MessageToJson method converts the protobuf message into JSON format. However,
     # to make JSON logs consistent with the formatting in FDR, we're removing the '\n' between the key-values,
-    # as well as all the spaces.
-    json_str = str(protobuf_json_format.MessageToJson(proto_msg)).replace('\n', '').replace(' ', '') 
+    # as well as all the spaces by doing a load and then dump.
+    json_str = json.dumps(proto_msg_str)
     json_str += '\n' # Add a new line to separate between messages
     self.messages.append(json_str)
 
-  def GetParamValue(self, message, paramName):
+  def GetParamValue(self, message, paramId=None, paramName=None):
     paramValue = None
-    json_object = json.loads(message)
-    if json_object.get('ParamName') == paramName:
+    json_object = json.loads(message)  
+    if (paramId is not None and json_object.get('ParamID') == paramId) or (paramName is not None and json_object.get('ParamName') == paramName):
       for key in json_object.keys():
         if 'ParamValue' in key:
           paramValue = json_object.get(key)

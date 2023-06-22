@@ -49,6 +49,8 @@ class InfluxDBConnection:
                                       retry_callback=self.callback.retry)
 
   def WritePoint(self, point):
+    # if isinstance(point, influxdb_client.client.write.point.Point):
+    #   return
     self.write_api.write(bucket=self.database_name, org=self.org, record=point)
 
   def Close(self):
@@ -57,7 +59,7 @@ class InfluxDBConnection:
 class InfluxBatchingCallback(object):
     def success(self, conf: (str, str, str), data: str):
         """Successfully writen batch."""
-        #print(f"Written batch: {conf}, data: {data}")
+        # print(f"Written batch: {conf}, data: {data}")
 
     def error(self, conf: (str, str, str), data: str, exception: InfluxDBError):
         """Unsuccessfully writen batch."""
@@ -76,19 +78,24 @@ class InfluxDBCatalogEntry(CatalogEntry):
     self.tablename = self.FindTablename()
 
   def AddMessage(self, proto_msg):
-    #print(self.msg_type)
     match self.msg_type:
       case PROTO_MSG_TYPE.fdr_sample:
         #values = {'ParamValue': None} # Need to do it as sometimes the 'ParamValue' is missing in the logs
-        field_key = self.GetParamName(proto_msg.ParamID)
+        field_key = self.GetParamNameFromID(proto_msg.ParamID)
+        if field_key is None:
+          logging.error(f'Skipping ParamID {proto_msg.ParamID} in {self.tablename} as parameter name is undefined.')
+          return
         values = CatalogEntry.get_message_values(proto_msg, ['ParamValue'])
-        point_data = influxdb_client.Point(self.tablename).field(field_key, values['ParamValue']).time(proto_msg.TimeStamp, write_precision=WritePrecision.S)
+        point_data = influxdb_client.Point(self.tablename).tag('BootId', self.bootid).field(field_key, values['ParamValue']).time(proto_msg.TimeStamp, write_precision=WritePrecision.S)
         self.messages.append(point_data)
       
       case PROTO_MSG_TYPE.fdr_stat:
         # Temporary change: Using 0 as the protobuf didn't serialize default values. Need to figure out a solution.
         #values = {'Min': 0, 'Max': 0, 'Avg': 0} # Should be None by default. The values won't show up in database
-        field_key = self.GetParamName(proto_msg.ParamID)
+        field_key = self.GetParamNameFromID(proto_msg.ParamID)
+        if field_key is None:
+          logging.error(f'Skipping {proto_msg.ParamID} in {self.tablename} as parameter name is undefined.')
+          return
         values = CatalogEntry.get_message_values(proto_msg, ['FromTime','ToTime', 'Min', 'Max', 'Avg'])
         point_data = influxdb_client.Point(self.tablename)\
                                     .tag('agg-type', 'Min')\
@@ -115,14 +122,24 @@ class InfluxDBCatalogEntry(CatalogEntry):
         self.messages.append(point_data)
       
       case PROTO_MSG_TYPE.fdr_params:
-        # Won't be pushed tp InfluxDB, so save it in proto format
+        # Won't be pushed to InfluxDB, so save it in proto format
         self.messages.append(proto_msg)
         
+      case PROTO_MSG_TYPE.fdr_book_of_errors:
+        pass
+        
+      case PROTO_MSG_TYPE.fdr_compactor_bookkeep:
+        pass
+      
       case _:
         print("Proto msg format didn't match")
 
-  def GetParamValue(self, message, paramName):
+  # This method finds the param value given either the paramId or paramName.
+  # If both are given, paramName gets precedence
+  def GetParamValue(self, message, paramId=None, paramName=None):
     paramValue = None
+    if paramName is None:
+      paramName = self.GetParamNameFromID(paramId)
     # Here message is a InfluxDB Point object.
     if paramName in message._fields.keys():
       paramValue = message._fields.get(paramName)
@@ -137,7 +154,7 @@ class InfluxDBCatalogEntry(CatalogEntry):
     influxClient = kwargs.get('influxClient')
     if influxClient:
       for point in self.messages:
-        influxClient.WritePoint(point)
+        influxClient.WritePoint(point) 
     else:
       print("Missing influxClient")
 
