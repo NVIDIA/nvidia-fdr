@@ -107,7 +107,7 @@ void Record::Refresh(void)
 
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
-        // fdr->BookOfErrorEngine(info.ID, info.ParamID, section.ID, component.ID, info.parent_infogroup->ID ,current_time, val);
+        fdr->BookOfErrorEngine(info.ID, info.ParamID, section.ID, component.ID, info.parent_infogroup->ID ,current_time, val);
 
         // Sensors
         
@@ -148,6 +148,13 @@ void Record::Refresh(void)
             {
                 // printf("bool = %d\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
+            }
+            else if (auto ptr = (std::get_if<std::tuple<bool, unsigned int>>(&val)); ptr)
+            {
+                // std::cout << "Successfully parsed: " << info.DbusParams.Property.c_str() << std::endl;
+                const unsigned int intVal = std::get<1>(*ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) intVal);
+                // std::cout << intVal << std::endl;
             }
             else {
                 std::cout << "DBus read failed: Unknown numerical variant type: " 

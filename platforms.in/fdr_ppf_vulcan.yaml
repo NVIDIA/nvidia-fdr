@@ -29,7 +29,6 @@ GeneralConfig:
   CompactionWindowSecs: 604800 # 1 week, every week new directory is created
   CompactionSubWindowSecs: 7200 # 2 hours, every 2 hours stats are created
   HiFiDataPreserveTimeSecs: 14400 # 4 hours, <-4 hours ---Error--- +4 hours> worth of entires
-
   DefaultCompactionSensors: &compaction-definition-sensors
     RecordRetentionPolicy: Recreate
     CompactionMethod: Average

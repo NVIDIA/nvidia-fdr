@@ -27,7 +27,7 @@ private:
 	std::vector<Record *> RecList;
 	std::time_t LastCompactWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
 	const std::string CompactorBookKeeperName = "Compactor.log";
-	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
+	// const std::string BookOfErrorKeeperName = "BookOfErrors.log";
 	const std::string ParamDescKeeperName = "ParamDescription.log";
 	std::unique_ptr<FDRStore> CompactorBookKeeperAppender;
 	std::unique_ptr<FDRStore> fdrParamsWriter;
@@ -71,10 +71,14 @@ private:
 	void CompactorEngine(std::string directoryTocompact);
 
 	// all private functions related to Book Of Errors
-	void SetBookOfErrorsRecord(unsigned int paramID, std::string sectionID, std::string componentID, 
-							   std::string paramClass, const char *value, time_t current_time);
+	void SetBookOfErrorsRecord(unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
+                                                 const char *value, time_t current_time, std::string bookOfErrorsFileName);
+
+	bool CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg, const std::string& logFile);
 
 public:
+
+	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
 	std::unique_ptr<FDRStore> fdrbookoferrorswriter;
     fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 	Profile_t profile;
@@ -93,9 +97,8 @@ public:
 	{
 		CheckCompactionWindowExpiry();
 	}
-	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string sectionID,
-						   std::string componentID, std::string paramClass,
-                		   time_t current_time, PropertyVariant val);
+	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
+                                             time_t current_time, PropertyVariant val);
 	void CheckForErrorsToUpdateBookOfErrors(void);
     void CheckExceptionRateLimit();
 };
