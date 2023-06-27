@@ -376,6 +376,11 @@ void FlightDataRecorder_c::CreateRecords(void)
 				// use the same FDRStore pointer for all the records on this infogroup
 			    std::shared_ptr<FDRStore> fdrStoreObj;
 			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, fdrStoreObj);
+				// For AML events store FDRStore objects for devices having `Error` fields
+				if ((infogroup.ID).find("Error") != std::string::npos)
+				{
+					fdrDeviceErrorsWriter[component.ID] = fdrStoreObj;
+				}
 
 				for (auto &info : infogroup.InfoList)
 				{
@@ -666,7 +671,8 @@ void FlightDataRecorder_c::initEventsSignalRegistration()
 	if (!objPath.empty() && !intf.empty() && !member.empty())
 	{
 		std::cout << "Registering events signal watcher" << std::endl;
-		EventSignalHandler* eventHandler = new EventSignalHandler(objPath, intf, member);
+		EventSignalHandler* eventHandler = new EventSignalHandler(objPath, intf, member,
+			fdrDeviceErrorsWriter);
 		eventHandler->registerEventsSignal();
 	}
 }

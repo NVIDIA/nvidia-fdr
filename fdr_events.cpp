@@ -12,6 +12,53 @@
 #include <iostream>
 #include "fdr_events.hpp"
 
+/** @brief Helper to fetch device id from device name */
+std::string getDeviceId(const std::string& deviceName)
+{
+    std::string deviceId;
+    // Find the position of the last underscore
+    std::size_t lastUnderscorePos = deviceName.find_last_of('_');
+    if (lastUnderscorePos != std::string::npos) {
+        // Extract the substring after the underscore
+        deviceId = deviceName.substr(lastUnderscorePos + 1);
+    }
+
+    return deviceId;
+}
+
+// TODO: Update fdr device name to match HMC DAT device name
+/** @brief Method to convert event device name to FDR device name */
+std::string EventSignalHandler::getFDRDeviceName(
+    std::string& deviceName)
+{
+    std::string fdrDeviceName;
+    // Translate GPU_SXM_1 to GPU1
+    if (deviceName.find("GPU") != std::string::npos)
+    {
+        auto deviceId = getDeviceId(deviceName);
+        fdrDeviceName = "GPU" + deviceId;
+    }
+    // Translate NVSwitch_0 to NVSwitch0
+    else if (deviceName.find("NVSwitch") != std::string::npos)
+    {
+        auto deviceId = getDeviceId(deviceName);
+        fdrDeviceName = "NVSwitch" + deviceId;
+    }
+    // Translate HGX_Baseboard_0 to Baseboard0
+    else if (deviceName.find("Baseboard") != std::string::npos)
+    {
+        auto deviceId = getDeviceId(deviceName);
+        fdrDeviceName = "Baseboard" + deviceId;
+    }
+    // Default device will be Baseboard0
+    else
+    {
+        fdrDeviceName = "Baseboard0";
+    }
+
+    return fdrDeviceName;
+}
+
 /* Sample of event message to be parsed by handler
 string "xyz.openbmc_project.Logging.Entry"
 array [
@@ -68,6 +115,9 @@ array [
 /** @brief Method to parse event metadata */
 void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
 {
+
+    std::time_t eventTimestamp = std::time(nullptr);
+
     for (const auto& eventProperty: eventProperties)
     {
         // Process only event metadata
@@ -75,7 +125,7 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
         {
             for (const auto& eventData: eventProperty.second)
             {
-                // Process only additional data
+                // Process additional data
                 if (eventData.first == "AdditionalData")
                 {
                     const std::vector<std::string>* msgStringsPtr =
@@ -112,6 +162,25 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                             errorMessageDetails = (equalSignPos != std::string::npos) ?
                                 msgString.substr(equalSignPos + 1) : "";
                         }
+                    }
+
+                    // Update event message to FDR store
+                    auto fdrDeviceName = getFDRDeviceName(deviceName);
+                    auto it = this->fdrDeviceEventsWriter.find(fdrDeviceName);
+                    if (it != this->fdrDeviceEventsWriter.end())
+                    {
+                        // Store event data into FDR records
+                        auto fdrStoreWriter = it->second;
+                        // Create protobuf message
+                        fdr_event_data.set_eventtimestamp(eventTimestamp);
+                        fdr_event_data.set_eventname(errorMessage);
+                        fdr_event_data.set_eventmessage(errorMessageDetails);
+                        // Write to fdr space
+                        fdrStoreWriter->append(fdr_event_data);
+                    }
+                    else
+                    {
+                        std::cout << "Event store got unkown device: " << fdrDeviceName << std::endl;
                     }
                     break; // Skip processing other elements
                 }
