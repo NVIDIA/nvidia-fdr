@@ -8698,6 +8698,8 @@ FPGA: &fpga
             Interface: "xyz.openbmc_project.Sensor.Value"
             Property: "Value"
 
+      <<: *compaction-definition-sensors
+
     - ID: Status
       InfoList:
         - ID: HEALTH
@@ -8712,7 +8714,6 @@ FPGA: &fpga
             Interface: "xyz.openbmc_project.State.Decorator.Health"
             Property: "Health"
 
-      <<: *compaction-definition-sensors
 
 Baseboard: &baseboard
   Params:
