@@ -11,6 +11,8 @@
 
 #include <unistd.h>
 #include <systemd/sd-bus.h>
+#include "spdlog/spdlog.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 #include "fdr.hpp"
 
 sd_bus *bus = NULL;
@@ -50,8 +52,14 @@ int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 
 FlightDataRecorder_c *fdr;
 
+
 int main(int argc, char *argv[])
 {
+	// the fdr-init logger is used before fdr->log initialization
+	auto console = spdlog::stdout_color_mt("fdr-init"); 
+	console->set_level(spdlog::level::info);
+	spdlog::set_default_logger(console);
+
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
 
 	sd_bus_default_system(&bus);
@@ -63,7 +71,7 @@ int main(int argc, char *argv[])
 	}
 	fdr = new FlightDataRecorder_c(filename);
 	if (fdr == nullptr) {
-		std::cerr << "Error instantiating fdr instance" << std::endl;
+		spdlog::error("Error instantiating fdr instance");
 		exit(1);
 	}
 

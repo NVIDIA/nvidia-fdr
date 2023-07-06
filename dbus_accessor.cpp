@@ -12,6 +12,7 @@
 #include <iostream>
 #include "dbus_accessor.hpp"
 #include <sdbusplus/exception.hpp>
+#include <spdlog/spdlog.h>
 
 namespace dbus
 {
@@ -46,12 +47,12 @@ std::string getService(const std::string& objectPath,
         }
         else
         {
-            printf("getService() Service not found for: %s %s\n", objectPath.c_str(), interface.c_str());
+            spdlog::warn("getService() Service not found for: {} {}", objectPath, interface);
         }
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        printf("getService() DBus error: error = %s\n", e.what());
+        spdlog::warn("getService() DBus error: error = {}", e.what());
     }
     return ret;
 }
@@ -72,7 +73,7 @@ PropertyVariant readDbusProperty(const std::string& service, const std::string& 
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        printf("readDbusProperty() Failed to get property: error = %s\n", e.what());
+        spdlog::warn("readDbusProperty() Failed to get property: error = {}", e.what());
     }
     return value;
 }
@@ -98,19 +99,15 @@ RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& ob
         reply.read(response);
     }
     catch (const sdbusplus::exception::exception& e){
-        printf("readDbusDGDProperty: Failed to get property: error = %s\n", e.what());
+        spdlog::warn("readDbusDGDProperty: Failed to get property: error = {}", e.what());
     }
     auto rc = std::get<int>(response);
     auto data = std::get<std::vector<uint32_t>>(response);
 
     if (rc != 0){
-        std::cout << "readDbusDGDProperty: bad return: "
-                  << "; objPath: " << objPath
-                  << "; property: " << property
-                  << "; DevId: " << devId
-                  << std::endl;
-    }
-    else{
+        spdlog::warn("readDbusDGDProperty: bad return: objPath: {}; property: {}; DevId: {}",
+                    objPath, property, devId);
+    }else{
         auto data = std::get<std::vector<uint32_t>>(response);
         if (data.size() >= 2){
             // Per SMBPBI spec: data[0]:dataOut, data[1]:exDataOut
@@ -153,30 +150,20 @@ PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string
 
     }
     catch (const sdbusplus::exception::exception& e){
-        printf("readDbusPTProperty: Failed to get property: error = %s\n", e.what());
+        spdlog::warn("readDbusPTProperty: Failed to get property: error = {}", e.what());
     }
 
     if (rc != 0){
-        std::cout << "readDbusPTProperty: bad return: "
-                  << "; objPath: " << objPath
-                  << "; opcode: " << opcode
-                  << "; arg1: " << arg1
-                  << "; arg2: " << arg2
-                  << std::endl;
-    }
-    else{
+        spdlog::warn("readDbusPTProperty: bad return: objPath: {}; opcode: {}; arg1: {}; arg2: {}",
+                    objPath, opcode, arg1, arg2);
+    }else{
         if (dataOut.size() == 4){
             fpgavalue = ((uint64_t)dataOut[3] << 32 | (uint64_t)dataOut[2]);
             
         }
         else{
-            std::cout << "readDbusPTProperty: PassthroughFpga: Unknown SMBPBI response: "
-                    << dataOut.size()
-                    << "; objPath: " << objPath
-                    << "; opcode: " << opcode
-                    << "; arg1: " << arg1
-                    << "; arg2: " << arg2
-                    << std::endl;
+            spdlog::warn ("readDbusPTProperty: PassthroughFpga: Unknown SMBPBI response: {}; objPath: {}; opcode: {}; arg1: {}; arg2: {}",
+                        dataOut.size(), objPath, opcode, arg1, arg2);
         }
 
     }
@@ -204,7 +191,7 @@ bool setDbusProperty(const std::string& service, const std::string& objPath,
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        printf("setDbusProperty() Failed to set property: error = %s\n", e.what());
+        spdlog::warn("setDbusProperty() Failed to set property: error = {}", e.what());
     }
     return ret;
 }

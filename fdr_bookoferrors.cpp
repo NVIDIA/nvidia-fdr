@@ -20,7 +20,7 @@ bool FlightDataRecorder_c::CompareMessageWithLog(const fdrpb::fdr_book_of_errors
 {
 
 	if (!(std::filesystem::exists(logFile))) {
-		std::cout << "Book of errors file Not Exist!!: " << logFile << std::endl;
+		log->warn("Book of errors file Not Exist!!: {}", logFile);
 		return false;
 	}
     else
