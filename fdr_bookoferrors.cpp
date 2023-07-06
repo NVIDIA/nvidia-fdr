@@ -12,6 +12,7 @@
 // This file contain definitions for all the methods related to Book of errors in FDR
 #include "fdr.hpp"
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <regex>
 
@@ -63,7 +64,7 @@ void FlightDataRecorder_c::SetBookOfErrorsRecord(unsigned int paramID, std::stri
 
     bool result = CompareMessageWithLog(book_of_errors, bookOfErrorsFileName);
 
-    if (book_of_errors.ByteSize() > 0 && !result ) 
+    if (book_of_errors.ByteSizeLong() > 0 && !result )
     {
         fdrbookoferrorswriter->append(book_of_errors);
     }

@@ -84,7 +84,7 @@ void FindAndReplaceAll(std::string &s, const std::string &search, const std::str
     }
 }
 
-LeakyBucket::LeakyBucket(int64_t capacity, double rate) : capacity{capacity}, rate{rate}, e{std::chrono::steady_clock::now()} {};
+LeakyBucket::LeakyBucket(int64_t capacity, double rate) : capacity{capacity}, rate{rate}, e{std::chrono::steady_clock::now()} {}
 
 int64_t LeakyBucket::Capacity()
 {

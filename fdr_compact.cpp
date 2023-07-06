@@ -12,6 +12,7 @@
 // This file contain definitions for all the methods related to compaction in FDR
 
 #include "fdr.hpp"
+#include <filesystem>
 
 // This method will slide through BookOfError.log file and find any error occured between the given 2 timestamps.
 // If yes, then get the list of those errors between those 2 timestamps.
