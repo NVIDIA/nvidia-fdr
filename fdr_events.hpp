@@ -16,6 +16,13 @@
 #include "fdr_utils.hpp"
 #include "fdr_store.hpp"
 
+// Store section.ID, component.ID and infogroup.ID for book_of_errors
+struct EventRecord {
+  std::string sectionID;   // Ex: GPU
+  std::string componentID; // Ex: GPU0
+  std::string infogroupID; // Ex: Error
+};
+
 class EventSignalHandler
 {
   private:
@@ -24,7 +31,8 @@ class EventSignalHandler
     std::string eventIface;
     std::string eventMember;
     std::unique_ptr<sdbusplus::bus::match_t> eventHandlerMatcher;
-    std::map<std::string, std::shared_ptr<FDRStore>> fdrDeviceEventsWriter;
+    std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>>
+      fdrDeviceEventsWriter;
 
     using eventPropertiesType = std::vector<std::pair<
       std::string, std::vector<std::pair<
@@ -37,8 +45,8 @@ class EventSignalHandler
   public:
     EventSignalHandler(
         std::string eventObjPath,
-        std::string eventIface, std::string eventMember,
-        std::map<std::string, std::shared_ptr<FDRStore>>& fdrDeviceEventsWriter) :
+        std::string eventIface, std::string eventMember, std::map<std::string,
+          std::pair<std::shared_ptr<FDRStore>, EventRecord>>& fdrDeviceEventsWriter) :
         eventObjPath(eventObjPath),
         eventIface(eventIface), eventMember(eventMember),
         fdrDeviceEventsWriter(fdrDeviceEventsWriter)

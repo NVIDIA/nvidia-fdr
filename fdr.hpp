@@ -84,7 +84,8 @@ public:
 	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
 	std::unique_ptr<FDRStore> fdrbookoferrorswriter;
 	// Map of device name to FDRStore object for streaming AML events on all devices
-	std::map<std::string, std::shared_ptr<FDRStore>> fdrDeviceErrorsWriter;
+	std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>>
+		fdrDeviceErrorsWriter;
     fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 	Profile_t profile;
 	std::shared_ptr<spdlog::logger> log;

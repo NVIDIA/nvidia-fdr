@@ -379,7 +379,14 @@ void FlightDataRecorder_c::CreateRecords(void)
 				// For AML events store FDRStore objects for devices having `Error` fields
 				if ((infogroup.ID).find("Error") != std::string::npos)
 				{
-					fdrDeviceErrorsWriter[component.ID] = fdrStoreObj;
+					// Store records for book of errors
+					EventRecord rec;
+					rec.sectionID = section.ID;
+					rec.componentID = component.ID;
+					rec.infogroupID = infogroup.ID;
+					std::pair<std::shared_ptr<FDRStore>, EventRecord> recPair =
+						std::make_pair(fdrStoreObj, rec);
+					fdrDeviceErrorsWriter[component.ID] = recPair;
 				}
 
 				for (auto &info : infogroup.InfoList)

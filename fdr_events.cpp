@@ -10,6 +10,8 @@
 */
 
 #include <iostream>
+#include "fdr.hpp"
+#include "property_variant.hpp"
 #include "fdr_events.hpp"
 
 /** @brief Helper to fetch device id from device name */
@@ -169,14 +171,25 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                     auto it = this->fdrDeviceEventsWriter.find(fdrDeviceName);
                     if (it != this->fdrDeviceEventsWriter.end())
                     {
-                        // Store event data into FDR records
-                        auto fdrStoreWriter = it->second;
+                        // Object having FDR store writer and book of errors record
+                        auto fdrDeviceEventRec = it->second;
+
+                        // Store event data into FDR records - FDR store writer
+                        auto fdrStoreWriter = fdrDeviceEventRec.first;
                         // Create protobuf message
                         fdr_event_data.set_eventtimestamp(eventTimestamp);
                         fdr_event_data.set_eventname(errorMessage);
                         fdr_event_data.set_eventmessage(errorMessageDetails);
                         // Write to fdr space
                         fdrStoreWriter->append(fdr_event_data);
+
+                        // Add book of errors record
+                        PropertyVariant val = std::string(""); // No value associated
+                        // Use infoID as 'FAULTS'
+                        // Use paramID as default 9999 - No params
+                        auto record = fdrDeviceEventRec.second;
+                        fdr->BookOfErrorEngine("FAULTS", 9999, record.sectionID,
+                            record.componentID, record.infogroupID, eventTimestamp, val);
                     }
                     else
                     {
