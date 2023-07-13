@@ -340,6 +340,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 	{
 		// std::cout << "Section.ID: " << section.ID << "\n";
 		section.parent_profile = &profile;
+		bool ComponentAddedInSchema = false;
 		for (auto &component : section.Components)
 		{
 			// std::cout << "\tComponent.ID: " << component.ID << "\n";
@@ -364,21 +365,26 @@ void FlightDataRecorder_c::CreateRecords(void)
 					// Append it to the list
 					RecList.push_back(resource);
 
-					// Create fdr_params data
-					fdrpb::fdr_params data;
-					data.set_compclass(section.ID);
-					data.set_paramclass(infogroup.ID);
-					data.set_paramname(info.ID);
-					data.set_paramid(info.ParamID);
-					data.set_paramtype(info.DataType);
-					// data.set_paramunits(info.ID); // TO-DO
-					// data.set_paramnotes(info.ID); // TO-DO
-					fdrParamsWriter->append(data);
+					if(!ComponentAddedInSchema) // Added ONLY ONCE for a component class to avoid repeated entries
+					{
+						// Create fdr_params data
+						fdrpb::fdr_params data;
+						data.set_compclass(section.ID);
+						data.set_paramclass(infogroup.ID);
+						data.set_paramname(info.ID);
+						data.set_paramid(info.ParamID);
+						data.set_paramtype(info.DataType);
+						// data.set_paramunits(info.ID); // TO-DO
+						// data.set_paramnotes(info.ID); // TO-DO
+						fdrParamsWriter->append(data);
+					}
+					
 				}
 
 				// std::cout << "CreateRecords: fdrStoreObj.use_count: "
 				// 		  << fdrStoreObj.use_count() << std::endl;
 			}
+			ComponentAddedInSchema = true;
 		}
 	}
 }
