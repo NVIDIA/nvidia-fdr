@@ -122,6 +122,7 @@ public:
 	void initEventsSignalRegistration();
 	void InitTimerEvents(void);
 	void RunEventLoop(void);
+	void initRecordsSignalRegistration();
 };
 
 // We have a global fdr variable defined in main.cpp

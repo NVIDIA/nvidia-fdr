@@ -439,7 +439,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 						// data.set_paramnotes(info.ID); // TO-DO
 						fdrParamsWriter->append(data);
 					}
-					
+
 				}
 
 				// std::cout << "CreateRecords: fdrStoreObj.use_count: "
@@ -751,6 +751,11 @@ void FlightDataRecorder_c::ModifySpecificRecords(std::string recRetentionPolicy)
 	}
 
 	// std::cout << "ModifySpecificRecords: 3: numFdsObjs: " << numFdsObjs << std::endl;
+}
+
+void FlightDataRecorder_c::initRecordsSignalRegistration()
+{
+	// TODO
 }
 
 FlightDataRecorder_c::~FlightDataRecorder_c()
