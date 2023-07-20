@@ -44,6 +44,8 @@ private:
 	void DeleteSpecificRecords(std::string recordSubName);
 	void CreateSpecificRecords(std::string recordSubName);
 
+	void InitLogger();
+
 	LeakyBucket *ExceptionRateLimiter;
 	void InitExceptionRateLimiter();
 

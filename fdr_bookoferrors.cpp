@@ -12,6 +12,7 @@
 // This file contain definitions for all the methods related to Book of errors in FDR
 #include "fdr.hpp"
 #include <iostream>
+#include <filesystem>
 #include <fstream>
 #include <regex>
 
@@ -19,7 +20,7 @@ bool FlightDataRecorder_c::CompareMessageWithLog(const fdrpb::fdr_book_of_errors
 {
 
 	if (!(std::filesystem::exists(logFile))) {
-		std::cout << "Book of errors file Not Exist!!: " << logFile << std::endl;
+		log->warn("Book of errors file Not Exist!!: {}", logFile);
 		return false;
 	}
     else
@@ -63,7 +64,7 @@ void FlightDataRecorder_c::SetBookOfErrorsRecord(unsigned int paramID, std::stri
 
     bool result = CompareMessageWithLog(book_of_errors, bookOfErrorsFileName);
 
-    if (book_of_errors.ByteSize() > 0 && !result ) 
+    if (book_of_errors.ByteSizeLong() > 0 && !result )
     {
         fdrbookoferrorswriter->append(book_of_errors);
     }

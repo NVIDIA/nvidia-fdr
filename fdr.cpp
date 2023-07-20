@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <sys/stat.h>
+#include <spdlog/spdlog.h>
 #include "fdr.hpp"
 
 std::string bootCounter;
@@ -27,7 +28,7 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	if (!filename.empty())
 	{
-		std::cout << "Specified PPF file " << filename << ", PPF detection skipped" << std::endl;
+		spdlog::info("Specified PPF file {}, PPF detection skipped", filename);
 		retVal = ConvertPPFToStruct(filename);
 		PPFName = filename;
 	}
@@ -38,7 +39,7 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 	}
 	if (retVal != FDR_SUCCESS)
 	{
-		std::cout << "Error loading PPF file..Exiting!" << std::endl;
+		spdlog::error("Error loading PPF file..Exiting!");
 		exit(EXIT_FAILURE);
 	}
 
@@ -47,20 +48,13 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 	retVal = SanityChecker->SanityTestPPF(PPFName);
 	if (retVal != FDR_SUCCESS)
 	{
-		std::cout << "Error: PPF failed sanity test! Please fix the above issue(s) in the PPF " << PPFName << "." << std::endl;
+		spdlog::error("Error: PPF failed sanity test! Please fix the above issue(s) in the PPF {}.", PPFName);
 		exit(EXIT_FAILURE);
 	}
 
 	birthCertFilePath = profile.GeneralConfig.LogsBasePath + "/BirthCertificate.tar";
 
-	spdlog::level::level_enum level = spdlog::level::from_str(profile.GeneralConfig.LoggingLevel);
-	this->log = spdlog::rotating_logger_mt("fdr",
-										   this->profile.GeneralConfig.LogsBasePath + "/fdr.log",
-										   this->profile.GeneralConfig.LoggingFileMaxSize,
-										   this->profile.GeneralConfig.LoggingFileNumber);
-	this->log->flush_on(level);
-	this->log->set_level(level);
-
+	this->InitLogger();
 	this->InitExceptionRateLimiter();
 
 	this->rfc = nullptr;
@@ -79,7 +73,7 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 	}
 	else
 	{
-		this->log->info("No redfish configuration found, skipped creating redfish client.");
+		this->log->debug("No redfish configuration found, skipped creating redfish client.");
 	}
 
 	// update the boot counter
@@ -88,7 +82,7 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 	// create a hidden empty file /tmp/.fdrHmcAlive, if it not exist 
 	CreateFdrHmcAlive();
 
-	std::cout << "bootCounter: " << bootCounter << "; sensorDirTimestamp: " << sensorDirTimestamp << std::endl;
+	log->debug("bootCounter: {}; sensorDirTimestamp: {}", bootCounter, sensorDirTimestamp);
 
     birthCertFilePath = profile.GeneralConfig.LogsBasePath + "/" + CommonFdrKeepersDirName +"/BirthCertificate.tar";
 
@@ -100,6 +94,35 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	CompactorBookKeeperCleanEntries();
 	CompactorBookKeeperAppendEntry();
+}
+
+
+void FlightDataRecorder_c::InitLogger() {
+	spdlog::level::level_enum level = spdlog::level::from_str(profile.GeneralConfig.LoggingLevel);
+
+	std::vector<spdlog::sink_ptr> sinks;
+	// stdout logger
+	auto stdout_logger = std::make_shared<spdlog::sinks::ansicolor_stdout_sink_mt>();
+	sinks.push_back(stdout_logger);
+	// file logger
+	try {
+		auto file_logger = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
+							this->profile.GeneralConfig.LogsBasePath + "/fdr.log",
+							this->profile.GeneralConfig.LoggingFileMaxSize,
+							this->profile.GeneralConfig.LoggingFileNumber);
+		sinks.push_back(file_logger);
+	} catch (const std::exception &e) {
+		spdlog::error("Error creating logger file: {}", e.what());
+	}
+
+	// combined logger
+	this->log = std::make_shared<spdlog::logger>("fdr", begin(sinks), end(sinks));
+	spdlog::register_logger(this->log);
+
+	spdlog::set_default_logger(this->log);
+
+	this->log->flush_on(level);
+	this->log->set_level(level);
 }
 
 void FlightDataRecorder_c::InitExceptionRateLimiter()
@@ -143,7 +166,7 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 	std::string SupportedPlatformsDir = (platforms_path != NULL ? platforms_path : "./platforms");
 	if (!(std::filesystem::exists(SupportedPlatformsDir)))
 	{
-		std::cout << "Not able to find the 'Platform Profile File' directory" << std::endl;
+		spdlog::error("Not able to find the 'Platform Profile File' directory");
 		return FDR_ERR_GENFAILURE;
 	}
 
@@ -157,7 +180,7 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 			}
 		}
 	} catch(std::exception &e) {
-		std::cout << "Exception while iterating PPF directory: " << SupportedPlatformsDir << ": " << e.what() << std::endl;
+		spdlog::error("Exception while iterating PPF directory: {}: {}", SupportedPlatformsDir, e.what());
 		return FDR_ERR_GENFAILURE;
 	}
 
@@ -168,12 +191,12 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 	for (auto filename : SupportedPlatforms)
 	{
 
-		std::cout << "Trying " + filename << std::endl;
+		spdlog::info ("Trying {}", filename);
 
 		// HACK: If YAML, convert to JSON because yaml-cpp has trouble parsing yaml with anchors and aliases
 		if (filename.substr(filename.find_last_of(".")) != ".yaml")
 		{
-			std::cout << "skipping non config file: " << filename << std::endl;
+			spdlog::info("skipping non config file: {}", filename);
 			continue;
 		}
 
@@ -181,21 +204,21 @@ int FlightDataRecorder_c::FindAndLoadPlatformProfile(void)
 		retVal = ConvertPPFToStruct(filename);
 		if (retVal != FDR_SUCCESS)
 		{
-			std::cout << "ExecuteFingerPrintRules failed...Try another" << std::endl;
+			spdlog::info ("ExecuteFingerPrintRules failed...Try another");
 			continue;
 		}
 		// execute the Fingerprint in the PPF
 		retVal = ExecuteFingerPrintRules();
 		if (retVal == FDR_SUCCESS)
 		{
-			std::cout << "Found the PPF file: " << filename << std::endl;
+			spdlog::info("Found the PPF file: {}", filename);
 			PPFName = filename;
 			// now Data struct have all the values from this PPF file. Hence return FDR_SUCCESS.
 			return FDR_SUCCESS;
 		}
 	}
 
-	std::cout << "Not able to find the right PPF file for this platform." << std::endl;
+	spdlog::error("Not able to find the right PPF file for this platform.");
 
 	return FDR_ERR_GENFAILURE;
 }
@@ -216,7 +239,7 @@ int FlightDataRecorder_c::ConvertPPFToStruct(const std::string filename)
 	}
 	catch (std::exception &e)
 	{
-		std::cout << "Exception while parsing " << filename << ": " << e.what() << std::endl;
+		spdlog::error("Exception while parsing {}: {}", filename, e.what());
 		return FDR_ERR_GENFAILURE;
 	}
 }
@@ -233,7 +256,7 @@ int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
 		if (cmdResult.cmdExitstatus != FDR_SUCCESS)
 		{
 			// if any of the command failed, then this is not the PPF file for this platform
-			std::cout << "ExecuteFingerPrintRules: command Failed: " << CheckRule << std::endl;
+			spdlog::info("ExecuteFingerPrintRules: command Failed: {}", CheckRule);
 			return FDR_ERR_GENFAILURE;
 		}
 	}
@@ -265,7 +288,7 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
 
     if (!(std::filesystem::exists(dir))) {
         if (!(std::filesystem::create_directories(dir)))
-            std::cout << "CreateKeeperWriter: Failed to create directory: " << dir << std::endl;
+            log->warn("CreateKeeperWriter: Failed to create directory: {}", dir.string());
         // TODO: error handling
     }
 
@@ -313,7 +336,7 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
     }
     if (!(std::filesystem::exists(dir))) {
         if (!(std::filesystem::create_directories(dir))) {
-            std::cout << "Failed to create directory: " << dir << std::endl;
+            log->warn("Failed to create directory: {}", dir.string());
             // TODO: error handling
         }
     } else {
@@ -406,9 +429,9 @@ void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 		CommandResult_t cmdResult = exec(commandStr.c_str());
 		if (cmdResult.cmdExitstatus != FDR_SUCCESS)
 		{
-			std::cout << "tarCmd command Failed: " << commandStr << std::endl;
+			log->warn ("tarCmd command Failed: {}", commandStr);
 		}
-		std::cout << "Successfully created Birth certificate: " << birthCertFilePath << std::endl;
+		log->debug("Successfully created Birth certificate: {}", birthCertFilePath);
 	}
 	else
 	{
@@ -487,7 +510,7 @@ void FlightDataRecorder_c::CreateFdrHmcAlive(void)
 
 		//If file is not created, return error
 		if (!file) { 
-			std::cout << fdrHmcAlivePathName << " :Error in file creation!" << std::endl;
+			log->warn ("{}: Error in file creation!", fdrHmcAlivePathName);
 			// no need to abort/exit FDR instance as it wont create a major functionality
 			// break in normal function of fdr itself. Just continue the operation of FDR
 			// with a error message in the fdr log.
@@ -496,7 +519,7 @@ void FlightDataRecorder_c::CreateFdrHmcAlive(void)
 			file.close();
 		}
 	} else {
-		std::cout << fdrHmcAlivePathName << " already exist!!" << std::endl;
+		log->debug("{}: already exist!!", fdrHmcAlivePathName);
 	}
 }
 
@@ -518,22 +541,22 @@ void FlightDataRecorder_c::UpdateGlobVariables(bool needtoUpdateBootcounter)
 		CommandResult_t bootCountCmdResult = exec(bootCountCmd.c_str());
 		if (bootCountCmdResult.cmdExitstatus != FDR_SUCCESS) {
 			// if any of the command failed, then this is not the PPF file for this platform
-			std::cout << "UpdateGlobVariables: command Failed: " << bootCountCmd << std::endl;
-			std::cout << "UpdateGlobVariables: commandresult: "
-					<< "cmdExitstatus: " << bootCountCmdResult.cmdExitstatus
-					<< "; cmdOutput: " << bootCountCmdResult.cmdOutput << std::endl;
+			log->warn("UpdateGlobVariables: command Failed: {}", bootCountCmd);
+			log->warn("UpdateGlobVariables: commandresult: {}; cmdOutput: {}",
+						bootCountCmdResult.cmdExitstatus,
+						bootCountCmdResult.cmdOutput);
 		}
 		// 2. check if the file exists
 		std::string BootCountFilepath = bootcounterDir + "BootCount.txt";
 		if (!(std::filesystem::exists(BootCountFilepath))) {
-			std::cout << "BootCount file Not Exist!!: " << BootCountFilepath << std::endl;
+			log->warn("BootCount file Not Exist!!: {}", BootCountFilepath);
 			// if the file not exist, then hardcode fixed value to the variable
 			bootCounter = "0";
 		} else {
 			// 3. get the boot counter from the BootCount.txt
 			std::ifstream f(BootCountFilepath);
 			f >> bootCounter;
-			std::cout << "UpdateGlobVariables: bootCounter: " << bootCounter << std::endl;
+			log->info("UpdateGlobVariables: bootCounter: {}", bootCounter);
 		}
 	}
 

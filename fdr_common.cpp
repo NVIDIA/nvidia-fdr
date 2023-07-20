@@ -12,6 +12,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
+#include <spdlog/spdlog.h>
 #include "fdr_common.hpp"
 
 CommandResult_t exec(const char *cmd)
@@ -23,7 +24,8 @@ CommandResult_t exec(const char *cmd)
 	FILE *pipe = popen(cmd, "r");
 	if (pipe == nullptr)
 	{
-		std::cout << "exec cmd failed: " << cmd << std::endl;
+        // it can be called before fdr init
+		spdlog::warn("exec cmd failed: {}", cmd);
 		throw std::runtime_error("popen() failed!");
 	}
 	try
@@ -84,7 +86,7 @@ void FindAndReplaceAll(std::string &s, const std::string &search, const std::str
     }
 }
 
-LeakyBucket::LeakyBucket(int64_t capacity, double rate) : capacity{capacity}, rate{rate}, e{std::chrono::steady_clock::now()} {};
+LeakyBucket::LeakyBucket(int64_t capacity, double rate) : capacity{capacity}, rate{rate}, e{std::chrono::steady_clock::now()} {}
 
 int64_t LeakyBucket::Capacity()
 {

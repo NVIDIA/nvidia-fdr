@@ -11,6 +11,7 @@
 
 #include <string>
 #include <sstream>
+#include <spdlog/spdlog.h>
 #include "fdr_store.hpp"
 
 #include "fdr_logs_schema.pb.h"
@@ -50,7 +51,7 @@ FDRStore::FDRStore(std::string file, std::string fileformat, std::string cClass,
     int errCode = sqlite3_open(dbLoc.c_str(), &DB);
 
     if(errCode != SQLITE_OK){	//TODO: Error Handling
-		std::cout << "Error opening DB" << std::endl;
+		spdlog::warn("Error opening DB");
 	}
 
     //Generate the table name
@@ -67,7 +68,8 @@ FDRStore::FDRStore(std::string file, std::string fileformat, std::string cClass,
     errCode = sqlite3_prepare_v2(DB, sqlStmt.c_str(), -1, &sampleFetchStmt, NULL);
 
     if(errCode){
-		std::cout << "Error during execution : " << std::string(sqlite3_errmsg(DB)) << std::endl << "Statement could not be prepared : " << sqlStmt << std::endl;
+		spdlog::warn("Error during execution: {}\nStatement could not be prepared: {}",
+                    std::string(sqlite3_errmsg(DB)), sqlStmt); 
 		sqlite3_close(DB);
 	}
 
@@ -142,7 +144,8 @@ void FDRStore::append(const fdr_sample_sql &data)
         errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
 		if(errCode){
-			std::cout << "Error during execution : " << zErrMsg << std::endl << "Insert failed : " << sql << std::endl;
+			spdlog::warn("Error during execution : {}\nInsert failed : {}",
+                         zErrMsg, sql);
 			sqlite3_close(DB);
 			return;
 		}
@@ -183,7 +186,7 @@ int FDRStore::readnext(google::protobuf::Message *datap){
                 }
                 else
                 {
-                    std::cout << "Binary file seems corrupted" << std::endl;
+                    spdlog::warn("Binary file seems corrupted");
                     return 0; // Unexpected end of file
                 }
             }
@@ -241,7 +244,7 @@ void FDRStore::deleteRecords(){
     int errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
     if(errCode){
-        std::cout << "Error during execution : " << zErrMsg << std::endl << "Delete failed : " << sql << std::endl;
+        spdlog::warn("Error during execution : {}\nDelete failed : {}", zErrMsg, sql);
         sqlite3_close(DB);
     }
     else{
@@ -290,7 +293,7 @@ void FDRStore::createStatesTable(){
     int errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
     if(errCode != SQLITE_OK){	//TODO: Error Handling
-        std::cout << "Error creating states table" << std::endl;
+        spdlog::warn("Error creating states table");
     }
 }
 
@@ -314,7 +317,7 @@ void FDRStore::appendStat(const fdr_stat_sql &data){
     errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
 
     if(errCode){
-        std::cout << "Error during execution : " << zErrMsg << std::endl << "Insert failed : " << sql << std::endl;
+        spdlog::warn("Error during execution : {}\nInsert failed : {}", zErrMsg, sql);
         sqlite3_close(DB);
         return;
     }

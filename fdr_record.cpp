@@ -15,6 +15,7 @@
 #include <boost/algorithm/string.hpp>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
+#include <spdlog/spdlog.h>
 #include "fdr.hpp"
 #include "fdr_common.hpp"
 
@@ -80,7 +81,7 @@ void Record::Refresh(void)
     {
         CommandResult_t cmdResult = exec(info.CommandParams.Command.c_str());
 		if (cmdResult.cmdExitstatus == FDR_ERR_GENFAILURE) {
-			std::cout << "command Failed: " << info.CommandParams.Command << std::endl;
+            spdlog::warn("command Failed: {}", info.CommandParams.Command);
 			return;
 		}
 
@@ -157,10 +158,10 @@ void Record::Refresh(void)
                 // std::cout << intVal << std::endl;
             }
             else {
-                std::cout << "DBus read failed: Unknown numerical variant type: " 
-                          << "; ObjectPath: " << info.DbusParams.ObjectPath
-                          << "; Property: " << info.DbusParams.Property
-                          << std::endl;
+                spdlog::warn("No Error found on directoryTocompact: "
+                         "; ObjectPath: {}; Property: {}",
+                          info.DbusParams.ObjectPath,
+                          info.DbusParams.Property);
             }
 
         }
@@ -174,12 +175,12 @@ void Record::Refresh(void)
         }
     } else if (info.FetchMethod == "Redfish") {
         if (!fdr->rfc) {
-            std::cout << "Redfish not configured or not connected, skipping" << std::endl;
+            spdlog::debug("Redfish not configured or not connected, skipping");
             return;
         }
         std::string uri = info.RedfishParams.URI;
         std::string json_pointer = info.RedfishParams.JSONPointer;
-        std::cout << "RedfishParams URI: " << uri << " JSONPointer: " << json_pointer << std::endl;
+        spdlog::debug("RedfishParams URI: {}, JSONPointer: {}", uri, json_pointer);
 
         try {
             if (data.paramtype == "Uint64") {
@@ -191,7 +192,7 @@ void Record::Refresh(void)
                 data.fdr_sample_data.set_paramvaluestring(s);
             }
         } catch (const std::exception &e) {
-            std::cerr << "Error fetching redfish: " << e.what() << std::endl;
+            spdlog::warn("Error fetching redfish: {}", e.what());
         }
     }
     

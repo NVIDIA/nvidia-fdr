@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <ctime>
 #include <variant>
+#include <spdlog/spdlog.h>
 
 #include "fdr_logs_schema.pb.h"
 #include "fdr_policy.hpp"
