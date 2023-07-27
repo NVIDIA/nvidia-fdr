@@ -94,7 +94,8 @@ public:
 	~FlightDataRecorder_c();
 	void CreateSamplesWriter(Profile_t &profile, std::string compClass,
 							 std::string compID, std::string paramClass,
-							 std::shared_ptr<FDRStore> &fdrLogWriter);
+							 std::shared_ptr<FDRStore> &fdrLogWriter,
+							 const std::string& fileTimestamp);
 	void CreateRecords(void);
 	void ReadOldRecords(void);
 	void CollectAndArchieveBirthCertificate(void);

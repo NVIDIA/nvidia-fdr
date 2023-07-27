@@ -141,6 +141,8 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                     std::string deviceName;
                     std::string errorMessage;
                     std::string errorMessageDetails;
+                    std::string errorOriginOfCondition;
+                    std::string errorAdditionalInfo;
                     for (const std::string& msgString : *msgStringsPtr)
                     {
                         // Device name
@@ -164,6 +166,20 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                             errorMessageDetails = (equalSignPos != std::string::npos) ?
                                 msgString.substr(equalSignPos + 1) : "";
                         }
+                        // REDFISH_ORIGIN_OF_CONDITION - device where error occurred
+                        if (msgString.find("REDFISH_ORIGIN_OF_CONDITION") != std::string::npos)
+                        {
+                            std::size_t equalSignPos = msgString.find('=');
+                            errorOriginOfCondition = (equalSignPos != std::string::npos) ?
+                                msgString.substr(equalSignPos + 1) : "";
+                        }
+                        // DEVICE_EVENT_DATA  - error message detailed info
+                        if (msgString.find("DEVICE_EVENT_DATA ") != std::string::npos)
+                        {
+                            std::size_t equalSignPos = msgString.find('=');
+                            errorAdditionalInfo = (equalSignPos != std::string::npos) ?
+                                msgString.substr(equalSignPos + 1) : "";
+                        }
                     }
 
                     // Update event message to FDR store
@@ -176,10 +192,36 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
 
                         // Store event data into FDR records - FDR store writer
                         auto fdrStoreWriter = fdrDeviceEventRec.first;
+                        auto record = fdrDeviceEventRec.second;
+
+                        // Write descriptive event details data into new single file
+                        // Filepath BootCount_<id>_DateStamp_<fdr_timestamp>/GPU/GPU<id>/Event_<event_timestamp>.log
+                        std::shared_ptr<FDRStore> eventFDRStoreObj;
+                        std::stringstream timeStampString;
+                        timeStampString << eventTimestamp;
+
+			            fdr->CreateSamplesWriter(*record.profile, record.sectionID,
+                            record.componentID, "FAULTS", eventFDRStoreObj,
+                            timeStampString.str());
+
+                        // Create event details data protobuf message
+                        fdr_event_details_data.set_eventtimestamp(eventTimestamp);
+                        fdr_event_details_data.set_eventname(errorMessage);
+                        fdr_event_details_data.set_eventdevicename(deviceName);
+                        fdr_event_details_data.set_eventmessage(errorMessageDetails);
+                        fdr_event_details_data.set_eventoriginofcondition(
+                            errorOriginOfCondition);
+                        fdr_event_details_data.set_eventadditionalinfo(
+                            errorAdditionalInfo);
+                        // Write event details to fdr space
+                        eventFDRStoreObj->append(fdr_event_details_data);
+
+                        // Add entry for event details log to Error.log
+                        auto filePath = eventFDRStoreObj->getStoreFilePath();
                         // Create protobuf message
                         fdr_event_data.set_eventtimestamp(eventTimestamp);
                         fdr_event_data.set_eventname(errorMessage);
-                        fdr_event_data.set_eventmessage(errorMessageDetails);
+                        fdr_event_data.set_eventloggingpath(filePath);
                         // Write to fdr space
                         fdrStoreWriter->append(fdr_event_data);
 
@@ -187,7 +229,6 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         PropertyVariant val = std::string(""); // No value associated
                         // Use infoID as 'FAULTS'
                         // Use paramID as default 9999 - No params
-                        auto record = fdrDeviceEventRec.second;
                         fdr->BookOfErrorEngine("FAULTS", 9999, record.sectionID,
                             record.componentID, record.infogroupID, eventTimestamp, val);
                     }

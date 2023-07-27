@@ -304,7 +304,8 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
 // This method is used to create writers in the FDR file structure directory, 
 // mostly for writing the sample collected as per the fetchpolicy.
 void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string compClass, std::string compID,
-				std::string paramClass, std::shared_ptr<FDRStore> &fdrLogWriter) {
+				std::string paramClass, std::shared_ptr<FDRStore> &fdrLogWriter,
+				const std::string& fileTimestamp = "") {
 	std::string logsformat = profile.GeneralConfig.LogsFormat;
 
 	// Only used if encoding type is binary/json
@@ -323,7 +324,15 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
             logdir += "/" + GetDirectoryName() + "/";
             logdir += compClass + "/" + compID + "/";
         }
-        logfile = paramClass + ".log";
+        // For faults create file name as Event_<event_timestamp>.log
+        if (paramClass == "FAULTS")
+        {
+            logfile = "Event_" + fileTimestamp + ".log";
+        }
+        else
+        {
+            logfile = paramClass + ".log";
+        }
         logfilepath = logdir + logfile;
     }
 	// Create log directory if missing
@@ -381,6 +390,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 				{
 					// Store records for book of errors
 					EventRecord rec;
+					rec.profile = &profile;
 					rec.sectionID = section.ID;
 					rec.componentID = component.ID;
 					rec.infogroupID = infogroup.ID;

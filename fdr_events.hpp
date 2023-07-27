@@ -18,6 +18,7 @@
 
 // Store section.ID, component.ID and infogroup.ID for book_of_errors
 struct EventRecord {
+  Profile_t* profile; // Profile ref
   std::string sectionID;   // Ex: GPU
   std::string componentID; // Ex: GPU0
   std::string infogroupID; // Ex: Error
@@ -27,6 +28,7 @@ class EventSignalHandler
 {
   private:
     fdrpb::fdr_event fdr_event_data;
+    fdrpb::fdr_event_details fdr_event_details_data;
     std::string eventObjPath;
     std::string eventIface;
     std::string eventMember;

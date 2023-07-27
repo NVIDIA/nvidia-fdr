@@ -85,4 +85,6 @@ public:
     void appendStat(const fdr_stat_sql &data);
 
     void rewind(); // reset pointer in file to begining of file
+
+    std::string getStoreFilePath(); // Returns storage file path
 };
