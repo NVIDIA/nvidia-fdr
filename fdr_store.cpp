@@ -325,3 +325,8 @@ void FDRStore::appendStat(const fdr_stat_sql &data){
         //std::cout << "Insert completed" << std::endl;
     }
 }
+
+std::string FDRStore::getStoreFilePath()
+{
+    return storagefilepath;
+}

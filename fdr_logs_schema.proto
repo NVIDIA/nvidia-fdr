@@ -46,3 +46,18 @@ message fdr_book_of_errors {
   uint64 StopHifiTimeStamp = 7;   // ErrorOccurTimeStamp + HiFi-Data-Preserve-Time
   string ParamClass = 8;
 }
+
+message fdr_event {
+  uint64 EventTimeStamp = 1; // Time at which event occured
+  string EventName = 2; // Type of event occured
+  string EventLoggingPath = 3; // Full path of event details getting stored
+}
+
+message fdr_event_details {
+  uint64 EventTimeStamp = 1; // Time at which event occured
+  string EventName = 2; // Type of event occured
+  string EventDeviceName = 3; // System device name
+  string EventMessage = 4; // Details of event occured
+  string EventOriginOfCondition = 5; // Associated device where event occurred
+  string EventAdditionalInfo = 6; // Descriptive information for event
+}

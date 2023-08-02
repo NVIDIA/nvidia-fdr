@@ -14,9 +14,10 @@
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "fdr.hpp"
+#include "fdr_utils.hpp"
 
-sd_bus *bus = NULL;
-
+// TODO: message callback must move to use sdbusplus methods instead systemd sdbus
+/*
 int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 {
 	(void)userdata;
@@ -49,6 +50,7 @@ int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 
 	return 0;
 }
+*/
 
 FlightDataRecorder_c *fdr;
 
@@ -62,7 +64,7 @@ int main(int argc, char *argv[])
 
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
 
-	sd_bus_default_system(&bus);
+	auto& bus = getBus();
 
 	// a quick and dirty way to specify the platform definination file instead of detection
 	std::string filename{};
@@ -75,6 +77,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+// TODO: sdbus signals watch must move to use sdbusplus methods instead systemd sdbus
+/*
 #if 0
 	// Install Listeners so we can avoid polling as much as possible
 	sd_bus_match_signal(
@@ -95,9 +99,12 @@ int main(int argc, char *argv[])
 		}
 	}
 #endif
-
+*/
 	// create the birth certificate archive file, if needed
 	fdr->CollectAndArchieveBirthCertificate();
+
+	// Register AML events signal
+	fdr->initEventsSignalRegistration();
 
 	while (true)
 	{
@@ -117,6 +124,10 @@ int main(int argc, char *argv[])
 
 			// Compactor
 			fdr->Compactor();
+
+			// Process the waiting dbus messages or signals
+			bus.process_discard();
+
 		} catch (const std::exception& e) {
 			expt = true;
 			fdr->log->warn("RefreshAndRecord Got Exception: {}", e.what());
@@ -132,7 +143,8 @@ int main(int argc, char *argv[])
 		sleep(1);
 	}
 
-	sd_bus_unref(bus);
+	bus.close(); // Close the connection to the dbus
+
 	return EXIT_SUCCESS;
 }
 

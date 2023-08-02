@@ -32,6 +32,11 @@ GeneralConfig:
   DefaultCompactionSensors: &compaction-definition-sensors
     RecordRetentionPolicy: Recreate
     CompactionMethod: Average
+  # Config params for storing AML events on OpenBMC platforms
+  Events:
+    ObjectPath: "/xyz/openbmc_project/logging"
+    Interface: "org.freedesktop.DBus.ObjectManager"
+    Member: "InterfacesAdded"
 
 
 GPU: &gpu

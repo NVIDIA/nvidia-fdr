@@ -27,6 +27,13 @@ struct FingerPrint_t
 	std::vector<std::string> Checks; // list of checks to find the platform
 };
 
+// Params for storing AML events configuration on OpenBMC platforms
+struct Events_t {
+    std::string objectPath;
+    std::string interface;
+    std::string member;
+};
+
 struct GeneralConfig_t
 {
 	std::string LogsBasePath; // Root directory for all logs for this system
@@ -48,6 +55,7 @@ struct GeneralConfig_t
 	int64_t ExceptionAllowNumber;
 	double ExceptionAllowRate;
 
+	Events_t eventParams; // Events params defined under GeneralConfig
 };
 
 struct CommandParams_t
@@ -149,6 +157,28 @@ namespace YAML
 	};
 
 	template <>
+	struct convert<Events_t>
+	{
+		static bool decode(const Node &node, Events_t &rhs)
+		{
+			if (node["ObjectPath"])
+			{
+				rhs.objectPath = node["ObjectPath"].as<std::string>();
+			}
+			if (node["Interface"])
+			{
+				rhs.interface = node["Interface"].as<std::string>();
+			}
+			if (node["Member"])
+			{
+				rhs.member = node["Member"].as<std::string>();
+			}
+
+			return true;
+		}
+	};
+
+	template <>
 	struct convert<GeneralConfig_t>
 	{
 #if 0
@@ -182,6 +212,12 @@ namespace YAML
 
 			rhs.ExceptionAllowNumber = node["ExceptionAllowNumber"] ? node["ExceptionAllowNumber"].as<int64_t>() : 128;
 			rhs.ExceptionAllowRate = node["ExceptionAllowRate"] ? node["ExceptionAllowRate"].as<float>() : 0.5;
+
+			// Events config will be applicable for only OpenBmc platforms
+			if (node["Events"])
+			{
+				rhs.eventParams = node["Events"].as<Events_t>();
+			}
 
 			return true;
 		}

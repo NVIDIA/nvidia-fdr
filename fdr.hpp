@@ -19,6 +19,7 @@
 #include "fdr_redfish.hpp"
 #include "ppf_sanity.hpp"
 #include "dbus_accessor.hpp"
+#include "fdr_events.hpp"
 
 class FlightDataRecorder_c
 {
@@ -82,6 +83,9 @@ public:
 
 	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
 	std::unique_ptr<FDRStore> fdrbookoferrorswriter;
+	// Map of device name to FDRStore object for streaming AML events on all devices
+	std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>>
+		fdrDeviceErrorsWriter;
     fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 	Profile_t profile;
 	std::shared_ptr<spdlog::logger> log;
@@ -90,7 +94,8 @@ public:
 	~FlightDataRecorder_c();
 	void CreateSamplesWriter(Profile_t &profile, std::string compClass,
 							 std::string compID, std::string paramClass,
-							 std::shared_ptr<FDRStore> &fdrLogWriter);
+							 std::shared_ptr<FDRStore> &fdrLogWriter,
+							 const std::string& fileTimestamp);
 	void CreateRecords(void);
 	void ReadOldRecords(void);
 	void CollectAndArchieveBirthCertificate(void);
@@ -103,6 +108,7 @@ public:
                                              time_t current_time, PropertyVariant val);
 	void CheckForErrorsToUpdateBookOfErrors(void);
     void CheckExceptionRateLimit();
+	void initEventsSignalRegistration();
 };
 
 // We have a global fdr variable defined in main.cpp

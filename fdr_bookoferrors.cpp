@@ -193,4 +193,11 @@ void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int pa
 
         }
     }
+
+    // Record Faults into book of errors
+    else if (infoID == "FAULTS")
+    {
+        SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass,
+            "Faults and Errors", current_time, bookOfErrorsFileName);
+    }
 }
