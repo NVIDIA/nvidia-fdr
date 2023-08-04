@@ -12,7 +12,6 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <boost/algorithm/string.hpp>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
 #include <spdlog/spdlog.h>

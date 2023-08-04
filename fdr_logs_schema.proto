@@ -18,7 +18,9 @@ message fdr_stat {
   int64 Min = 4;        // Minimum value seen across all samples
   int64 Max = 5;        // Maximum value seen across all samples
   int64 Avg = 6;        // Average values for the sample set
-  optional uint64 ParamID = 7; // Unique parameter ID (Used to identify parameter name)
+  uint64 MinValTimeStamp = 7; // Time at which MINIMUM value occured during this samples
+  uint64 MaxValTimeStamp = 8; // Time at which MAXIMUM value occured during this samples
+  optional uint64 ParamID = 9; // Unique parameter ID (Used to identify parameter name)
 }
 
 message fdr_params {

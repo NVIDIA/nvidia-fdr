@@ -253,11 +253,22 @@ void FlightDataRecorder_c::CompactorCreateStatFiles(const std::string directoryT
 						stats_so_far[readrec.paramid()].set_numsamples(stats_so_far[readrec.paramid()].numsamples() + 1);
 						stats_so_far[readrec.paramid()].set_avg(stats_so_far[readrec.paramid()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
 						if (stats_so_far[readrec.paramid()].min() != 0) {
-							stats_so_far[readrec.paramid()].set_min(std::min(stats_so_far[readrec.paramid()].min(), readrec.paramvalueint64()));
+							int64_t min_value = std::min(stats_so_far[readrec.paramid()].min(), readrec.paramvalueint64());
+							stats_so_far[readrec.paramid()].set_min(min_value);
+							if (min_value == readrec.paramvalueint64()) {
+								// need to record the timestamp for min value during this subwindow
+								stats_so_far[readrec.paramid()].set_minvaltimestamp(readrec.timestamp());
+							}
 						} else {
 							stats_so_far[readrec.paramid()].set_min(readrec.paramvalueint64());
+							stats_so_far[readrec.paramid()].set_minvaltimestamp(readrec.timestamp());
 						}
-						stats_so_far[readrec.paramid()].set_max(std::max(stats_so_far[readrec.paramid()].max(), readrec.paramvalueint64()));
+						int64_t max_value = std::max(stats_so_far[readrec.paramid()].max(), readrec.paramvalueint64());
+						stats_so_far[readrec.paramid()].set_max(max_value);
+						if (max_value == readrec.paramvalueint64()) {
+							// need to record the timestamp for max value during this subwindow
+							stats_so_far[readrec.paramid()].set_maxvaltimestamp(readrec.timestamp());
+						}
 						stats_so_far[readrec.paramid()].set_fromtime(stats_so_far[readrec.paramid()].fromtime() == 0 ? currentRecordTime : stats_so_far[readrec.paramid()].fromtime());
 						stats_so_far[readrec.paramid()].set_totime(currentRecordTime);
 					}
