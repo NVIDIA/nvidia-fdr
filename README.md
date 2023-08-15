@@ -1,62 +1,94 @@
 # Dev environment setup on build machine
 
-These steps were verified on Ubuntu 20.04 and 22.04.
+These steps were verified on Ubuntu 22.04.
+
+## Dependencies for sdbusplus
 
 ```bash
-# Dependency for sdbusplus
-sudo apt install git meson libtool pkg-config g++ libsystemd-dev \
+sudo apt install git meson libtool pkg-config g++-12 libsystemd-dev \
     python3 python3-pip python3-yaml python3-mako python3-inflection
-
-# Dependency for fdr
-sudo apt install cmake nlohmann-json3-dev \
-    sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml \
-    libspdlog-dev libfmt-dev
 ```
+
+## Dependencies for NVIDIA FDR
+
+```bash
+sudo apt install cmake clang-tools nlohmann-json3-dev \
+    sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml \
+    libspdlog-dev libfmt-dev clang-tools
+```
+
+## Protobuf
 
 protobuf3 bundled with the distro is not new engouh to support `optional` keyword
 
-```
+```bash
 wget https://github.com/protocolbuffers/protobuf/releases/download/v3.20.3/protobuf-all-3.20.3.tar.gz
 tar zxvf protobuf-all-3.20.3.tar.gz
 cd protobuf-3.20.3/
-./configure
+./configure --prefix=/usr
 make
 sudo make install
-
-# protobuf by default installed to /usr/local, so you need to export the LD_LIBRARY_PATH env
-# you might also put it into your ~/.bash_profile
-export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 ```
 
-# Build (x86 native)
+## Set default gcc/g++ version
+
+Some header files os `sdbusplus` requires g++12 to compile. If you have multiple gcc/g++ installed on the system (most likely you'll have both 11 and 12 now), set the default version to 12.
+
+```bash
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 10
+sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 10
+```
+
+> Note: `10` at the end of command is the priority.
+
+# Build (amd64 native)
+
+## Option 1: Building with meson
+
+```bash
+meson setup builddir
+meson compile -C builddir
+
+# You can also do a clang static analysis via：
+ninja scan-build -C builddir
+```
+
+## Option 2: Building with CMake
 
 ```bash
 cmake -B build/
 make -j24 -C build/
 ```
-## Run
+
+> Note: make sure to create a separate build directory to build FDR.
+>       In source tree will not work, eventhough it's supported by CMake.
+
+## Running FDR
+
+By default, nvidia-fdr looks for the platforms files under the relative path `./platforms`.
+It can be override by environment variable `PLATFORMS_PATH`.
+
+So here's the 2 options the start NVIDIA FDR:
+
 
 ### Option 1: 
+
 ```bash
-cd build
-./fdr
+cd <build dir>
+./nvidia-fdr
 ```
+
 ### Option 2:
 ```bash
 export PLATFORMS_PATH=/path/to/platforms
-./fdr
+./nvidia-fdr
 ```
-FDR data would start landing under the path (LogsBasePath) provided in PPF.
 
-**Note:** *PLATFORMS_PATH* gets precedence over *./platforms* in the working directory.
-So, even if the working directory has *platforms* directory under it, if the *PLATFORMS_PATH* environment var
-is set, FDR will use *PLATFORMS_PATH* for finding PPF.
+FDR data would start landing under the path (LogsBasePath) provided in PPF.
 
 # Build (ARM cross compile with bitbake)
 
-## Add recipe to openbmc project
-
-This is a one time step, and it would be no longer needed once it is committed to openbmc. 
+## Checkout the OpenBMC repo
 
 ```bash
 git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/bmc/openbmc.git

@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <spdlog/sinks/rotating_file_sink.h>
+#include <spdlog/spdlog.h>
 #include "fdr_common.hpp"
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
