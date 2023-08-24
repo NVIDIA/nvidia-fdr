@@ -14,7 +14,7 @@
 #include <sdbusplus/bus.hpp>
 
 /** @brief Get the bus connection. */
-static auto& getBus()
+inline auto& getBus()
 {
     static auto bus = sdbusplus::bus::new_default();
     return bus;

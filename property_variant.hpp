@@ -16,6 +16,7 @@
 #include <tuple>
 #include <vector>
 #include <variant>
+#include <cstdint>
 
 /**
  * It is a common type used in openbmc DBus services

@@ -30,7 +30,6 @@ pbgenerated = pbgen.process('fdr_logs_schema.proto')
 libcurl_dep = dependency(
   'libcurl',
   version: '>=7.58.0',
-  meson_version: '>=0.57',
   default_options: [
     'default_library=static',
     'warning_level=0',
