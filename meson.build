@@ -1,6 +1,7 @@
 project(
   'nvidia-fdr', 'cpp',
   version : '0.1',
+  meson_version: '>=0.60',
   default_options: [
     'prefix=/usr',
     'cpp_std=c++20',
@@ -9,6 +10,8 @@ project(
   ],
 )
 
+cmake = import('cmake')
+
 # Generate src from proto file
 protoc = find_program('protoc', required : true)
 pbgen = generator(protoc, \
@@ -16,22 +19,81 @@ pbgen = generator(protoc, \
   arguments : ['--proto_path=@CURRENT_SOURCE_DIR@', '--cpp_out=@BUILD_DIR@', '@INPUT@'])
 pbgenerated = pbgen.process('fdr_logs_schema.proto')
 
-# If sdbusplus exist (OpenBMC case): use the distro lib,
-# Otherwise (non OpenBMC case): static link from the subprojects
+
+# Subprojects for dependencie
+# 3 Scenarios:
+#   - OpenBMC (bitbake):  all dependecies should be available.
+#   - Ubuntu amd64 (native build): some OpenBMC specified packages are not available.
+#   - Ubuntu Unit Test (docker): some OpenBMC & distro devel packages are not available
+
+# Workaround for Docker Unit Test
+libcurl_dep = dependency(
+  'libcurl',
+  version: '>=7.58.0',
+  meson_version: '>=0.57',
+  default_options: [
+    'default_library=static',
+    'warning_level=0',
+    'werror=false',
+  ]
+)
+
+# Workaround for Docker Unit Test / amd64 native
 sdbusplus_dep = dependency(
   'sdbusplus', 
   fallback : ['sdbusplus', 'sdbusplus_dep'],
-  default_options: ['default_library=static'])
+  default_options: [
+    'default_library=static',
+    'tests=disabled'
+  ])
 
-# other deps
+# Workaround for Docker Unit Test
+spdlog_dep = dependency(
+  'spdlog', 
+  fallback : ['spdlog', 'spdlog_dep'],
+  default_options: [
+    'default_library=static',
+    'tests=false'
+  ])
+
+
+# Workaround for Docker Unit Test
+sqlite3_dep = dependency(
+  'sqlite3', 
+  fallback : ['sqlite3', 'sqlite3_dep'],
+  default_options: [
+    'default_library=static',
+    'warning_level=0',
+    'werror=false',
+  ]
+)
+
+# Workaround for Docker Unit Test
+yamlcpp_dep = dependency('yaml-cpp', version: '>= 0.5.1', required: false)
+if not yamlcpp_dep.found()
+    yamlcpp_opts = cmake.subproject_options()
+    yamlcpp_opts.add_cmake_defines({
+      'CMAKE_BUILD_TYPE'                : 'Release',
+      'CMAKE_POSITION_INDEPENDENT_CODE' : 'ON',
+      'YAML_CPP_BUILD_TOOLS'            : 'OFF',
+      'YAML_CPP_BUILD_TESTS'            : 'OFF',
+      'YAML_CPP_BUILD_CONTRIB'          : 'OFF',
+      'BUILD_SHARED_LIBS'               : 'OFF'
+    })
+    yamlcpp_dep = cmake.subproject(
+      'yaml-cpp',
+      options: yamlcpp_opts
+    ).dependency('yaml-cpp')
+endif
+
 deps = [
-  dependency('libcurl'),
+  libcurl_dep,
   dependency('protobuf'),
-  dependency('spdlog'),
-  dependency('sqlite3'),
+  sdbusplus_dep,
+  spdlog_dep,
+  sqlite3_dep,
   dependency('systemd'),
-  dependency('yaml-cpp'),
-  sdbusplus_dep
+  yamlcpp_dep,
 ]
 
 src = [
