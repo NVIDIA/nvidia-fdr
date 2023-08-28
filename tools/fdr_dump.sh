@@ -7,18 +7,37 @@ TMP_DIR_PATH=""
 OUTPUT_ARCHIVE_PATH=""
 
 ARG_DUMP_ID="00000000"
+ARG_DUMP_ACTION="collect"
 ARG_DUMP_PATH=""
 
 FDR_LOG_PATH="/tmp/emmc/fdr/"
 
 function help()
 {
-    echo "Usage: fdr_dump [-h] -p <file_path> -i <dump_id>"
+    echo "Usage: fdr_dump [-h] -p <file_path> -i <dump_id> -a <action>"
     echo ""
     echo "Options:"
     echo "          -h  shows this help"
     echo "          -p  (required) path to put compressed dump to"
     echo "          -i  file dump id, default $ARG_DUMP_ID"
+    echo "          -a  action, default collect"
+}
+
+
+function on_clean_action()
+{
+    if [ -d "$FDR_LOG_PATH" ]; then
+        find $FDR_LOG_PATH \
+            -mindepth 1 \
+            -maxdepth 1 \
+            -type d \
+            ! -name 'Bookkeeper' \
+            -exec rm -rf {} + && \
+        find $FDR_LOG_PATH \
+            -type f \
+            ! -name 'BirthCertificate.tar' \
+            -exec rm -rf {} +
+    fi
 }
 
 
@@ -90,7 +109,7 @@ function main()
     return 0
 }
 
-while getopts ":hDp:i:" option; do
+while getopts ":hDp:i:a:" option; do
    case $option in
       h) # display help
          help
@@ -102,6 +121,10 @@ while getopts ":hDp:i:" option; do
 
       i) # output file path
          ARG_DUMP_ID=$OPTARG
+         ;;
+
+      a) # action
+         ARG_DUMP_ACTION=$OPTARG
          ;;
 
      \?) # Invalid option
@@ -135,6 +158,20 @@ if [ $WRONG_OPT ]; then
     exit 1
 fi
 
+#
+# Check ARG_DUMP_ACTION
+#
+if [ $ARG_DUMP_ACTION == "clean" ]; then
+    on_clean_action
+    if [ $? -ne 0 ]; then
+        echo "Failed to clean $FDR_LOG_PATH"
+        exit 1
+    fi
+
+    exit 0
+fi
+
+# For action collect
 initialize
 if [ $? -ne 0 ]; then
     echo "Init failed"
