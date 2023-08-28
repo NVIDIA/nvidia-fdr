@@ -12,6 +12,7 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+#include <sdbusplus/bus/match.hpp>
 #include "fdr_common.hpp"
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
@@ -48,6 +49,9 @@ private:
 	std::string PPFName;
 	std::string birthCertFilePath;
 	std::unique_ptr<PPFSanity> SanityChecker;
+	std::vector<std::pair<std::string, std::string>> subscribedPaths;
+	std::vector<std::unique_ptr<sdbusplus::bus::match_t>> eventHandlerMatcher;
+
 	int FindAndLoadPlatformProfile(void);
 	int ConvertPPFToStruct(const std::string filename);
 	int ExecuteFingerPrintRules(void);
@@ -123,6 +127,13 @@ public:
 	void InitTimerEvents(void);
 	void RunEventLoop(void);
 	void initRecordsSignalRegistration();
+
+	/**
+	 * @brief This is the callback which handles DBUS properties changes
+	 */
+	static void dbusEventHandlerCallback(
+		std::map<int, std::vector<Record *>>& recListSubscribeMap,
+		sdbusplus::message::message& msg);
 };
 
 // We have a global fdr variable defined in main.cpp

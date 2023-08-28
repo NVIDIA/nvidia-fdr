@@ -383,6 +383,13 @@ void Record::Store(void)
         return;
     }
 
+    // For debugging : No debugging needed for poll records
+    if (info.FetchType == "Subscribe")
+    {
+        fdr->log->debug("Store record for objectPath = {}, interface = {}, property = {}",
+            info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
+    }
+
     if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrLogReaderWriter->append(data.fdr_sample_data);
     }
@@ -409,6 +416,10 @@ void Record::refreshDataCallback(PropertyVariant val)
 {
     // For errors counter run book of errors
     // Write to both fdr reader writer as well as book of errors
+
+    fdr->log->debug("Refresh record data for objectPath = {}, interface = {}, property = {}",
+        info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
+
     std::time_t current_time = std::time(nullptr);
     data.fdr_sample_data.set_timestamp(current_time);
     data.paramtype = info.DataType;

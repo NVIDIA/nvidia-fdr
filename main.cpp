@@ -61,8 +61,28 @@ int main(int argc, char *argv[])
 	fdr->initRecordsSignalRegistration();
 
 #ifdef FDR_TIMER_EVENT_ENABLED
-	fdr->InitTimerEvents();
-	fdr->RunEventLoop();
+	constexpr auto FDR_BUSNAME = "xyz.openbmc_project.FDR";
+	try {
+		sd_bus* fdrBus = nullptr;
+		auto rc = sd_bus_default_system(&fdrBus);
+		if (rc < 0)
+		{
+			spdlog::error("Exiting, Failed to connect to system bus");
+			return EXIT_FAILURE;
+		}
+		auto io = std::make_shared<boost::asio::io_context>();
+		auto sdbusp =
+			std::make_shared<sdbusplus::asio::connection>(*io, fdrBus);
+		sdbusp->request_name(FDR_BUSNAME);
+		fdr->InitTimerEvents();
+		fdr->RunEventLoop();
+		io->run();
+	}
+	catch (const std::exception& e)
+	{
+		spdlog::error("FDR init error: {}", e.what());
+		return EXIT_FAILURE;
+	}
 #else
 	// TODO: consider adding SIGTERM for systemd stop
 	signal(SIGINT, signalHandler);

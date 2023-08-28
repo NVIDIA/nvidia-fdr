@@ -104,7 +104,7 @@ public:
     }
     void Print(void);
 
-    /* Callback to refresh the record on propertyChangedSignals message */
+    /* Callback to refresh the data on propertyChangedSignals message */
     void refreshDataCallback(PropertyVariant val);
 
 };
