@@ -61,6 +61,10 @@ FDRStore::FDRStore(std::string file, std::string fileformat, std::string cClass,
     //Create the table if it does not exist
     std::string sql = "CREATE TABLE if not exists " + tableName + " (TimeStamp INTEGER, ParamID INT, ParamValue TEXT, BootCounter INT);";
     errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
+    if (errCode) {
+		spdlog::warn("Error creating table {}: {}", tableName, std::string(sqlite3_errmsg(DB)));
+		sqlite3_close(DB);
+    }
 
     //Create the SQL statement used to read values from the DB
     std::string sqlStmt = "SELECT vt.timestamp, vt.paramvalue, vt.paramid, p.datatype from " + tableName + " as vt inner join PVT_Param_Description_Table as p where p.paramId = vt.paramId and p.compclass = '" + compClass + "' AND p.paramClass = '" + paramClass + "';";

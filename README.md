@@ -43,33 +43,42 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 10
 
 # Build (amd64 native)
 
-## Option 1: Building with meson
+Configure
 
 ```bash
-meson setup builddir
-meson compile -C builddir
+meson setup --reconfigure build
 
-# You can also do a clang static analysis via：
+# Or use following for debug build, these are the same options used in Docker unit test.
+meson setup --reconfigure build -Db_colorout=never -Dwerror=true -Dwarning_level=3 -Ddebug=true -Doptimization=g 
+```
+
+Build
+
+```bash
+meson compile -C build
+
+# or use ninja
+ninja -C build
+```
+
+Unit Test (not implemented yet)
+
+```bash
+meson test --print-errorlogs --repeat 1 -C build
+meson test -t 10 -C build --print-errorlogs --setup valgrind 
+```
+
+Static analysis
+
+```bash
 ninja scan-build -C builddir
 ```
-
-## Option 2: Building with CMake
-
-```bash
-cmake -B build/
-make -j24 -C build/
-```
-
-> Note: make sure to create a separate build directory to build FDR.
->       In source tree will not work, eventhough it's supported by CMake.
-
 ## Running FDR
 
 By default, nvidia-fdr looks for the platforms files under the relative path `./platforms`.
 It can be override by environment variable `PLATFORMS_PATH`.
 
 So here's the 2 options the start NVIDIA FDR:
-
 
 ### Option 1: 
 

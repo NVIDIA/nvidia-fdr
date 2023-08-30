@@ -132,7 +132,7 @@ PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string
     std::tuple<int, std::vector<uint32_t>> response;
     std::vector<uint32_t> dataOut;
     int rc;
-    uint64_t fpgavalue;
+    uint64_t fpgavalue = 0;
 
     auto bus = sdbusplus::bus::new_default();
 
