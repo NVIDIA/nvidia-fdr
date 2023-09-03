@@ -27,8 +27,9 @@ private:
 	/* data */
 	std::vector<Record *> RecList;
 	std::time_t LastCompactWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
+	std::time_t LastCompactSubWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
 	const std::string CompactorBookKeeperName = "Compactor.log";
-	// const std::string BookOfErrorKeeperName = "BookOfErrors.log";
+	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
 	const std::string ParamDescKeeperName = "ParamDescription.log";
 	std::unique_ptr<FDRStore> CompactorBookKeeperAppender;
 	std::unique_ptr<FDRStore> fdrParamsWriter;
@@ -51,7 +52,9 @@ private:
 	void InitExceptionRateLimiter();
 
 	// all private functions related to Compactor
-	void CheckCompactionWindowExpiry(void);
+	int CheckCompactionWindowExpiry(std::time_t current_time);
+	int CheckCompactionSubWindowExpiry(std::time_t current_time, int mainWindowCompactStatus);
+	void CompactionWindowExpiryCleanUp(int mainWindowCompactStatus);
 	bool CompactorCheckBookOfErrors(const std::string directoryTocompact,
 							uint64_t leastWindowTimestamp,
 							uint64_t farWindowTimestamp,
@@ -61,16 +64,11 @@ private:
 	void CompactorBookKeeperCleanEntries(void);
 	void CompactorRemoveSamplesLogfiles(std::string directoryTocompact);
 	std::string CompactorGetDirectoryToCompact(int numberOfDirToLook);
-	void CompactorCreateStatFiles(const std::string directoryTocompact,
+	void CompactorGetLeastAndFarTimestamp(const std::string directoryTocompact,
 								  uint64_t &leastWindowTimestamp,
 								  uint64_t &farWindowTimestamp);
 	void CompactorCreateHighFidelityFiles(const std::string directoryTocompact,
 										  std::vector<fdrpb::fdr_book_of_errors> errorList);
-	void CompactorAppendStatFile(FDRStore &fdrstats, std::map<unsigned int, fdrpb::fdr_stat> stats_so_far);
-	void CompactorCollectHiFidelityRecords(std::string componentId,
-								  std::string infogroupID,
-								  fdrpb::fdr_sample readRecord,
-								  std::map<std::string, std::map<std::string, std::vector<fdrpb::fdr_sample>>> &hifiRecords);
 	void CompactorEngine(std::string directoryTocompact);
 
 	// all private functions related to Book Of Errors
@@ -81,11 +79,9 @@ private:
 
 public:
 
-	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
 	std::unique_ptr<FDRStore> fdrbookoferrorswriter;
 	// Map of device name to FDRStore object for streaming AML events on all devices
-	std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>>
-		fdrDeviceErrorsWriter;
+	std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>> fdrDeviceErrorsWriter;
     fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 	Profile_t profile;
 	std::shared_ptr<spdlog::logger> log;
@@ -93,20 +89,15 @@ public:
 	FlightDataRecorder_c(const std::string filename = std::string{});
 	~FlightDataRecorder_c();
 	void CreateSamplesWriter(Profile_t &profile, std::string compClass,
-							 std::string compID, std::string paramClass,
+							 std::string compID, std::string paramClass, std::string fileExtention,
 							 std::shared_ptr<FDRStore> &fdrLogWriter,
 							 const std::string& fileTimestamp);
 	void CreateRecords(void);
-	void ReadOldRecords(void);
 	void CollectAndArchieveBirthCertificate(void);
 	void RefreshAndRecord(void);
-	inline void Compactor(void)
-	{
-		CheckCompactionWindowExpiry();
-	}
+	void Compactor(void);
 	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
                                              time_t current_time, PropertyVariant val);
-	void CheckForErrorsToUpdateBookOfErrors(void);
     void CheckExceptionRateLimit();
 	void initEventsSignalRegistration();
 };

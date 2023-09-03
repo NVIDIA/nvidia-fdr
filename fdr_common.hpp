@@ -24,7 +24,9 @@
 
 enum {
     FDR_SUCCESS             = 0,
-    FDR_ERR_GENFAILURE
+    FDR_ERR_GENFAILURE,
+    FDR_ERR_MAIN_WINDOW_NOT_EXPIRED,
+    FDR_ERR_SUB_WINDOW_NOT_EXPIRED
 };
 
 typedef struct CommandResult {

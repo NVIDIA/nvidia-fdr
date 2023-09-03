@@ -39,7 +39,10 @@ private:
 
     std::string logsformat;  // encoding format for logfiles
 
-    std::shared_ptr<FDRStore> fdrreaderwriter;
+    std::shared_ptr<FDRStore> fdrLogReaderWriter;
+    std::shared_ptr<FDRStore> fdrStatwriter;
+
+    fdrpb::fdr_stat runningStatus;
 
 public:
     InfoGroup_t &infogroup; // Ref to the infogroup this record belongs to
@@ -49,15 +52,31 @@ public:
     fdr_sample_ext last_stored_data; // Last fetched value. Used to determine if anything changed
 
     Record(Profile_t &profile, Section_t &section,
-           Component_t &component, std::shared_ptr<FDRStore> &fdrLogWriter,
+           Component_t &component, std::shared_ptr<FDRStore> &fdrLogWriter,  std::shared_ptr<FDRStore> &fdrStatWriter,
            InfoGroup_t &infogroup, Info_t &info);
 
     ~Record();
 
     void Refresh(void); // Update the record with fresh info from platform
-    void Load(void);    // Read the (last) record from logfile into the record
     void Store(void);   // Write the record out to the file
+    void RunningStatisticEngine(fdrpb::fdr_sample readrec);
+    void appendRunningStatToStatfile(void);
+    // reset all the variables related to stat
+    inline void ResetRunningStat(void) {
+        runningStatus.clear_fromtime();
+        runningStatus.clear_totime();
+        runningStatus.clear_numsamples();
+        runningStatus.clear_min();
+        runningStatus.clear_max();
+        runningStatus.clear_avg();
+        runningStatus.clear_minvaltimestamp();
+        runningStatus.clear_maxvaltimestamp();
+        runningStatus.clear_paramid();
+    }
 
+    std::string print_fdrStatwriterStoragefilepath(void) {
+        return fdrStatwriter->getStoreFilePath();
+    }
     void Print(void);
 
 

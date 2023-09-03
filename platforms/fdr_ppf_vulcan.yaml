@@ -22,13 +22,13 @@ FingerPrint:
       - "grep -q -i VULCAN /etc/os-release"
 
 GeneralConfig:
-  LogsFormat: JSON  #Choices=JSON|BINARY|DB
+  LogsFormat: BINARY  #Choices=JSON|BINARY|DB
   #DatabaseName: "Database.db"   #Only used if logs format is DB
   LogsBasePath: &LogsBasePath
-    - "/home/root/"
-  CompactionWindowSecs: 604800 # 1 week, every week new directory is created
-  CompactionSubWindowSecs: 7200 # 2 hours, every 2 hours stats are created
-  HiFiDataPreserveTimeSecs: 14400 # 4 hours, <-4 hours ---Error--- +4 hours> worth of entires
+    - "/tmp/emmc/fdr/"
+  CompactionWindowSecs: 86400 # 1 day, every day new directory is created
+  CompactionSubWindowSecs: 1800 # .5 hours, every 2 hours stats are created
+  HiFiDataPreserveTimeSecs: 3600 # 1 hours, <-1 hours ---Error--- +1 hours> so total 2 hours worth of entires
   DefaultCompactionSensors: &compaction-definition-sensors
     RecordRetentionPolicy: Recreate
     CompactionMethod: Average
@@ -9448,15 +9448,15 @@ PCIeSwitch: &pcieswitch
 
 BOOTEVENT: &bootevent
   InfoGroups:
-    - ID: bootevent
+    - ID: BootEvent
       InfoList:
         - ID: BootEventLog
           ParamID: 0
           DataType: string
           FetchPolicy: OnBoot
-          FetchFreqSecs: 5
           StorePolicy: EveryFetch
-          CommandParams: # TODO: need to fix the absolute path of this script..till then refer locally via relative path
+          FetchMethod: Command
+          CommandParams:
             Command: "cat $logbasepath/Bookkeeper/BootCount.txt; echo ';'; uptime -s"
       RecordRetentionPolicy: AfterBootDelete
 
