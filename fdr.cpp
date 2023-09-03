@@ -89,6 +89,7 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	// set the current time
 	LastCompactWindowDirCreationSecsAt = std::time(nullptr);
+	LastCompactSubWindowDirCreationSecsAt = std::time(nullptr);
 
 	// create the records from the PPF file
 	CreateRecords();
@@ -305,13 +306,13 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
 // This method is used to create writers in the FDR file structure directory, 
 // mostly for writing the sample collected as per the fetchpolicy.
 void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string compClass, std::string compID,
-				std::string paramClass, std::shared_ptr<FDRStore> &fdrLogWriter,
+				std::string paramClass, std::string fileExtention, std::shared_ptr<FDRStore> &fdrLogWriter,
 				const std::string& fileTimestamp = "") {
 	std::string logsformat = profile.GeneralConfig.LogsFormat;
 
 	// Only used if encoding type is binary/json
     std::string logdir = profile.GeneralConfig.LogsBasePath; // base directory for logs
-    std::string logfile = paramClass + ".log"; // relative filename of logs
+    std::string logfile = paramClass + fileExtention; // relative filename of logs
 
     std::string logfilepath; // full filepath of logs
 	if (logsformat == ENCODING_CHOICE_DB) {
@@ -328,11 +329,11 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
         // For faults create file name as Event_<event_timestamp>.log
         if (paramClass == "FAULTS")
         {
-            logfile = "Event_" + fileTimestamp + ".log";
+            logfile = "Event_" + fileTimestamp + fileExtention;
         }
         else
         {
-            logfile = paramClass + ".log";
+            logfile = paramClass + fileExtention;
         }
         logfilepath = logdir + logfile;
     }
@@ -385,7 +386,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 				// create the FDRStore[samples storage file] here itself and
 				// use the same FDRStore pointer for all the records on this infogroup
 			    std::shared_ptr<FDRStore> fdrStoreObj;
-			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, fdrStoreObj);
+			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".log", fdrStoreObj);
 				// For AML events store FDRStore objects for devices having `Error` fields
 				if ((infogroup.ID).find("Error") != std::string::npos)
 				{
@@ -399,6 +400,11 @@ void FlightDataRecorder_c::CreateRecords(void)
 						std::make_pair(fdrStoreObj, rec);
 					fdrDeviceErrorsWriter[component.ID] = recPair;
 				}
+				// create writer store object for statistic file only for Average CompactionMethod records
+			    std::shared_ptr<FDRStore> fdrStatStoreObj;
+			    if (infogroup.CompactionMethod == "Average") {
+				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".stats", fdrStatStoreObj);
+				}
 
 				for (auto &info : infogroup.InfoList)
 				{
@@ -406,7 +412,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 					info.parent_infogroup = &infogroup;
 
 					// Create a record object
-					Record *resource = new Record(profile, section, component, fdrStoreObj, infogroup, info);
+					Record *resource = new Record(profile, section, component, fdrStoreObj, fdrStatStoreObj, infogroup, info);
 
 					// Append it to the list
 					RecList.push_back(resource);
@@ -469,17 +475,6 @@ void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 	DeleteSpecificRecords("AfterBootDelete");
 	// std::cout << "after bootevent deleting-----------------------------------" << std::endl;
 	// std::cout << "size of RecList:" << RecList.size() << std::endl;
-}
-
-void FlightDataRecorder_c::ReadOldRecords(void)
-{
-	for (auto &rec : RecList)
-	{
-		if (rec->info.FetchPolicy.compare("Periodic") == 0)
-		{
-			rec->Load();
-		}
-	}
 }
 
 void FlightDataRecorder_c::RefreshAndRecord(void)
@@ -647,8 +642,11 @@ void FlightDataRecorder_c::CreateSpecificRecords(std::string recRetentionPolicy)
 
 				// create the FDRStore[samples storage file] here itself and
 				// use the same FDRStore pointer for all the records on this infogroup
-			    std::shared_ptr<FDRStore> fdrStoreObj;
-			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, fdrStoreObj);
+			    std::shared_ptr<FDRStore> fdrLogStoreObj;
+			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".log", fdrLogStoreObj);
+				// create writer store object for statistic file
+			    std::shared_ptr<FDRStore> fdrStatStoreObj;
+			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".stats", fdrStatStoreObj);
 
 				for (auto &info : infogroup.InfoList)
 				{
@@ -656,13 +654,13 @@ void FlightDataRecorder_c::CreateSpecificRecords(std::string recRetentionPolicy)
 					info.parent_infogroup = &infogroup;
 
 					// Create a record object
-					Record *resource = new Record(profile, section, component, fdrStoreObj, infogroup, info);
+					Record *resource = new Record(profile, section, component, fdrLogStoreObj, fdrStatStoreObj, infogroup, info);
 
 					// Append it to the list
 					RecList.push_back(resource);
 				}
-				// std::cout << "CreateSpecificRecords: fdrStoreObj.use_count: "
-				// 		  << fdrStoreObj.use_count() << std::endl;
+				// std::cout << "CreateSpecificRecords: fdrLogStoreObj.use_count: " << fdrLogStoreObj.use_count() 
+				// 		  << "; fdrStatStoreObj.use_count(): " << fdrStatStoreObj.use_count() << std::endl;
 			}
 		}
 	}

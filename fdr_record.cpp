@@ -20,10 +20,11 @@
 
 
 Record::Record(Profile_t &profile, Section_t &section,
-              Component_t &component, std::shared_ptr<FDRStore> &fdrStoreObj,
+              Component_t &component, std::shared_ptr<FDRStore> &fdrStoreObj, std::shared_ptr<FDRStore> &fdrStatStoreObj,
               InfoGroup_t &infogroup, Info_t &info) : 
               profile(profile), section(section), component(component), 
-              fdrreaderwriter(fdrStoreObj), infogroup(infogroup), info(info)
+              fdrLogReaderWriter(fdrStoreObj), fdrStatwriter(fdrStatStoreObj),
+              infogroup(infogroup), info(info)
               
 {   
     LastFetchedAt = 0; // Init last read time to epoch
@@ -47,6 +48,9 @@ Record::Record(Profile_t &profile, Section_t &section,
     }
 
     logsformat = profile.GeneralConfig.LogsFormat;
+    
+    // reset all the variables related to stat
+    ResetRunningStat();
 
     // for debugging purpose
     // Print();
@@ -58,7 +62,7 @@ Record::~Record()
     //           << "/" << component.ID 
     //           << "/" << infogroup.ID
     //           << "/" << info.ID 
-    //           << "; fdrreaderwriter.use_count: " << fdrreaderwriter.use_count()
+    //           << "; fdrLogReaderWriter.use_count: " << fdrLogReaderWriter.use_count()
     //           << std::endl;
     // Print();
 }
@@ -157,10 +161,11 @@ void Record::Refresh(void)
                 // std::cout << intVal << std::endl;
             }
             else {
-                spdlog::warn("No Error found on directoryTocompact: "
-                         "; ObjectPath: {}; Property: {}",
-                          info.DbusParams.ObjectPath,
-                          info.DbusParams.Property);
+                // spdlog::warn("DBus read failed: Unknown numerical variant type: "
+                //          "; ObjectPath: {}; Property: {}",
+                //           info.DbusParams.ObjectPath,
+                //           info.DbusParams.Property);
+    			return;
             }
 
         }
@@ -192,6 +197,7 @@ void Record::Refresh(void)
             }
         } catch (const std::exception &e) {
             spdlog::warn("Error fetching redfish: {}", e.what());
+            return;
         }
     }
     
@@ -232,6 +238,77 @@ void Record::Refresh(void)
         data.fdr_sample_data.set_paramvalueint64(((uint64_t) std::get<1>(fpga))); 
      
     }
+    else
+    {
+    	return;
+    }
+
+    // [if it reaches here, then a definite data is available for consumption]
+    // on every record execution, store or update the running stat variables which will 
+    // used at the subwindow expiry time. 
+    if (infogroup.CompactionMethod == "Average") {
+        RunningStatisticEngine(data.fdr_sample_data);
+    }
+
+}
+
+// this method will be called on every record execution.
+// using the just acquired recent record values, store or update the running stat variables which will 
+// written in the stat file on every subwindow expiry time.
+void Record::RunningStatisticEngine(fdrpb::fdr_sample readrec)
+{
+    auto currentRecValue = readrec.paramvalueint64();
+    auto currentRecTimestamp = readrec.timestamp();
+
+    runningStatus.set_paramid(readrec.paramid());
+    runningStatus.set_numsamples(runningStatus.numsamples() + 1);
+    runningStatus.set_avg(runningStatus.avg() + currentRecValue); // TODO: using avg field as sum. avoid overflow.
+
+    // set min value for the very first time
+    if (runningStatus.min() == 0 && runningStatus.minvaltimestamp() == 0) {
+        runningStatus.set_min(currentRecValue);
+        runningStatus.set_minvaltimestamp(currentRecTimestamp);
+    } else {
+        int64_t min_value = std::min(runningStatus.min(), currentRecValue);
+        runningStatus.set_min(min_value);
+        if (min_value == currentRecValue) {
+            // need to record the timestamp for min value
+            runningStatus.set_minvaltimestamp(currentRecTimestamp);
+        }
+    }
+
+    int64_t max_value = std::max(runningStatus.max(), currentRecValue);
+    runningStatus.set_max(max_value);
+    if (max_value == currentRecValue) {
+        // need to record the timestamp for max value
+        runningStatus.set_maxvaltimestamp(currentRecTimestamp);
+    }
+    runningStatus.set_fromtime(runningStatus.fromtime() == 0 ? currentRecTimestamp : runningStatus.fromtime());
+    runningStatus.set_totime(currentRecTimestamp);
+
+}
+
+void Record::appendRunningStatToStatfile(void)
+{
+    if (runningStatus.numsamples() != 0) {
+	    runningStatus.set_avg(runningStatus.avg() / runningStatus.numsamples());
+    }
+    // finally, append the stat record to the stat file
+    fdrStatwriter->append(runningStatus);
+
+    // for debugging
+    // std::cout << "-----------component: " << infogroup.parent_component->ID
+    //           << "; info.ParamID: " << info.ID
+    //           << "; FromTime: " << runningStatus.fromtime()
+    //           << "; totime: " << runningStatus.totime()
+    //           << "; numsamples: " << runningStatus.numsamples()
+    //           << "; min: " << runningStatus.min()
+    //           << "; max: " << runningStatus.max()
+    //           << "; avg: " << runningStatus.avg()
+    //           << "; minvaltimestamp: " << runningStatus.minvaltimestamp()
+    //           << "; maxvaltimestamp: " << runningStatus.maxvaltimestamp()
+    //           << "; paramid: " << runningStatus.paramid()
+    //           << "----------" << std::endl;
 }
 
 bool same_data_values(const fdr_sample_ext &left, const fdr_sample_ext &right)
@@ -294,17 +371,8 @@ void Record::Store(void)
         return;
     }
 
-    // if (data.paramName() == "Model")
-    // {
-    //     std::cout << "Writing Model for ID " << info.parent_infogroup->parent_component->ID << std::endl;
-    //     print_data("last_stored_data", last_stored_data);
-    //     print_data("data", data);
-    // }
-
     if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrreaderwriter->append(data.fdr_sample_data);
-        // Write to book of errors only when there is an error event
-        // fdr->CheckForErrorsToUpdateBookOfErrors();
+        fdrLogReaderWriter->append(data.fdr_sample_data);
     }
 
     else if (logsformat == ENCODING_CHOICE_DB){
@@ -318,48 +386,11 @@ void Record::Store(void)
         else{
             sqlDat.paramValueString = data.fdr_sample_data.paramvaluestring();
         }
-        fdrreaderwriter->append(sqlDat);
+        fdrLogReaderWriter->append(sqlDat);
     }
 
-    // if (info.ID == "Model")
-    //     std::cout << "Setting last_stored_data = data for ID " << info.parent_infogroup->parent_component->ID << std::endl;
     last_stored_data = data;
     LastStoredAt = std::time(nullptr);
-}
-
-// Read the last record of our type from the storage
-void Record::Load(void)
-{
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrpb::fdr_sample readrec;
-        while (fdrreaderwriter->readnext(&readrec))
-        { // TODO: read the file from last to first
-            if (readrec.paramid() == info.ParamID)
-            {
-                data.fdr_sample_data = last_stored_data.fdr_sample_data = readrec;
-            }
-        }
-    }
-    else if (logsformat == ENCODING_CHOICE_DB){
-        fdr_sample_sql readrec;
-        while (fdrreaderwriter->readnext(&readrec))
-        { // TODO: read the file from last to first
-            if (readrec.paramID == info.ParamID)
-            {
-                data.fdr_sample_data.set_timestamp(readrec.timestamp);
-                data.fdr_sample_data.set_paramid(readrec.paramID);
-                if (data.paramtype == "Uint64"){
-                    data.fdr_sample_data.set_paramvalueint64(readrec.paramValueInt64);
-                }
-                else{
-                    data.fdr_sample_data.set_paramvaluestring(readrec.paramValueString);
-                }
-                last_stored_data = data;
-            }
-        }
-    }
-
-    // last_stored_data.paramValue = 0;
 }
 
 void Record::Print(void)
@@ -394,5 +425,5 @@ void Record::Print(void)
               << "\t\t\t\tDataType: " << info.DataType << std::endl;
 
     std::cout << "logsformat: " << logsformat << std::endl;
-    std::cout << "fdrreaderwriter: " << fdrreaderwriter.get() << std::endl;
+    std::cout << "fdrLogReaderWriter: " << fdrLogReaderWriter.get() << std::endl;
 }

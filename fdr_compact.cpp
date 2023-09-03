@@ -97,10 +97,27 @@ bool FlightDataRecorder_c::CompactorCheckBookOfErrors(const std::string director
 	return errorList.size()? true: false;
 }
 
-// This method takes appropriate actions on every compaction window expiry
-void FlightDataRecorder_c::CheckCompactionWindowExpiry()
+void FlightDataRecorder_c::Compactor(void)
 {
-	double timeSinceLastCompactionWindowDirCreation = difftime(std::time(nullptr), LastCompactWindowDirCreationSecsAt);
+	// pass the same time to both sub window expiracy and main window expiracy checks,
+	// [as there could be slight timing issues]
+	std::time_t current_time = std::time(nullptr);
+
+	// 1st check for main window compaction time expiry
+	auto mainWindowCompactStatus = CheckCompactionWindowExpiry(current_time);
+
+	// 2nd, if main window compaction time expired, then we need to append the 
+	// last few collected stats to the stat file
+	CheckCompactionSubWindowExpiry(current_time, mainWindowCompactStatus);
+
+	// 3rd, if main window compaction time expired, then we need to recreate the records
+	CompactionWindowExpiryCleanUp(mainWindowCompactStatus);
+}
+
+// This method takes appropriate actions on every compaction window expiry
+int FlightDataRecorder_c::CheckCompactionWindowExpiry(std::time_t current_time)
+{
+	double timeSinceLastCompactionWindowDirCreation = difftime(current_time, LastCompactWindowDirCreationSecsAt);
 
 	log->debug("timeSinceLastCompactionWindowDirCreation: {}"
 	           "; LastCompactWindowDirCreationSecsAt: {}"
@@ -124,192 +141,120 @@ void FlightDataRecorder_c::CheckCompactionWindowExpiry()
 			CompactorEngine(directoryTocompact);
 		}
 
-		// update the global variable bootCounter and sensorDirTimestamp
-		UpdateGlobVariables(false);
-
-		// delete only the Sensor records
-		// std::cout << "Before deleting-------------------------------------------------------------------------" << std::endl;
-		// std::cout << "size of RecList:" << RecList.size() << std::endl;
-		// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
-		// 	(*recIt)->Print();
-		// } 
-		DeleteSpecificRecords("Recreate");
-
-		// create again the Sensor records with the new timestamp
-		// std::cout << "after deleting-------------------------------------------------------------------------" << std::endl;
-		// std::cout << "size of RecList:" << RecList.size() << std::endl;
-		// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
-		// 	(*recIt)->Print();
-		// } 
-		CreateSpecificRecords("Recreate");
-
-		// std::cout << "after creating-------------------------------------------------------------------------" << std::endl;
-		// std::cout << "size of RecList:" << RecList.size() << std::endl;
-		// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
-		// 	(*recIt)->Print();
-		// } 
-
-		// after creating the specific records again, update the Compactor BookKeeper
-		CompactorBookKeeperAppendEntry();
-
 		// reset to the current time
 		LastCompactWindowDirCreationSecsAt = std::time(nullptr);
+
+		return FDR_SUCCESS;
 	}
+
+	return FDR_ERR_MAIN_WINDOW_NOT_EXPIRED;
 }
 
-// This method will append a new stat entry on each subwindow into its respective stat file
-void FlightDataRecorder_c::CompactorAppendStatFile(FDRStore &fdrstatsWriter, std::map<unsigned int, fdrpb::fdr_stat> stats_so_far)
+// cleanup action when main window compaction time got expired:
+// * need to recreate the records
+// * update the global variables
+// * update the Compactor BookKeeper
+void FlightDataRecorder_c::CompactionWindowExpiryCleanUp(int mainWindowCompactStatus)
 {
-	for (auto &stat : stats_so_far)	{
-		stat.second.set_avg(stat.second.avg() / stat.second.numsamples());
-
-		// std::cout << "-------------------------------------------------------------------" << std::endl;
-		// std::cout << "appending stats to file: " << statFileName << std::endl;
-
-		fdrstatsWriter.append(stat.second);
+	if (mainWindowCompactStatus != FDR_SUCCESS) {
+		return;
 	}
+	// update the global variable bootCounter and sensorDirTimestamp
+	UpdateGlobVariables(false);
+
+	// delete only the Sensor records
+	// std::cout << "Before deleting-------------------------------------------------------------------------" << std::endl;
+	// std::cout << "size of RecList:" << RecList.size() << std::endl;
+	// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
+	// 	(*recIt)->Print();
+	// } 
+	DeleteSpecificRecords("Recreate");
+
+	// create again the Sensor records with the new timestamp
+	// std::cout << "after deleting-------------------------------------------------------------------------" << std::endl;
+	// std::cout << "size of RecList:" << RecList.size() << std::endl;
+	// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
+	// 	(*recIt)->Print();
+	// } 
+	CreateSpecificRecords("Recreate");
+
+	// std::cout << "after creating-------------------------------------------------------------------------" << std::endl;
+	// std::cout << "size of RecList:" << RecList.size() << std::endl;
+	// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
+	// 	(*recIt)->Print();
+	// } 
+
+	// after creating the specific records again, update the Compactor BookKeeper
+	CompactorBookKeeperAppendEntry();
 }
 
-// This method will create the stat file for all the types on all the device [and its instances].
-// Also this method while sliding through this compact window directory finds the least timestamp and the far timestamp
+// This method takes appropriate actions on every compaction window expiry
+int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(std::time_t current_time, int mainWindowCompactStatus)
+{
+	double timeSinceLastCompactionSubWindowDirCreation = difftime(current_time, LastCompactSubWindowDirCreationSecsAt);
+
+	log->debug("timeSinceLastCompactionSubWindowDirCreation: {}"
+	           "; LastCompactSubWindowDirCreationSecsAt: {}"
+			   "; CompactionSubWindowSecs: {}"
+			   "; mainWindowCompactStatus: {}",
+			   timeSinceLastCompactionSubWindowDirCreation,
+			   LastCompactSubWindowDirCreationSecsAt,
+			   profile.GeneralConfig.CompactionSubWindowSecs,
+			   mainWindowCompactStatus);
+
+	// check if sub window compaction time got expired [time to append the stat file yet] 
+	// or main window compaction time got expired[in this case, we need to append the last few pending 
+	// stat collected. scenario: main window compaction time: say 150, sub window compaction time: say 40.
+	// in this case, that last 30 seconds stats needs to be appended to the stat file]
+	if (timeSinceLastCompactionSubWindowDirCreation >= profile.GeneralConfig.CompactionSubWindowSecs ||
+		mainWindowCompactStatus == FDR_SUCCESS) {
+		log->debug("======================sub window timer expired======================");
+
+		for (auto &rec : RecList) {
+			if (rec->infogroup.CompactionMethod != "Average") {
+				continue;
+			}
+			rec->appendRunningStatToStatfile();
+
+		    // after appending, reset all the variables related to stat
+			rec->ResetRunningStat();
+		}
+		// reset to the current time
+		LastCompactSubWindowDirCreationSecsAt = std::time(nullptr);
+		return FDR_SUCCESS;
+	}
+	return FDR_ERR_SUB_WINDOW_NOT_EXPIRED;
+}
+
+// This method will get the least timestamp and the far timestamp from the compact window directory name itself.
 // [which will latter updated into their corresponding entry compactor book keeper file by the caller]
-void FlightDataRecorder_c::CompactorCreateStatFiles(const std::string directoryTocompact,
+void FlightDataRecorder_c::CompactorGetLeastAndFarTimestamp(const std::string directoryTocompact,
 									uint64_t &leastWindowTimestamp, uint64_t &farWindowTimestamp)
 {
 	// reset the variable references
 	leastWindowTimestamp = 0;
 	farWindowTimestamp = 0;
+    char* endPtr;  // Pointer to the character after the converted number
 
-	for (auto &section : profile.Sections) {
-		for (auto &component : section.Components) {
-			for (auto &infogroup : component.InfoGroups) {
-				if (infogroup.CompactionMethod != "Average") {
-					continue; // Only numerical stats can be compacted not text etc. for now
-				}
-
-				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON ||
-					profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY) {
-					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + 
-										 directoryTocompact + "/" +
-										 section.ID + "/" +
-										 component.ID + "/";
-
-					// check is the directory exist
-					// std::cout << "CompactorCreateStatFiles: directory to compact: logdir: " << logdir << std::endl;
-					if (!(std::filesystem::exists(logdir))) {
-						log->warn("directory to compact Not Exist!!, logdir: {}", logdir);
-						continue;
-					}
-
-					std::string logfile = logdir + infogroup.ID + ".log";
-					std::string statsfile = logdir + infogroup.ID + ".stats";
-					fdrpb::fdr_sample readrec;
-					int statCounter = 0;
-					uint64_t startSubWindowTime = 0, endSubWindowTime = 0, currentRecordTime = 0;
-					std::map<unsigned int, fdrpb::fdr_stat> stats_so_far;
-
-					// read every record from the *.log file
-					FDRStore fdrLogSamplesReader(logfile, profile.GeneralConfig.LogsFormat, STORE_READER);
-					FDRStore fdrstatsWriter(statsfile, profile.GeneralConfig.LogsFormat, STORE_WRITER);
-					while (fdrLogSamplesReader.readnext(&readrec)) {
-						// 1. reset the sliding window
-						if (statCounter == 0) {
-							startSubWindowTime = readrec.timestamp();
-							endSubWindowTime = startSubWindowTime + profile.GeneralConfig.CompactionSubWindowSecs;
-							currentRecordTime = readrec.timestamp();
-						} else {
-							currentRecordTime = readrec.timestamp();
-						}
-						statCounter++;
-
-						// 2. [for bookkeeping] find the leastWindowTimestamp and farWindowTimestamp in this window
-						if (farWindowTimestamp != 0) {
-							farWindowTimestamp = std::max(farWindowTimestamp, currentRecordTime);
-						} else {
-							// first time updating the variables
-							leastWindowTimestamp = farWindowTimestamp = currentRecordTime;
-						}
-						// std::cout << "leastWindowTimestamp: " << leastWindowTimestamp
-						// 		  << "; farWindowTimestamp: " << farWindowTimestamp << std::endl;
-
-						// std::cout << "endSubWindowTime: " << endSubWindowTime 
-						// 		  << "; profile.GeneralConfig.CompactionSubWindowSecs: " << profile.GeneralConfig.CompactionSubWindowSecs 
-						// 		  << "; currentRecordTime: " << currentRecordTime << std::endl;
-
-						// 3. check if slided beyond the compact subwindow
-						if (endSubWindowTime < currentRecordTime) {
-							// 3.1: append to the statfile
-							CompactorAppendStatFile(fdrstatsWriter, stats_so_far);
-							
-							// 3.2: then clear all the map entires to start collecting freshly the next subwindow sliding
-							stats_so_far.clear();
-
-							// 3.3: then reset the statCounter
-							statCounter = 0;
-						}
-
-						// 4. collect all the stats in this sliding subwindow
-						stats_so_far[readrec.paramid()].set_paramid(readrec.paramid());
-						stats_so_far[readrec.paramid()].set_numsamples(stats_so_far[readrec.paramid()].numsamples() + 1);
-						stats_so_far[readrec.paramid()].set_avg(stats_so_far[readrec.paramid()].avg() + readrec.paramvalueint64()); // TODO: using avg field as sum. avoid overflow.
-						if (stats_so_far[readrec.paramid()].min() != 0) {
-							int64_t min_value = std::min(stats_so_far[readrec.paramid()].min(), readrec.paramvalueint64());
-							stats_so_far[readrec.paramid()].set_min(min_value);
-							if (min_value == readrec.paramvalueint64()) {
-								// need to record the timestamp for min value during this subwindow
-								stats_so_far[readrec.paramid()].set_minvaltimestamp(readrec.timestamp());
-							}
-						} else {
-							stats_so_far[readrec.paramid()].set_min(readrec.paramvalueint64());
-							stats_so_far[readrec.paramid()].set_minvaltimestamp(readrec.timestamp());
-						}
-						int64_t max_value = std::max(stats_so_far[readrec.paramid()].max(), readrec.paramvalueint64());
-						stats_so_far[readrec.paramid()].set_max(max_value);
-						if (max_value == readrec.paramvalueint64()) {
-							// need to record the timestamp for max value during this subwindow
-							stats_so_far[readrec.paramid()].set_maxvaltimestamp(readrec.timestamp());
-						}
-						stats_so_far[readrec.paramid()].set_fromtime(stats_so_far[readrec.paramid()].fromtime() == 0 ? currentRecordTime : stats_so_far[readrec.paramid()].fromtime());
-						stats_so_far[readrec.paramid()].set_totime(currentRecordTime);
-					}
-
-					// 5. flush the remaining leftover entires to the statfile
-					// std::cout << "--------flush the remaining leftover entires to the statfile: stats_so_far.size(): " << stats_so_far.size() << "-------------" << std::endl;
-					if (stats_so_far.size() != 0) {
-						CompactorAppendStatFile(fdrstatsWriter, stats_so_far);
-					}
-				} else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB) {
-					// TODO: not yet coded this section
-				}
-			}
-		}
-	}
-}
-
-void FlightDataRecorder_c::CompactorCollectHiFidelityRecords(
-				std::string componentId,
-				std::string infogroupID,
-				fdrpb::fdr_sample readRecord,
-				std::map<std::string, std::map<std::string, std::vector<fdrpb::fdr_sample>>> &hifiRecords)
-{
-	if (hifiRecords[componentId].size() == 0 || hifiRecords[componentId][infogroupID].size() == 0) {
-		// then simply push the readRecord back at the vector
-		hifiRecords[componentId][infogroupID].push_back(readRecord);
+	auto splittedList = split(directoryTocompact, '_');
+	if (splittedList.size() != 4) {
+		// should never happen at this point..but checking for code completeness.
+		log->warn("not a valid directoryTocompact: {}"
+					   "; splittedList.size(): {}",
+					   directoryTocompact,
+					   splittedList.size());
 	} else {
-		for (auto &componentVector : hifiRecords[componentId][infogroupID]) {
-			// check if the incoming record already exist in the vector
-			if (componentVector.timestamp() == readRecord.timestamp() &&
-				componentVector.paramid() == readRecord.paramid()) {
-				if (componentVector.paramvalueint64() == readRecord.paramvalueint64()) {
-					// std::cout << "-----------int64: value matches in one of the record";
-					return;
-				}
-			}
+		log->debug("CompactorGetLeastAndFarTimestamp: directory timestamp: {}", splittedList[3]);
+		leastWindowTimestamp = std::strtoull(splittedList[3].c_str(), &endPtr, 10);
+		if (*endPtr == '\0') {
+			// std::cout << "Converted value: " << leastWindowTimestamp << std::endl;
+			farWindowTimestamp = leastWindowTimestamp + profile.GeneralConfig.CompactionWindowSecs;
+		} else {
+			log->warn("Error converting string: {}", splittedList[3]);
 		}
-		// if it reaches here, then it means this record is unique and not yet collected..so collect it
-		hifiRecords[componentId][infogroupID].push_back(readRecord);
-		// std::cout << "5. final else case: length: " << hifiRecords[componentId][infogroupID].size() << std::endl;
 	}
+	// std::cout << "2. finally: leastWindowTimestamp: " << leastWindowTimestamp
+	// 			<< "; farWindowTimestamp: " << farWindowTimestamp << std::endl;
 }
 
 // This method will scans through the samples log files and check if the record falls in any
@@ -318,11 +263,13 @@ void FlightDataRecorder_c::CompactorCollectHiFidelityRecords(
 void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string directoryTocompact,
 									std::vector<fdrpb::fdr_book_of_errors> errorList)
 {
-	std::map<std::string, std::map<std::string, std::vector<fdrpb::fdr_sample>>> hifiRecords;
-
 	// 1. this loop will first collect all the required high fidelity data into a vector
 	for (auto &section : profile.Sections) {
 		for (auto &component : section.Components) {
+			// collect the high fidelity logs for every instance of its components and
+			// write it immdiately and clear the variable
+			std::vector<fdrpb::fdr_sample> hifiRecords;
+
 			for (auto &infogroup : component.InfoGroups) {
 				if (infogroup.CompactionMethod != "Average") {
 					continue; // Only numerical stats can be compacted not text etc. for now
@@ -345,7 +292,7 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 					std::string logfile = logdir + infogroup.ID + ".log";
 					fdrpb::fdr_sample readrec;
 
-					// read every record from the sensor*.log file
+					// 1. read every record from the sensor*.log file
 					FDRStore fdrLogSamplesReader(logfile, profile.GeneralConfig.LogsFormat, STORE_READER);
 					while (fdrLogSamplesReader.readnext(&readrec)) {
 						// loop through the errorList and find if this record is falling in any of the hifi range
@@ -356,52 +303,18 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 							// 		  << "; readrec.timestamp: " << readrec.timestamp()
 							// 		  << std::endl;
 							if (CheckIsInRange(errorRecord.starthifitimestamp(), errorRecord.stophifitimestamp(), readrec.timestamp())) {
-								CompactorCollectHiFidelityRecords(component.ID, infogroup.ID, readrec, hifiRecords);
+								// if the current log is in range of any of the error list, then this log needs to be collected for hifi log.
+								hifiRecords.push_back(readrec);
+								break;
 							}
 						}
 					}
-				} else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB) {
-					// TODO: not yet coded this section
-				}
-			}
-		}
-	}
 
-	// 2. this loop will write the collected data into their respective directories
-	for (auto &section : profile.Sections) {
-		for (auto &component : section.Components) {
-			for (auto &infogroup : component.InfoGroups) {
-				if (infogroup.CompactionMethod != "Average") {
-					continue; // Only numerical stats can be compacted not text etc. for now
-				}
-
-				// check if any record got collected for this component
-				if (hifiRecords[component.ID][infogroup.ID].size() == 0) {
-					// nothing..then continue to next item
-					log->debug("No hifi collected for this component: {}; infogroup: {}", 
-								component.ID, 
-								infogroup.ID);
-					continue;
-				}
-				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON ||
-					profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY) {
-					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + 
-										 directoryTocompact + "/" +
-										 section.ID + "/" +
-										 component.ID + "/";
-
-					// check is the directory exist
-					// std::cout << "CompactorCreateHighFidelityFiles: 2.directory to compact: logdir: " << logdir << std::endl;
-					if (!(std::filesystem::exists(logdir))) {
-						log->warn("2. directory to compact Not Exist!!, logdir: {}", logdir);
-						continue;
-					}
-
+					// 2. this loop will write the collected data into their respective directories
 					std::string highFidelityFile = logdir + infogroup.ID + ".hifilog";
-					fdrpb::fdr_sample readrec;
                 	FDRStore fdrHifiWriter(highFidelityFile, profile.GeneralConfig.LogsFormat, STORE_WRITER);
 					// loop through the hifiRecords and put them into the hifi log file
-					for (auto &hifiRecord : hifiRecords[component.ID][infogroup.ID]) {
+					for (auto &hifiRecord : hifiRecords) {
 						fdrHifiWriter.append(hifiRecord);
 					}
 				} else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB) {
@@ -616,8 +529,8 @@ void FlightDataRecorder_c::CompactorEngine(std::string directoryTocompact)
     // in one stretch create the stat file for all the sensor types on all the devices[on its instances]
     uint64_t leastWindowTimestamp=0, farWindowTimestamp=0;
 
-    // 1. create the stat files
-    CompactorCreateStatFiles(directoryTocompact, leastWindowTimestamp, farWindowTimestamp);
+    // 1. get the from and to timestamp range
+    CompactorGetLeastAndFarTimestamp(directoryTocompact, leastWindowTimestamp, farWindowTimestamp);
     // std::cout << "------------leastWindowTimestamp: " << leastWindowTimestamp
     // 		  << "; farWindowTimestamp: " << farWindowTimestamp << "------------" << std::endl;
 
@@ -626,7 +539,7 @@ void FlightDataRecorder_c::CompactorEngine(std::string directoryTocompact)
     std::vector<fdrpb::fdr_book_of_errors> errorList;
     if (CompactorCheckBookOfErrors(directoryTocompact, leastWindowTimestamp, farWindowTimestamp, errorList)) {
         log->warn ("Error found on directoryTocompact: {}",  directoryTocompact);
-        // 2.1. in one stretch collect the high fidelity data if needed for all the
+        // 2.1. in one stretch collect the high fidelity data if needed, and collect for all the
         //      sensor types on all the devices[and its instances]
         CompactorCreateHighFidelityFiles(directoryTocompact, errorList);
     } else {

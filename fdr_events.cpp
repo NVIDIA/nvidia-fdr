@@ -201,7 +201,7 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         timeStampString << eventTimestamp;
 
 			            fdr->CreateSamplesWriter(*record.profile, record.sectionID,
-                            record.componentID, "FAULTS", eventFDRStoreObj,
+                            record.componentID, "FAULTS", ".log", eventFDRStoreObj,
                             timeStampString.str());
 
                         // Create event details data protobuf message

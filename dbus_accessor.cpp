@@ -73,7 +73,7 @@ PropertyVariant readDbusProperty(const std::string& service, const std::string& 
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        spdlog::warn("readDbusProperty() Failed to get property: error = {}", e.what());
+        // spdlog::warn("readDbusProperty() Failed to get property: error = {}", e.what());
     }
     return value;
 }
@@ -99,7 +99,7 @@ RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& ob
         reply.read(response);
     }
     catch (const sdbusplus::exception::exception& e){
-        spdlog::warn("readDbusDGDProperty: Failed to get property: error = {}", e.what());
+        // spdlog::warn("readDbusDGDProperty: Failed to get property: error = {}", e.what());
     }
     auto rc = std::get<int>(response);
     auto data = std::get<std::vector<uint32_t>>(response);
@@ -150,7 +150,7 @@ PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string
 
     }
     catch (const sdbusplus::exception::exception& e){
-        spdlog::warn("readDbusPTProperty: Failed to get property: error = {}", e.what());
+        // spdlog::warn("readDbusPTProperty: Failed to get property: error = {}", e.what());
     }
 
     if (rc != 0){
