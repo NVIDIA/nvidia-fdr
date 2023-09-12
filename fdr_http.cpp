@@ -78,9 +78,9 @@ HttpResponse HttpClient::request(const HttpRequestType &req_type, const std::str
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, payload->size());
   }
 
+  struct curl_slist *hdrs = NULL;
   if (headers)
   {
-    struct curl_slist *hdrs = NULL;
     for (auto const &[k, v] : *headers)
     {
       std::string header = k + ": " + v;
@@ -90,6 +90,10 @@ HttpResponse HttpClient::request(const HttpRequestType &req_type, const std::str
   }
 
   res = curl_easy_perform(curl);
+  if (hdrs != NULL)
+  {
+    curl_slist_free_all(hdrs);
+  }
   if (res != CURLE_OK)
   {
     curl_easy_cleanup(curl);
