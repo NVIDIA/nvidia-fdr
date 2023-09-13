@@ -41,9 +41,9 @@ sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 10
 
 > Note: `10` at the end of command is the priority.
 
-# Build (amd64 native)
+# Build & Test(amd64 native)
 
-Configure
+## Configure
 
 ```bash
 meson setup --reconfigure build
@@ -52,7 +52,7 @@ meson setup --reconfigure build
 meson setup --reconfigure build -Db_colorout=never -Dwerror=true -Dwarning_level=3 -Ddebug=true -Doptimization=g 
 ```
 
-Build
+## Build
 
 ```bash
 meson compile -C build
@@ -61,18 +61,6 @@ meson compile -C build
 ninja -C build
 ```
 
-Unit Test
-
-```bash
-meson setup --reconfigure build_coverage -Db_coverage=True
-meson test -v -C build_coverage
-```
-
-Static analysis
-
-```bash
-ninja scan-build -C builddir
-```
 ## Running FDR
 
 By default, nvidia-fdr looks for the platforms files under the relative path `./platforms`.
@@ -94,6 +82,37 @@ export PLATFORMS_PATH=/path/to/platforms
 ```
 
 FDR data would start landing under the path (LogsBasePath) provided in PPF.
+
+## Validation
+
+### Unit Test
+
+```bash
+meson setup --reconfigure build_coverage -Db_coverage=True
+meson test -v -C build_coverage
+```
+
+### Static analysis
+
+```bash
+ninja scan-build -C builddir
+```
+
+## Code Coverage (Docker)
+
+```bash
+./coverage/coverage.sh
+```
+
+The result should be availab in the following location:
+
+- text (also print on the output): ./build_coverage/meson-logs/coverage.txt
+- html: ./build_coverage/meson-logs/coverage.html
+
+## Run the CI pipeline locally
+
+See https://gitlab-master.nvidia.com/dgx/bmc/docs/-/blob/develop/testing/local-ci-build.md
+
 
 # Build (ARM cross compile with bitbake)
 
@@ -140,3 +159,6 @@ systemctl status nvidia-fdr.service
 systemctl restart nvidia-fdr.service
 ```
 
+## Code Coverage
+
+TODO
