@@ -14,7 +14,7 @@ sudo apt install git meson libtool pkg-config g++-12 libsystemd-dev \
 ```bash
 sudo apt install cmake clang-tools nlohmann-json3-dev \
     sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml \
-    libspdlog-dev libfmt-dev clang-tools
+    libspdlog-dev libfmt-dev clang-tools googletest google-mock
 ```
 
 ## Protobuf
@@ -61,11 +61,11 @@ meson compile -C build
 ninja -C build
 ```
 
-Unit Test (not implemented yet)
+Unit Test
 
 ```bash
-meson test --print-errorlogs --repeat 1 -C build
-meson test -t 10 -C build --print-errorlogs --setup valgrind 
+meson setup --reconfigure build_coverage -Db_coverage=True
+meson test -v -C build_coverage
 ```
 
 Static analysis
