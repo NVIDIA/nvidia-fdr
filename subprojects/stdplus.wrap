@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/openbmc/stdplus.git
+revision = 6317f357094fd30403731c6776ddf84bc242a16b
+#revision = head
+depth = 1
+
+[provide]
+dependency_names = stdplus

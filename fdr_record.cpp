@@ -67,11 +67,13 @@ Record::~Record()
     // Print();
 }
 
-void Record::Refresh(void)
+void Record::Refresh(bool viaTimerSkipChecks)
 {
     // Skip if too early to refresh
-    if (difftime(std::time(nullptr), LastFetchedAt) < info.FetchFreqSecs)
-        return;
+    if (viaTimerSkipChecks == false) {
+        if (difftime(std::time(nullptr), LastFetchedAt) < info.FetchFreqSecs)
+            return;
+    }
 
     std::time_t current_time = std::time(nullptr);
     data.fdr_sample_data.set_timestamp(current_time);
@@ -83,7 +85,7 @@ void Record::Refresh(void)
     if (info.FetchMethod == "Command")
     {
         CommandResult_t cmdResult = exec(info.CommandParams.Command.c_str());
-		if (cmdResult.cmdExitstatus == FDR_ERR_GENFAILURE) {
+		if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
             spdlog::warn("command Failed: {}", info.CommandParams.Command);
 			return;
 		}
@@ -290,9 +292,15 @@ void Record::RunningStatisticEngine(fdrpb::fdr_sample readrec)
 
 void Record::appendRunningStatToStatfile(void)
 {
-    if (runningStatus.numsamples() != 0) {
-	    runningStatus.set_avg(runningStatus.avg() / runningStatus.numsamples());
+    if (runningStatus.numsamples() == 0) {
+        // This print could be false alarm as well, as CompactionWindowSecs and CompactionSubWindowSecs could
+        // finish at the same time and Compactor() could have already append the statistic data to the stat files
+        // and would have cleared the runningStatus elements; hence, CompactionSubWindowSecs timerCB when tries
+        // append the runningStatus data, it sees all are cleared and will return from here.
+        // fdr->log->warn("{}: num sample is zero: skipping stat update!", infogroup.parent_component->ID);
+        return;
     }
+    runningStatus.set_avg(runningStatus.avg() / runningStatus.numsamples());
     // finally, append the stat record to the stat file
     fdrStatwriter->append(runningStatus);
 
@@ -426,4 +434,5 @@ void Record::Print(void)
 
     std::cout << "logsformat: " << logsformat << std::endl;
     std::cout << "fdrLogReaderWriter: " << fdrLogReaderWriter.get() << std::endl;
+    std::cout << "fdrStatwriter: " << fdrStatwriter.get() << std::endl;
 }

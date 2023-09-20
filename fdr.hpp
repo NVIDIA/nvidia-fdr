@@ -21,11 +21,22 @@
 #include "dbus_accessor.hpp"
 #include "fdr_events.hpp"
 
+#include <sdeventplus/event.hpp>
+using sdeventplus::Event;
+
+#define FDR_TIMER_EVENT_ENABLED
+
 class FlightDataRecorder_c
 {
 private:
 	/* data */
 	std::vector<Record *> RecList;
+	// This map includes only Poll records and used for both fetching[refresh] and storing[store]
+	std::map<int, std::vector<Record *>> RecListPollMap;
+	// This map includes only Subscribe records and used only for storing[store] as
+	// fetching[refresh] is taken by the subscription events
+	std::map<int, std::vector<Record *>> RecListSubscribeStoreMap;
+	sdeventplus::Event FdrEvents = sdeventplus::Event::get_default();
 	std::time_t LastCompactWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
 	std::time_t LastCompactSubWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
 	const std::string CompactorBookKeeperName = "Compactor.log";
@@ -45,6 +56,7 @@ private:
 	std::unique_ptr<FDRStore> CreateKeeperWriter(const std::string dirName, const std::string filename);
 	void DeleteSpecificRecords(std::string recordSubName);
 	void CreateSpecificRecords(std::string recordSubName);
+	void ModifySpecificRecords(std::string recordSubName);
 
 	void InitLogger();
 
@@ -52,8 +64,8 @@ private:
 	void InitExceptionRateLimiter();
 
 	// all private functions related to Compactor
-	int CheckCompactionWindowExpiry(std::time_t current_time);
-	int CheckCompactionSubWindowExpiry(std::time_t current_time, int mainWindowCompactStatus);
+	int CheckCompactionWindowExpiry(bool viaTimerSkipChecks, std::time_t current_time);
+	int CheckCompactionSubWindowExpiry(bool viaTimerSkipChecks, std::time_t current_time, int mainWindowCompactStatus);
 	void CompactionWindowExpiryCleanUp(int mainWindowCompactStatus);
 	bool CompactorCheckBookOfErrors(const std::string directoryTocompact,
 							uint64_t leastWindowTimestamp,
@@ -76,6 +88,11 @@ private:
                                                  const char *value, time_t current_time, std::string bookOfErrorsFileName);
 
 	bool CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg, const std::string& logFile);
+	void PrintRecListPollSubscribeMap(void);
+	void PollRecordTimerCBEngine(int fetchFreqSecKey);
+	void SubscribeStoreRecordTimerCBEngine(int storeFreqSec);
+	void CompactionWindowTimerCBEngine(void);
+	void CompactionSubWindowTimerCBEngine(void);
 
 public:
 
@@ -94,12 +111,17 @@ public:
 							 const std::string& fileTimestamp);
 	void CreateRecords(void);
 	void CollectAndArchieveBirthCertificate(void);
-	void RefreshAndRecord(void);
-	void Compactor(void);
+	void RefreshAndStore(bool viaTimerSkipChecks, const std::vector<Record *>& recordListToRefresh);
+	void RefreshAndStore(bool viaTimerSkipChecks);
+	void StoreSubscribeRecords(const std::vector<Record *>& recordListToStore);
+	void Compactor(bool viaTimerSkipChecks);
 	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
                                              time_t current_time, PropertyVariant val);
+	void CheckForErrorsToUpdateBookOfErrors(void);
     void CheckExceptionRateLimit();
 	void initEventsSignalRegistration();
+	void InitTimerEvents(void);
+	void RunEventLoop(void);
 };
 
 // We have a global fdr variable defined in main.cpp

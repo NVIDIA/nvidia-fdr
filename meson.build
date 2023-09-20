@@ -67,6 +67,16 @@ sqlite3_dep = dependency(
   ]
 )
 
+stdplus_dep = dependency(
+  'stdplus', 
+  fallback : ['stdplus', 'stdplus_dep'],
+  default_options: ['default_library=static'])
+
+sdeventplus_dep = dependency(
+  'sdeventplus', 
+  fallback : ['sdeventplus', 'sdeventplus_dep'],
+  default_options: ['default_library=static'])
+
 # Workaround for Docker Unit Test
 yamlcpp_dep = dependency('yaml-cpp', version: '>= 0.5.1', required: false)
 if not yamlcpp_dep.found()
@@ -93,6 +103,8 @@ deps = [
   sqlite3_dep,
   dependency('systemd'),
   yamlcpp_dep,
+  stdplus_dep,
+  sdeventplus_dep
 ]
 
 if get_option('tests').enabled()
@@ -130,6 +142,7 @@ src = [
   'fdr_record.cpp',
   'fdr_redfish.cpp',
   'fdr_store.cpp',
+  'fdr_timers.cpp',
   'main.cpp',
   'ppf_sanity.cpp',
   'property_variant.hpp',
