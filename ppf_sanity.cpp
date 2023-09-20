@@ -41,7 +41,8 @@ std::map<std::string, std::vector<InfoGroup_t>> PPFSanity::CreateComponentsMap(c
 	std::map<std::string, std::vector<InfoGroup_t>> ComponentsMap;
 	for (YAML::const_iterator it = PlatformProfile.begin(); it != PlatformProfile.end(); ++it) {
 		std::string component_name = it->first.as<std::string>();
-		if ((component_name.compare("FingerPrint") != 0) & (component_name.compare("GeneralConfig") != 0) & (component_name.compare("Sections") != 0)) {
+		if ((component_name.compare("FingerPrint") != 0) & (component_name.compare("GeneralConfig") != 0) & (component_name.compare("Sections") != 0) & 
+		(component_name.compare("Preconditions") != 0)) {
 			std::vector<InfoGroup_t> InfoGroups = PlatformProfile[component_name]["InfoGroups"].as<std::vector<InfoGroup_t>>();
 			ComponentsMap.insert(std::pair<std::string, std::vector<InfoGroup_t>>(component_name, InfoGroups));
 		}

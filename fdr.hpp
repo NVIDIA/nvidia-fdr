@@ -55,6 +55,7 @@ private:
 	int FindAndLoadPlatformProfile(void);
 	int ConvertPPFToStruct(const std::string filename);
 	int ExecuteFingerPrintRules(void);
+	int ExecutePreconditionRules(void);
 	void UpdateGlobVariables(bool needtoUpdateBootcounter);
 	void CreateFdrHmcAlive(void);
 	std::unique_ptr<FDRStore> CreateKeeperWriter(const std::string dirName, const std::string filename);
