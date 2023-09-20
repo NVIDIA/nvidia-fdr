@@ -135,6 +135,10 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 // printf("uint64 = %lu\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
+            else if (auto ptr (std::get_if<uint8_t>(&val)); ptr)
+            {
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
+            }
             else if (auto ptr (std::get_if<uint16_t>(&val)); ptr)
             {
                 // printf("uint16 = %u\n", *ptr);
@@ -379,6 +383,13 @@ void Record::Store(void)
         return;
     }
 
+    // For debugging : No debugging needed for poll records
+    if (info.FetchType == "Subscribe")
+    {
+        fdr->log->debug("Store record for objectPath = {}, interface = {}, property = {}",
+            info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
+    }
+
     if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrLogReaderWriter->append(data.fdr_sample_data);
     }
@@ -399,6 +410,33 @@ void Record::Store(void)
 
     last_stored_data = data;
     LastStoredAt = std::time(nullptr);
+}
+
+void Record::refreshDataCallback(PropertyVariant val)
+{
+    // For errors counter run book of errors
+    // Write to both fdr reader writer as well as book of errors
+
+    fdr->log->debug("Refresh record data for objectPath = {}, interface = {}, property = {}",
+        info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
+
+    std::time_t current_time = std::time(nullptr);
+    data.fdr_sample_data.set_timestamp(current_time);
+    data.paramtype = info.DataType;
+    data.fdr_sample_data.set_paramid(info.ParamID);
+
+    if (infogroup.ID == "Error"){
+        fdr->BookOfErrorEngine(info.ID, info.ParamID, section.ID, component.ID, info.parent_infogroup->ID ,current_time, val);
+    }
+
+    if (auto ptr (std::get_if<std::string>(&val)); ptr){
+        data.fdr_sample_data.set_paramvaluestring(*ptr);
+    }
+    else if (auto ptr (std::get_if<std::uint64_t>(&val)); ptr){
+        data.fdr_sample_data.set_paramvalueint64(*ptr);
+    }
+    // Update LastStoredAt timestamp
+    this->LastStoredAt = std::time(nullptr);
 }
 
 void Record::Print(void)

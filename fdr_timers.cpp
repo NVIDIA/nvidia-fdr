@@ -10,6 +10,7 @@
 */
 
 #include "fdr.hpp"
+#include "fdr_utils.hpp"
 #include <sdeventplus/clock.hpp>
 #include <sdeventplus/utility/timer.hpp>
 
@@ -144,6 +145,8 @@ void FlightDataRecorder_c::InitTimerEvents(void)
 {
 	log->info("Enable the timers for all the POLL records, Subscribe records for Store, Compaction window & sub window!");
 
+    auto& sdbusConn = getBus();
+    sdbusConn.attach_event(FdrEvents.get(), SD_EVENT_PRIORITY_NORMAL);
     // for debugging:
     PrintRecListPollSubscribeMap();
 

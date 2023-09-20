@@ -13,9 +13,30 @@
 #include "dbus_accessor.hpp"
 #include <sdbusplus/exception.hpp>
 #include <spdlog/spdlog.h>
+#include "fdr_utils.hpp"
 
 namespace dbus
 {
+
+DbusPropertyChangedHandler registerServicePropertyChanged(
+    sdbusplus::bus::bus& bus, const std::string& objectPath,
+    const std::string& interface, CallbackFunction callback)
+{
+    DbusPropertyChangedHandler propertyHandler;
+    try
+    {
+        auto subscribeStr = sdbusplus::bus::match::rules::propertiesChanged(
+            objectPath, interface);
+        propertyHandler = std::make_unique<sdbusplus::bus::match_t>(
+            bus, subscribeStr, callback);
+    }
+    catch (const std::exception &e)
+    {
+        spdlog::warn("registerServicePropertyChanged failed in registering signal handler: error = {}",
+            e.what());
+    }
+    return propertyHandler;
+}
 
 std::string getService(const std::string& objectPath,
                        const std::string& interface)
@@ -33,7 +54,7 @@ std::string getService(const std::string& objectPath,
 
       Explictly connect to system bus
     */
-    auto bus = sdbusplus::bus::new_default_system();
+    auto& bus = getBus();
     try
     {
         auto method = bus.new_method_call(mapperBusBame, mapperObjectPath,
@@ -62,7 +83,7 @@ PropertyVariant readDbusProperty(const std::string& service, const std::string& 
 {
 
     PropertyVariant value;
-    auto bus = sdbusplus::bus::new_default();
+    auto& bus = getBus();
     try
     {
         auto method = bus.new_method_call(service.c_str(), objPath.c_str(),
@@ -87,7 +108,7 @@ RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& ob
     std::string valueStr = "";
     std::tuple<int, std::string, std::vector<uint32_t>> response;
 
-    auto bus = sdbusplus::bus::new_default();
+    auto& bus = getBus();
     try{
         auto method = bus.new_method_call(service.c_str(), objPath.c_str(),
                                           interface.c_str(), callName);
@@ -134,7 +155,7 @@ PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string
     int rc;
     uint64_t fpgavalue = 0;
 
-    auto bus = sdbusplus::bus::new_default();
+    auto& bus = getBus();
 
     try{
         auto method = bus.new_method_call(service.c_str(), objPath.c_str(),
@@ -176,7 +197,7 @@ bool setDbusProperty(const std::string& service, const std::string& objPath,
                      const std::string& interface, const std::string& property,
                      const PropertyVariant& val)
 {
-    auto bus = sdbusplus::bus::new_default();
+    auto& bus = getBus();
     bool ret = false;
     try
     {

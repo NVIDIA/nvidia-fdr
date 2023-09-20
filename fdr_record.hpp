@@ -20,6 +20,7 @@
 #include "fdr_logs_schema.pb.h"
 #include "fdr_policy.hpp"
 #include "fdr_store.hpp"
+#include "property_variant.hpp"
 
 struct fdr_sample_ext { // Extended version of the fdr_sample proto message
     fdrpb::fdr_sample fdr_sample_data;
@@ -103,5 +104,7 @@ public:
     }
     void Print(void);
 
+    /* Callback to refresh the data on propertyChangedSignals message */
+    void refreshDataCallback(PropertyVariant val);
 
 };

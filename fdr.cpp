@@ -11,6 +11,7 @@
 
 #include <filesystem>
 #include <sys/stat.h>
+#include <sdbusplus/bus.hpp>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include "fdr.hpp"
@@ -422,9 +423,11 @@ void FlightDataRecorder_c::CreateRecords(void)
 					// FetchFreqSecs: only for Poll fetchtype records for triggering both Refresh() and Store()
 					if(info.FetchType == "Subscribe") {
 						RecListSubscribeStoreMap[info.StoreFreqSecs].push_back(resource);
+						auto pair = std::make_pair(info.DbusParams.ObjectPath, info.DbusParams.Interface);
+						subscribedPaths.push_back(pair);
 					} else if (info.FetchType == "Poll") {
 						RecListPollMap[info.FetchFreqSecs].push_back(resource);
-					} 
+					}
 
 					if(!ComponentAddedInSchema) // Added ONLY ONCE for a component class to avoid repeated entries
 					{
@@ -439,7 +442,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 						// data.set_paramnotes(info.ID); // TO-DO
 						fdrParamsWriter->append(data);
 					}
-					
+
 				}
 
 				// std::cout << "CreateRecords: fdrStoreObj.use_count: "
@@ -753,6 +756,124 @@ void FlightDataRecorder_c::ModifySpecificRecords(std::string recRetentionPolicy)
 	// std::cout << "ModifySpecificRecords: 3: numFdsObjs: " << numFdsObjs << std::endl;
 }
 
+void FlightDataRecorder_c::dbusEventHandlerCallback(
+	std::map<int, std::vector<Record *>>& recListSubscribeMap,
+	sdbusplus::message::message& msg)
+{
+	std::string msgInterface;
+	boost::container::flat_map<std::string, PropertyVariant> propertiesChanged;
+
+	msg.read(msgInterface, propertiesChanged);
+
+	std::string objectPath = msg.get_path();
+	std::string sender = msg.get_sender();
+
+	if (propertiesChanged.empty())
+	{
+		return;
+	}
+
+	for (auto& property: propertiesChanged)
+	{
+		auto eventProperty = property.first;
+		try
+		{
+			fdr->log->debug("propertiesChanged signal message on objectPath = {},"
+				"interface = {}, property = {}", objectPath, msgInterface, eventProperty);
+			for (const auto& pair : recListSubscribeMap) {
+				const std::vector<Record*>& records = pair.second;
+				const auto it = std::find_if(records.begin(), records.end(),
+					[&](const Record *record){
+						return (record->info.DbusParams.Interface == msgInterface) &&
+							(record->info.DbusParams.ObjectPath == objectPath) &&
+							(record->info.DbusParams.Property == eventProperty);});
+
+				std::uint64_t val;
+				std::string value;
+
+				if (it != records.end()){
+
+					fdr->log->debug("propertiesChanged signal message record found for"
+						"objectPath = {}, interface = {}, property = {}",
+						objectPath, msgInterface, eventProperty);
+
+					Record* matchedRecord = *it;
+					if (auto ptr (std::get_if<int64_t>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<uint32_t>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<uint64_t>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<uint16_t>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<int16_t>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<double>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<bool>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr (std::get_if<uint8_t>(&property.second)); ptr){
+						val = (uint64_t) *ptr;
+					}
+					else if (auto ptr =
+						(std::get_if<std::tuple<bool, unsigned int>>(&property.second)); ptr) {
+						val = std::get<1>(*ptr);
+					}
+					else if (auto ptr (std::get_if<std::string>(&property.second)); ptr){
+						const char* value1 = ptr->c_str();
+						std::string value(value1);
+					}
+					else{
+						return;
+					}
+
+					if(val){
+						matchedRecord->refreshDataCallback(val);
+					}
+					else if (!(value.size() == 0)){
+						matchedRecord->refreshDataCallback(value);
+					}
+				}
+			}
+		}
+		catch (const std::exception& e) {
+			spdlog::warn("Error in processing propertiesChanged signal message: error = {}",
+				e.what());
+		}
+	}
+}
+
+void FlightDataRecorder_c::initRecordsSignalRegistration()
+{
+	auto& bus = getBus();
+	// Register callback on unique DBUS paths
+	std::set<std::pair<std::string, std::string>> uniqueStrings(
+		subscribedPaths.begin(), subscribedPaths.end());
+	std::vector<std::pair<std::string, std::string>> uniqueVector(
+		uniqueStrings.begin(), uniqueStrings.end());
+
+	fdr->log->info("Registering properties changed signal watchers");
+
+	for (const auto& obj: uniqueVector)
+	{
+		auto objPath = obj.first;
+		auto interface = obj.second;
+
+		auto genericHandler = std::bind(&FlightDataRecorder_c::dbusEventHandlerCallback,
+			RecListSubscribeStoreMap, std::placeholders::_1);
+
+		eventHandlerMatcher.push_back(dbus::registerServicePropertyChanged(
+			bus, objPath, interface, genericHandler));
+	}
+}
+
 FlightDataRecorder_c::~FlightDataRecorder_c()
 {
 	if (this->rfc)
@@ -773,7 +894,7 @@ void FlightDataRecorder_c::initEventsSignalRegistration()
 	// Register AML events watcher only for supported platforms
 	if (!objPath.empty() && !intf.empty() && !member.empty())
 	{
-		std::cout << "Registering events signal watcher" << std::endl;
+		fdr->log->info("Registering events signal watcher");
 		EventSignalHandler* eventHandler = new EventSignalHandler(objPath, intf, member,
 			fdrDeviceErrorsWriter);
 		eventHandler->registerEventsSignal();

@@ -13,6 +13,8 @@
 #include "property_variant.hpp"
 
 #include <sdbusplus/bus.hpp>
+#include <sdbusplus/asio/object_server.hpp>
+#include "fdr_common.hpp"
 
 namespace dbus
 {
@@ -21,6 +23,21 @@ constexpr auto freeDesktopInterface = "org.freedesktop.DBus.Properties";
 constexpr auto getCall = "Get";
 constexpr auto setCall = "Set";
 constexpr auto callName = "DeviceGetData";
+
+using DbusPropertyChangedHandler = std::unique_ptr<sdbusplus::bus::match_t>;
+using CallbackFunction = sdbusplus::bus::match::match::callback_t;
+
+/**
+ * @brief register for receiving signals from Dbus PropertyChanged
+ * @param bus       the bus type sdbusplus::bus::bus&
+ * @param objectPath
+ * @param interface
+ * @param callback
+ * @return
+ */
+DbusPropertyChangedHandler registerServicePropertyChanged(
+    sdbusplus::bus::bus& bus, const std::string& objectPath,
+    const std::string& interface, CallbackFunction callback);
 
 /**
  * @brief returns the service assigned with objectPath and interface
