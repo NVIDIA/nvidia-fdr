@@ -97,25 +97,25 @@ bool FlightDataRecorder_c::CompactorCheckBookOfErrors(const std::string director
 	return errorList.size()? true: false;
 }
 
-void FlightDataRecorder_c::Compactor(void)
+void FlightDataRecorder_c::Compactor(bool viaTimerSkipChecks)
 {
 	// pass the same time to both sub window expiracy and main window expiracy checks,
 	// [as there could be slight timing issues]
 	std::time_t current_time = std::time(nullptr);
 
 	// 1st check for main window compaction time expiry
-	auto mainWindowCompactStatus = CheckCompactionWindowExpiry(current_time);
+	auto mainWindowCompactStatus = CheckCompactionWindowExpiry(viaTimerSkipChecks, current_time);
 
 	// 2nd, if main window compaction time expired, then we need to append the 
 	// last few collected stats to the stat file
-	CheckCompactionSubWindowExpiry(current_time, mainWindowCompactStatus);
+	CheckCompactionSubWindowExpiry(viaTimerSkipChecks, current_time, mainWindowCompactStatus);
 
 	// 3rd, if main window compaction time expired, then we need to recreate the records
 	CompactionWindowExpiryCleanUp(mainWindowCompactStatus);
 }
 
 // This method takes appropriate actions on every compaction window expiry
-int FlightDataRecorder_c::CheckCompactionWindowExpiry(std::time_t current_time)
+int FlightDataRecorder_c::CheckCompactionWindowExpiry(bool viaTimerSkipChecks, std::time_t current_time)
 {
 	double timeSinceLastCompactionWindowDirCreation = difftime(current_time, LastCompactWindowDirCreationSecsAt);
 
@@ -127,7 +127,8 @@ int FlightDataRecorder_c::CheckCompactionWindowExpiry(std::time_t current_time)
 			   profile.GeneralConfig.CompactionWindowSecs);
 
 	// Skip if its not time to compact yet
-	if (timeSinceLastCompactionWindowDirCreation >= profile.GeneralConfig.CompactionWindowSecs) {
+	if (viaTimerSkipChecks == true ||
+		timeSinceLastCompactionWindowDirCreation >= profile.GeneralConfig.CompactionWindowSecs) {
 		log->debug("======================creating new directory for sensors======================");
 		// check for any compaction needs to be done and get the name of the directory to compact
 		auto directoryTocompact = CompactorGetDirectoryToCompact(RUN_TIME_DIR_COUNT);
@@ -162,23 +163,14 @@ void FlightDataRecorder_c::CompactionWindowExpiryCleanUp(int mainWindowCompactSt
 	// update the global variable bootCounter and sensorDirTimestamp
 	UpdateGlobVariables(false);
 
-	// delete only the Sensor records
-	// std::cout << "Before deleting-------------------------------------------------------------------------" << std::endl;
+	// std::cout << "before modifying-------------------------------------------------------------------------" << std::endl;
 	// std::cout << "size of RecList:" << RecList.size() << std::endl;
 	// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
 	// 	(*recIt)->Print();
 	// } 
-	DeleteSpecificRecords("Recreate");
+	ModifySpecificRecords("Recreate");
 
-	// create again the Sensor records with the new timestamp
-	// std::cout << "after deleting-------------------------------------------------------------------------" << std::endl;
-	// std::cout << "size of RecList:" << RecList.size() << std::endl;
-	// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
-	// 	(*recIt)->Print();
-	// } 
-	CreateSpecificRecords("Recreate");
-
-	// std::cout << "after creating-------------------------------------------------------------------------" << std::endl;
+	// std::cout << "after modifying-------------------------------------------------------------------------" << std::endl;
 	// std::cout << "size of RecList:" << RecList.size() << std::endl;
 	// for (auto recIt =  RecList.begin(); recIt !=  RecList.end(); ++recIt) { 
 	// 	(*recIt)->Print();
@@ -189,7 +181,7 @@ void FlightDataRecorder_c::CompactionWindowExpiryCleanUp(int mainWindowCompactSt
 }
 
 // This method takes appropriate actions on every compaction window expiry
-int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(std::time_t current_time, int mainWindowCompactStatus)
+int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(bool viaTimerSkipChecks, std::time_t current_time, int mainWindowCompactStatus)
 {
 	double timeSinceLastCompactionSubWindowDirCreation = difftime(current_time, LastCompactSubWindowDirCreationSecsAt);
 
@@ -206,7 +198,8 @@ int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(std::time_t current_tim
 	// or main window compaction time got expired[in this case, we need to append the last few pending 
 	// stat collected. scenario: main window compaction time: say 150, sub window compaction time: say 40.
 	// in this case, that last 30 seconds stats needs to be appended to the stat file]
-	if (timeSinceLastCompactionSubWindowDirCreation >= profile.GeneralConfig.CompactionSubWindowSecs ||
+	if (viaTimerSkipChecks == true ||
+		timeSinceLastCompactionSubWindowDirCreation >= profile.GeneralConfig.CompactionSubWindowSecs ||
 		mainWindowCompactStatus == FDR_SUCCESS) {
 		log->debug("======================sub window timer expired======================");
 

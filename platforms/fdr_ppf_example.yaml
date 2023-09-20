@@ -78,7 +78,9 @@ GPU: &gpu
           FetchPolicy: Periodic       #Choices=Periodic|OnEvent
           FetchMethod: Command        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
           FetchFreqSecs: 5            #Sampling freq in seconds
+          StoreFreqSecs: 5
           StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
+          FetchType: Subscribe
           CommandParams:              #applicable only when FetchMethod=Command
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=name"
         - ID: Serial
@@ -148,6 +150,9 @@ GPU: &gpu
           <<: *defaults
           ParamID: 0
           StorePolicy: EveryFetch
+          FetchType: Poll
+          FetchFreqSecs: 1
+          StoreFreqSecs: 1
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
@@ -155,10 +160,12 @@ GPU: &gpu
           <<: *defaults
           ParamID: 1
           StorePolicy: EveryFetch
+          FetchType: Poll
+          FetchFreqSecs: 1
+          StoreFreqSecs: 1
           DataType: Uint64
           CommandParams:
-            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.gpu"
-            # Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.memory"
+            Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=temperature.memory"
       <<: *compaction-definition-sensors
     - ID: Sensor.Clock
       InfoList:
@@ -166,6 +173,9 @@ GPU: &gpu
           <<: *defaults
           ParamID: 0
           StorePolicy: EveryFetch
+          FetchType: Poll
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.sm"
@@ -173,6 +183,9 @@ GPU: &gpu
           <<: *defaults
           ParamID: 1
           StorePolicy: EveryFetch
+          FetchType: Poll
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.memory"
@@ -180,6 +193,9 @@ GPU: &gpu
           <<: *defaults
           ParamID: 2
           StorePolicy: EveryFetch
+          FetchType: Poll
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.graphics"
@@ -187,6 +203,9 @@ GPU: &gpu
           <<: *defaults
           ParamID: 3
           StorePolicy: EveryFetch
+          FetchType: Poll
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=clocks.current.video"
@@ -197,6 +216,8 @@ GPU: &gpu
           <<: *defaults
           ParamID: 0
           StorePolicy: EveryFetch
+          FetchFreqSecs: 3
+          StoreFreqSecs: 3
           DataType: Uint64
           CommandParams:
             Command: "nvidia-smi --id=$gpuid --format=csv,noheader --query-gpu=power.draw"
@@ -214,6 +235,7 @@ NIC: &nic
           DataType: Uint64
           FetchPolicy: Periodic
           FetchFreqSecs: 5
+          StoreFreqSecs: 5
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           DbusParams:

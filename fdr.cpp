@@ -417,6 +417,15 @@ void FlightDataRecorder_c::CreateRecords(void)
 					// Append it to the list
 					RecList.push_back(resource);
 
+					// based on the fetchtype segregate the resource list as per its 
+					// StoreFreqSecs: only for Subscribe fetchtype records for triggering the Store()
+					// FetchFreqSecs: only for Poll fetchtype records for triggering both Refresh() and Store()
+					if(info.FetchType == "Subscribe") {
+						RecListSubscribeStoreMap[info.StoreFreqSecs].push_back(resource);
+					} else if (info.FetchType == "Poll") {
+						RecListPollMap[info.FetchFreqSecs].push_back(resource);
+					} 
+
 					if(!ComponentAddedInSchema) // Added ONLY ONCE for a component class to avoid repeated entries
 					{
 						// Create fdr_params data
@@ -446,7 +455,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 {
 	// 1. execute all the records irrespective of whether birth certificate got created or not
-	RefreshAndRecord();
+	RefreshAndStore(true);
 
 	// 2. create the birth certificate archieve, if not already present
 	if (!(std::filesystem::exists(birthCertFilePath)))
@@ -477,20 +486,49 @@ void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 	// std::cout << "size of RecList:" << RecList.size() << std::endl;
 }
 
-void FlightDataRecorder_c::RefreshAndRecord(void)
+// This method operate on a map of record list which will used both fetching[refresh] and storing[store]
+void FlightDataRecorder_c::RefreshAndStore(bool viaTimerSkipChecks, const std::vector<Record *>& recordListToRefresh)
 {
-	for (auto &rec : RecList)
+	for (auto &rec : recordListToRefresh)
 	{
 		bool expt = false;
 		try {
-			rec->Refresh();
+			rec->Refresh(viaTimerSkipChecks);
 			rec->Store();
 		} catch (const std::exception& e) {
 			expt = true;
-			this->log->warn("RefreshAndRecord(): {}", e.what());
+			this->log->warn("RefreshAndStore(): {}", e.what());
 		} catch (...) {
 			expt = true;
-			this->log->warn("RefreshAndRecord(): unknown exception !!!");
+			this->log->warn("RefreshAndStore(): unknown exception !!!");
+		}
+
+		if (expt) {
+			this->CheckExceptionRateLimit();
+		}
+	}
+}
+
+void FlightDataRecorder_c::RefreshAndStore(bool viaTimerSkipChecks)
+{
+	RefreshAndStore(viaTimerSkipChecks, this->RecList);
+}
+
+// This method will only call Store() of the given Subscribe record list as 
+// refresh would have done by the subscription event signal handler.
+void FlightDataRecorder_c::StoreSubscribeRecords(const std::vector<Record *>& recordListToStore)
+{
+	for (auto &rec : recordListToStore)
+	{
+		bool expt = false;
+		try {
+			rec->Store();
+		} catch (const std::exception& e) {
+			expt = true;
+			this->log->warn("StoreSubscribeRecords(): {}", e.what());
+		} catch (...) {
+			expt = true;
+			this->log->warn("StoreSubscribeRecords(): unknown exception !!!");
 		}
 
 		if (expt) {
@@ -624,6 +662,7 @@ void FlightDataRecorder_c::DeleteSpecificRecords(std::string recRetentionPolicy)
 // This method will loops throug the entire FDR profile and if it finds the infogroup name
 // matching the specified recRetentionPolicy[even if it matches the part of the name], then create
 // the record and push it to the RecList. This method will be called at every CompactionWindowSecs expiry.
+// This function is now obsolete.
 void FlightDataRecorder_c::CreateSpecificRecords(std::string recRetentionPolicy)
 {
 	for (auto &section : profile.Sections)
@@ -664,6 +703,54 @@ void FlightDataRecorder_c::CreateSpecificRecords(std::string recRetentionPolicy)
 			}
 		}
 	}
+}
+
+// This function will just modify the store pointer for the intended records.
+void FlightDataRecorder_c::ModifySpecificRecords(std::string recRetentionPolicy)
+{
+	// std::cout << "ModifySpecificRecords: 1: numFdsObjs: " << numFdsObjs << std::endl;
+
+	// step 1: release the existing store pointer
+	for (auto &rec : RecList) {
+		if (rec->infogroup.RecordRetentionPolicy == recRetentionPolicy) {
+			rec->ResetLogStatStorePtrs();
+		}
+	}
+	// std::cout << "ModifySpecificRecords: 2: numFdsObjs: " << numFdsObjs << std::endl;
+
+	// step 2: create new store objects and assign them to those specifi record store pointers
+	std::vector<std::string> ProcessedSecCompInfoGroupID;
+	for (auto &outerRec : RecList) {
+		std::string SecCompAndInfoGroupID = outerRec->GetSectionID() + "_" + outerRec->GetComponentID() + "_" + outerRec->GetInfoGroupID();
+		if (outerRec->infogroup.RecordRetentionPolicy == recRetentionPolicy &&
+			// check if this Section.ID, Component.ID and infogroup.ID is already processed. If yes, then skip to next record
+    		std::find(std::begin(ProcessedSecCompInfoGroupID), std::end(ProcessedSecCompInfoGroupID), SecCompAndInfoGroupID) 
+					== std::end(ProcessedSecCompInfoGroupID)) {
+
+			ProcessedSecCompInfoGroupID.push_back(SecCompAndInfoGroupID);
+
+			// create the new FDRStore[samples storage file] here itself and
+			// use the same FDRStore pointer for all the records on this Section.ID, Component.ID and infogroup.ID
+			std::shared_ptr<FDRStore> fdrStoreObj;
+			CreateSamplesWriter(profile, outerRec->GetSectionID(), outerRec->GetComponentID(),
+								outerRec->GetInfoGroupID(), ".log", fdrStoreObj);
+			// create writer store object for statistic file
+			std::shared_ptr<FDRStore> fdrStatStoreObj;
+			CreateSamplesWriter(profile, outerRec->GetSectionID(), outerRec->GetComponentID(),
+								outerRec->GetInfoGroupID(), ".stats", fdrStatStoreObj);
+
+			// assign same store pointer for all other records having same Section.ID, Component.ID and infogroup.ID
+			for (auto &innerRec : RecList) {
+				if (outerRec->GetSectionID() == innerRec->GetSectionID() &&
+					outerRec->GetComponentID() == innerRec->GetComponentID() &&
+					outerRec->GetInfoGroupID() == innerRec->GetInfoGroupID()) {
+					innerRec->ResetLogStatStorePtrs(fdrStoreObj, fdrStatStoreObj);
+				}
+			}
+		}
+	}
+
+	// std::cout << "ModifySpecificRecords: 3: numFdsObjs: " << numFdsObjs << std::endl;
 }
 
 FlightDataRecorder_c::~FlightDataRecorder_c()

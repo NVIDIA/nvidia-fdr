@@ -69,6 +69,7 @@ extern std::string bootCounter;
 extern std::string sensorDirTimestamp;
 extern std::string fdrHmcAlivePathName; 
 extern std::string CommonFdrKeepersDirName;
+extern uint64_t numFdsObjs;
 
 // some of the short and inlined function definition in header file
 // [so that these functions are guranteed to be inlined by the compiler]

@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/openbmc/sdeventplus.git
+revision = a8c11e3ca342b090aec615c832b85686bd4655f6
+#revision = head
+depth = 1
+
+[provide]
+dependency_names = sdeventplus

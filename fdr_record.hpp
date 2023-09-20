@@ -57,7 +57,7 @@ public:
 
     ~Record();
 
-    void Refresh(void); // Update the record with fresh info from platform
+    void Refresh(bool viaTimerSkipChecks); // Update the record with fresh info from platform
     void Store(void);   // Write the record out to the file
     void RunningStatisticEngine(fdrpb::fdr_sample readrec);
     void appendRunningStatToStatfile(void);
@@ -74,8 +74,32 @@ public:
         runningStatus.clear_paramid();
     }
 
-    std::string print_fdrStatwriterStoragefilepath(void) {
+    inline std::string print_fdrStatwriterStoragefilepath(void) {
         return fdrStatwriter->getStoreFilePath();
+    }
+
+   	// release the existing store pointer[will call the store object's destructor]
+    inline void ResetLogStatStorePtrs(void) {
+        fdrLogReaderWriter.reset();
+        fdrStatwriter.reset();
+    }
+    // all assign a new store object pointers
+    inline void ResetLogStatStorePtrs(std::shared_ptr<FDRStore> &fdrNewLogWriter,
+                                      std::shared_ptr<FDRStore> &fdrNewStatWriter) {
+        fdrLogReaderWriter = fdrNewLogWriter;
+        fdrStatwriter = fdrNewStatWriter;
+    }
+    inline std::string GetSectionID(void) {
+        return section.ID;
+    }
+    inline std::string GetComponentID(void) {
+        return component.ID;
+    }
+    inline std::string GetInfoGroupID(void) {
+        return infogroup.ID;
+    }
+    inline std::string GetInfoListID(void) {
+        return info.ID;
     }
     void Print(void);
 

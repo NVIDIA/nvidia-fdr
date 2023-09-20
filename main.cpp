@@ -72,7 +72,9 @@ int main(int argc, char *argv[])
 
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
 
+#ifndef FDR_TIMER_EVENT_ENABLED
 	auto& bus = getBus();
+#endif
 
 	// a quick and dirty way to specify the platform definination file instead of detection
 	std::string filename{};
@@ -114,6 +116,11 @@ int main(int argc, char *argv[])
 	// Register AML events signal
 	fdr->initEventsSignalRegistration();
 
+
+#ifdef FDR_TIMER_EVENT_ENABLED
+	fdr->InitTimerEvents();
+	fdr->RunEventLoop();
+#else
 	// TODO: consider adding SIGTERM for systemd stop
 	signal(SIGINT, signalHandler);
 
@@ -127,7 +134,7 @@ int main(int argc, char *argv[])
 
 		/*
 		   Note: the try catch block is mainly for fdr->Compactor();
-		   fdr->RefreshAndRecord() internally is a simple loop with similar try/catch block,
+		   fdr->RefreshAndStore() internally is a simple loop with similar try/catch block,
 	       so that if a record failed, it will proceed to next item.
 
 		   However, fdr->CheckExceptionRateLimit() is more complicated, 
@@ -136,20 +143,20 @@ int main(int argc, char *argv[])
 		bool expt = false;
 		try {
 			// Start the core engine of fetching and recording
-			fdr->RefreshAndRecord();
+			fdr->RefreshAndStore(false);
 
 			// Compactor
-			fdr->Compactor();
+			fdr->Compactor(false);
 
 			// Process the waiting dbus messages or signals
 			bus.process_discard();
 
 		} catch (const std::exception& e) {
 			expt = true;
-			fdr->log->warn("RefreshAndRecord Got Exception: {}", e.what());
+			fdr->log->warn("RefreshAndStore Got Exception: {}", e.what());
 		} catch (...) {
 			expt = true;
-			fdr->log->warn("RefreshAndRecord Got Unknown Exception !!!");
+			fdr->log->warn("RefreshAndStore Got Unknown Exception !!!");
 		}
 
 		if (expt) {
@@ -160,6 +167,7 @@ int main(int argc, char *argv[])
 	}
 
 	bus.close(); // Close the connection to the dbus
+#endif
 
 	return EXIT_SUCCESS;
 }
