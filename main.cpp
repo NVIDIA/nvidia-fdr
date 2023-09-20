@@ -12,7 +12,7 @@
 #include <unistd.h>
 #include <systemd/sd-bus.h>
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include "spdlog/sinks/stdout_sinks.h"
 #include "fdr.hpp"
 #include "fdr_utils.hpp"
 
@@ -55,10 +55,18 @@ int message_callback(sd_bus_message *m, void *userdata, sd_bus_error *ret_error)
 FlightDataRecorder_c *fdr;
 
 
+static std::atomic<bool> exitSignal = false;
+
+// get rid of -Wunused-parameter
+void signalHandler(__attribute__((unused))int signum)
+{
+	exitSignal = true;
+}
+
 int main(int argc, char *argv[])
 {
 	// the fdr-init logger is used before fdr->log initialization
-	auto console = spdlog::stdout_color_mt("fdr-init"); 
+	auto console = spdlog::stdout_logger_mt("fdr-init");
 	console->set_level(spdlog::level::info);
 	spdlog::set_default_logger(console);
 
@@ -106,8 +114,16 @@ int main(int argc, char *argv[])
 	// Register AML events signal
 	fdr->initEventsSignalRegistration();
 
+	// TODO: consider adding SIGTERM for systemd stop
+	signal(SIGINT, signalHandler);
+
 	while (true)
 	{
+		if (exitSignal) {
+			spdlog::info("Received received, exiting!");
+			// TODO: some clean up?
+			exit(0);
+		}
 
 		/*
 		   Note: the try catch block is mainly for fdr->Compactor();
