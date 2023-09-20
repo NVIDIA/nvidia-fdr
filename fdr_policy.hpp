@@ -27,6 +27,12 @@ struct FingerPrint_t
 	std::vector<std::string> Checks; // list of checks to find the platform
 };
 
+struct Preconditions_t
+{
+	size_t Threshold; // Time threshold for precondition check
+	std::vector<std::string> Checks; // Platform preconditions list of checks
+};
+
 // Params for storing AML events configuration on OpenBMC platforms
 struct Events_t {
     std::string objectPath;
@@ -135,6 +141,7 @@ struct Section_t
 struct Profile_t
 {
 	FingerPrint_t FingerPrint;
+	Preconditions_t Preconditions;
 	GeneralConfig_t GeneralConfig;	 // General config for this system
 	std::vector<Section_t> Sections; // List of Component Categories/Sections in the platform
 };
@@ -147,6 +154,21 @@ namespace YAML
 	{
 		static bool decode(const Node &node, FingerPrint_t &rhs)
 		{
+			if (node["Checks"])
+			{
+				rhs.Checks = node["Checks"].as<std::vector<std::string>>();
+			}
+
+			return true;
+		}
+	};
+
+	template <>
+	struct convert<Preconditions_t>
+	{
+		static bool decode(const Node &node, Preconditions_t &rhs)
+		{
+			rhs.Threshold = node["Threshold"] ? node["Threshold"].as<size_t>() : 60; // default 1min
 			if (node["Checks"])
 			{
 				rhs.Checks = node["Checks"].as<std::vector<std::string>>();
@@ -426,6 +448,7 @@ namespace YAML
 		static bool decode(const Node &node, Profile_t &rhs)
 		{
 			rhs.FingerPrint = node["FingerPrint"].as<FingerPrint_t>();
+			rhs.Preconditions = node["Preconditions"].as<Preconditions_t>();
 			rhs.GeneralConfig = node["GeneralConfig"].as<GeneralConfig_t>();
 			rhs.Sections = node["Sections"].as<std::vector<Section_t>>();
 

@@ -78,6 +78,14 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 		this->log->debug("No redfish configuration found, skipped creating redfish client.");
 	}
 
+	// Perform platform pre-check conditions
+	retVal = ExecutePreconditionRules();
+	if (retVal != FDR_SUCCESS)
+	{
+		spdlog::error("Error: Platform precheck conditions failed");
+		exit(EXIT_FAILURE);
+	}
+
 	// update the boot counter
 	UpdateGlobVariables(true);
 
@@ -235,6 +243,7 @@ int FlightDataRecorder_c::ConvertPPFToStruct(const std::string filename)
 		YAML::Node PlatformProfile = YAML::LoadFile(filename);
 
 		profile.FingerPrint = PlatformProfile["FingerPrint"].as<FingerPrint_t>();
+		profile.Preconditions = PlatformProfile["Preconditions"].as<Preconditions_t>();
 		profile.GeneralConfig = PlatformProfile["GeneralConfig"].as<GeneralConfig_t>();
 		profile.Sections = PlatformProfile["Sections"].as<std::vector<Section_t>>();
 
@@ -262,6 +271,47 @@ int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
 			spdlog::info("ExecuteFingerPrintRules: command Failed: {}", CheckRule);
 			return FDR_ERR_GENFAILURE;
 		}
+	}
+	return FDR_SUCCESS;
+}
+
+// Check platform preconditions before running FDR
+int FlightDataRecorder_c::ExecutePreconditionRules(void)
+{
+	bool allPrechecksPassed = true;
+	for (auto CheckRule : profile.Preconditions.Checks)
+	{
+		bool precheckPassed = false;
+		// Each check should be tried for a threshold limit
+		auto startTime = std::chrono::steady_clock::now();
+		auto endTime = startTime + std::chrono::seconds(
+			profile.Preconditions.Threshold);
+		while (std::chrono::steady_clock::now() < endTime){
+			try{
+				CommandResult_t cmdResult = exec(CheckRule.c_str());
+				if (cmdResult.cmdExitstatus == FDR_SUCCESS){
+					precheckPassed = true;
+					break; // Run next check
+				}
+				else{
+					// Wait for pre-check condition
+				}
+			}
+			catch (const std::exception& e) {
+				this->log->error("Failed to run precheck condition error: {}", e.what());
+			}
+			sleep(1);
+		}
+		allPrechecksPassed = allPrechecksPassed & precheckPassed;
+	}
+
+	if (allPrechecksPassed){
+		this->log->info("All precheck conditions passed, "
+			"FDR continues to collect telemetry");
+	} else {
+		// Future - FDR can exit if needed
+		this->log->warn("Precheck condition failed or threshold reached, "
+			"FDR continues to collect telemetry");
 	}
 	return FDR_SUCCESS;
 }
