@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <sys/stat.h>
 #include <sdbusplus/bus.hpp>
+#include <boost/container/flat_map.hpp>
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #include "fdr.hpp"
@@ -838,7 +839,7 @@ void FlightDataRecorder_c::dbusEventHandlerCallback(
 							(record->info.DbusParams.ObjectPath == objectPath) &&
 							(record->info.DbusParams.Property == eventProperty);});
 
-				std::uint64_t val;
+				std::uint64_t val = 0;
 				std::string value;
 
 				if (it != records.end()){
