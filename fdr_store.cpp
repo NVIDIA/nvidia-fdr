@@ -43,52 +43,13 @@ FDRStore::FDRStore(std::string filename, std::string fileformat, int isStoreRead
     }
 }
 
-FDRStore::FDRStore(std::string file, std::string fileformat, std::string cClass, std::string ID, std::string pClass) :
-        encodingtouse(fileformat), dbLoc(file), paramClass(pClass), compClass(cClass), compID(ID)
-{
-    DB = NULL;
-
-    int errCode = sqlite3_open(dbLoc.c_str(), &DB);
-
-    if(errCode != SQLITE_OK){	//TODO: Error Handling
-		spdlog::warn("Error opening DB");
-	}
-
-    //Generate the table name
-    std::string tableName = "PVT_" + paramClass + "_" + compClass + "_" + compID;
-    char *zErrMsg;
-
-    //Create the table if it does not exist
-    std::string sql = "CREATE TABLE if not exists " + tableName + " (TimeStamp INTEGER, ParamID INT, ParamValue TEXT, BootCounter INT);";
-    errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
-    if (errCode) {
-		spdlog::warn("Error creating table {}: {}", tableName, std::string(sqlite3_errmsg(DB)));
-		sqlite3_close(DB);
-    }
-
-    //Create the SQL statement used to read values from the DB
-    std::string sqlStmt = "SELECT vt.timestamp, vt.paramvalue, vt.paramid, p.datatype from " + tableName + " as vt inner join PVT_Param_Description_Table as p where p.paramId = vt.paramId and p.compclass = '" + compClass + "' AND p.paramClass = '" + paramClass + "';";
-
-    errCode = sqlite3_prepare_v2(DB, sqlStmt.c_str(), -1, &sampleFetchStmt, NULL);
-
-    if(errCode){
-		spdlog::warn("Error during execution: {}\nStatement could not be prepared: {}",
-                    std::string(sqlite3_errmsg(DB)), sqlStmt); 
-		sqlite3_close(DB);
-	}
-
-}
-
 FDRStore::~FDRStore()
 {
     numFdsObjs--;
     // std::cout << "FDRStore[destrutor]: numFdsObjs: " << numFdsObjs
     //           << "; storagefilepath: " << storagefilepath
     //           << std::endl;
-    if (DB && encodingtouse == ENCODING_CHOICE_DB) {
-        sqlite3_finalize(sampleFetchStmt);
-        sqlite3_close(DB);
-    } else {
+    if (encodingtouse == ENCODING_CHOICE_JSON || encodingtouse == ENCODING_CHOICE_BINARY) {
         if (binaryinzerocopystream) {
             delete binaryinzerocopystream;
         }
@@ -125,37 +86,6 @@ void FDRStore::append(const google::protobuf::Message &data)
     else
     {
     	// Use the other function for SQLite
-    }
-}
-
-void FDRStore::append(const fdr_sample_sql &data)
-{
-    if (encodingtouse == ENCODING_CHOICE_DB){
-        int errCode = 0;
-    	char *zErrMsg;
-
-        std::string tableName = "PVT_" + paramClass + "_" + compClass + "_" + compID;
-
-        /*
-            INSERT INTO <Table> SELECT <TimeStamp>, <ParamID>, <Value>, BootCounter FROM PDT as p where p.CompClass = <compClass> AND p.ParamClass = <paramClass> AND p.ParamName = <paramName>.
-
-            The subquery is used to fetch the param ID corresponding to the compClass, paramClass and paramName.
-        */
-        //std::string sql = "INSERT INTO " + tableName + " SELECT " + std::to_string(data.timestamp) + ", p.ParamID, \"" + (data.paramType == "Uint64" ? std::to_string(data.paramValueInt64) : data.paramValueString) + "\"," + "0" /* TODO: Boot counter */ + " FROM PDT as p where p.CompClass = '" + compClass + "' AND p.ParamClass = '" + paramClass + "' AND p.ParamName = '" + data.paramName + "'";
-
-        std::string sql = "INSERT INTO " + tableName + " (TimeStamp, ParamID, ParamValue)" + " VALUES (" + std::to_string(data.timestamp) + ", " + std::to_string(data.paramID) + ", \"" + (data.paramType == "Uint64" ? std::to_string(data.paramValueInt64) : data.paramValueString) + "\"" + ")";
-        
-        errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
-
-		if(errCode){
-			spdlog::warn("Error during execution : {}\nInsert failed : {}",
-                         zErrMsg, sql);
-			sqlite3_close(DB);
-			return;
-		}
-		else{
-			//std::cout << "Insert completed" << std::endl;
-		}
     }
 }
 
@@ -206,129 +136,6 @@ int FDRStore::readnext(google::protobuf::Message *datap){
     return 0;
 }
 
-// returns 0 if EOF reached else 1
-int FDRStore::readnext(fdr_sample_sql *datap)
-{
-    int errCode = sqlite3_step(sampleFetchStmt);
-
-    /*
-        Error Code SQLITE_ROW means a row was returned succesfully.
-        The returned columns are Timestamp, ParamValue, ParamName, DataType
-    */
-
-    if (errCode == SQLITE_ROW){
-        // vt.timestamp, vt.paramvalue, p.paramname, p.datatype
-        datap->timestamp = sqlite3_column_int64(sampleFetchStmt,0);
-
-        datap->paramID = sqlite3_column_int(sampleFetchStmt,2);
-        std::string datType =  std::string(reinterpret_cast<const char*>(sqlite3_column_text(sampleFetchStmt,3)));
-
-        datap->paramType = datType == "Integer" ? "Uint64" : "String";
-        
-        std::string value = std::string(reinterpret_cast<const char*>(sqlite3_column_text(sampleFetchStmt,1)));
-        if (datap->paramType == "Uint64"){
-            std::istringstream strToNum(value);
-            strToNum >> datap->paramValueInt64;
-        }
-        else{
-            datap->paramValueString = value;
-        }
-        return 1;   //Successfully read a record and not reached end of file yet
-    }
-    else{
-        return 0;   //Reached EOF
-    }
-}
-
-void FDRStore::deleteRecords(){
-    std::string tableName = "PVT_" + paramClass + "_" + compClass + "_" + compID;
-    std::string sql = "DELETE FROM " + tableName + ";";
-
-    char *zErrMsg;
-    int errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
-
-    if(errCode){
-        spdlog::warn("Error during execution : {}\nDelete failed : {}", zErrMsg, sql);
-        sqlite3_close(DB);
-    }
-    else{
-        //std::cout << "Delete completed" << std::endl;
-    }
-}
-
-/*int FDRStore::getLatest(fdr_sample *datap, std::string infoID){
-
-    std::string tableName = "PVT_" + paramClass + "_" + compClass + "_" + compID;
-    std::string sqlStmt = "SELECT TOP 1 vt.timestamp, vt.paramvalue, p.paramname, p.datatype from " + tableName + " as vt inner join PDT as p where p.paramId = vt.paramId and p.compclass = '" + compClass + "' AND p.paramClass = '" + paramClass + "' AND p.paramname = '" + infoID +"' ORDER BY vt.timestamp DESC;";
-
-    sqlite3_stmt *tempStmt;
-    int errCode = sqlite3_prepare_v2(DB, sqlStmt.c_str(), -1, &tempStmt, NULL);
-    errCode = sqlite3_step(tempStmt);
-
-    if (errCode == SQLITE_ROW){
-        // vt.timestamp, vt.paramvalue, p.paramname, p.datatype
-        datap->timestamp = sqlite3_column_int64(tempStmt,0);
-
-        datap->paramName = std::string(reinterpret_cast<const char*>(sqlite3_column_text(tempStmt,2)));
-        std::string datType =  std::string(reinterpret_cast<const char*>(sqlite3_column_text(tempStmt,3)));
-
-        datap->paramType = datType == "Integer" ? "Uint64" : "String";
-        
-        std::string value = std::string(reinterpret_cast<const char*>(sqlite3_column_text(tempStmt,1)));
-        if (datap->paramType == "Uint64"){
-            std::istringstream strToNum(value);
-            strToNum >> datap->paramValueInt64;
-        }
-        else{
-            datap->paramValueString = value;
-        }
-        return 1;   //Successfully read a record
-    }
-    else{
-        return 0;
-    }   
-}*/
-
-void FDRStore::createStatesTable(){
-    std::string tableName = "Stats_" + paramClass + "_" + compClass + "_" + compID;
-    char *zErrMsg;
-    //Create the table if it does not exist
-    std::string sql = "CREATE TABLE if not exists " + tableName + " (ParamID INT, FromTimeStamp INTEGER, ToTimeStamp INTEGER, Num INTEGER, Min INTEGER, Max INTEGER, Average INTEGER);";
-    int errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
-
-    if(errCode != SQLITE_OK){	//TODO: Error Handling
-        spdlog::warn("Error creating states table");
-    }
-}
-
-void FDRStore::appendStat(const fdr_stat_sql &data){
-    int errCode = 0;
-    char *zErrMsg;
-
-    std::string tableName = "Stats_" + paramClass + "_" + compClass + "_" + compID;
-
-    /*
-        INSERT INTO <Table> SELECT p.paramID, <FromTimeStamp>, <ToTimeStamp>, <Num>, <Min>, <Max>, <Average>
-        FROM PDT as p where p.CompClass = <compClass> AND p.ParamClass = <paramClass> AND
-        p.ParamName = <paramName>.
-
-        The subquery is used to fetch the param ID corresponding to the compClass, paramClass and paramName.
-    */
-    //std::string sql = "INSERT INTO " + tableName + " SELECT p.ParamID, " + std::to_string(data.fromtime) + ", " + std::to_string(data.totime) + ", " + std::to_string(data.numsamples) + ", " + std::to_string(data.min) + ", " + std::to_string(data.max) + ", " + std::to_string(data.avg) + " FROM PDT as p where p.CompClass = '" + compClass + "' AND p.ParamClass = '" + paramClass + "' AND p.ParamName = '" + data.paramName + "'";
-
-    std::string sql = "INSERT INTO " + tableName + " (ParamID, FromTimeStamp, ToTimeStamp, Num, Min, Max, Average)" + " VALUES (" + std::to_string(data.paramID) + ", " + std::to_string(data.fromtime) + ", " + std::to_string(data.totime) + ", " + std::to_string(data.numsamples) + ", " + std::to_string(data.min) + ", " + std::to_string(data.max) + ", " + std::to_string(data.avg) + ");";
-    
-    errCode = sqlite3_exec(DB,sql.c_str(),NULL,0,&zErrMsg);
-
-    if(errCode){
-        spdlog::warn("Error during execution : {}\nInsert failed : {}", zErrMsg, sql);
-        sqlite3_close(DB);
-        return;
-    }
-    else{
-        //std::cout << "Insert completed" << std::endl;
-    }
-}
 
 std::string FDRStore::getStoreFilePath()
 {

@@ -310,8 +310,6 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 					for (auto &hifiRecord : hifiRecords) {
 						fdrHifiWriter.append(hifiRecord);
 					}
-				} else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB) {
-					// TODO: not yet coded this section
 				}
 			}
 		}
@@ -344,8 +342,6 @@ void FlightDataRecorder_c::CompactorRemoveSamplesLogfiles(std::string directoryT
 					} else {
 						// std::cout << "CompactorRemoveSamplesLogfiles: Successfully deleted: " << logfiletodelete << std::endl;
 					}
-				} else if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_DB) {
-					// TODO: not yet coded this section
 				}
 			}
 		}
@@ -368,9 +364,7 @@ void FlightDataRecorder_c::CompactorBookKeeperRemoveEntry(std::string directoryT
     std::string logfile = CompactorBookKeeperName;
 
 	std::string logfilepath;
-    if (logsformat == ENCODING_CHOICE_DB) {
-        logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
-    } else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
+    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
         logfilepath = logdir + logfile;
     }
 
@@ -483,9 +477,7 @@ std::string FlightDataRecorder_c::CompactorGetDirectoryToCompact(int numberOfDir
     std::string logfile = CompactorBookKeeperName;
 
 	std::string compactorBookKeepLogFilepath;
-    if (logsformat == ENCODING_CHOICE_DB) {
-        compactorBookKeepLogFilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
-    } else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
+    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
         compactorBookKeepLogFilepath = logdir + logfile;
     }
 

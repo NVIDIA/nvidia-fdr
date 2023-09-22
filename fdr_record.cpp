@@ -394,20 +394,6 @@ void Record::Store(void)
         fdrLogReaderWriter->append(data.fdr_sample_data);
     }
 
-    else if (logsformat == ENCODING_CHOICE_DB){
-        fdr_sample_sql sqlDat;
-        sqlDat.timestamp = data.fdr_sample_data.timestamp();
-        sqlDat.paramID = data.fdr_sample_data.paramid();
-        sqlDat.paramType = data.paramtype;
-        if (data.paramtype == "Uint64"){
-            sqlDat.paramValueInt64 = data.fdr_sample_data.paramvalueint64();
-        }
-        else{
-            sqlDat.paramValueString = data.fdr_sample_data.paramvaluestring();
-        }
-        fdrLogReaderWriter->append(sqlDat);
-    }
-
     last_stored_data = data;
     LastStoredAt = std::time(nullptr);
 }

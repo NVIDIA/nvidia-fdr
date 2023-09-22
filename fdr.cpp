@@ -327,16 +327,12 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
     std::string logfile = filename;
 
 	std::string logfilepath;
-    if (logsformat == ENCODING_CHOICE_DB) {
-        logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
-    } else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
+    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
         logfilepath = logdir + logfile;
     }
 	// Create log directory if missing
     std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_DB) {
-        dir = profile.GeneralConfig.LogsBasePath;
-    } else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
+    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
         dir = logdir;
     }
 
@@ -347,9 +343,7 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
     }
 
     std::unique_ptr<FDRStore> fdrKeepersWriter;
-    if (logsformat == ENCODING_CHOICE_DB) {
-        fdrKeepersWriter.reset(new FDRStore(logfilepath, logsformat, "Param", "Description", "Table")); // TO-DO: CHANGE TABLENAME!!!
-    } else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
+    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
         fdrKeepersWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat, STORE_WRITER));
     }
 	return fdrKeepersWriter;
@@ -367,10 +361,7 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
     std::string logfile = paramClass + fileExtention; // relative filename of logs
 
     std::string logfilepath; // full filepath of logs
-	if (logsformat == ENCODING_CHOICE_DB) {
-        logfilepath = profile.GeneralConfig.LogsBasePath + "/" + profile.GeneralConfig.DatabaseName;
-    }
-    else if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
+    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
         // let the BootEvent record entries go to common directory "BookKeeper"
         if (paramClass == "BootEvent") {
             logdir += "/" + CommonFdrKeepersDirName + "/";
@@ -391,10 +382,7 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
     }
 	// Create log directory if missing
     std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_DB) {
-        dir = profile.GeneralConfig.LogsBasePath;
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
+    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
         dir = logdir;
     }
     if (!(std::filesystem::exists(dir))) {
@@ -407,10 +395,7 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
             // std::cout << "\tlogfilepath: " << logfilepath << std::endl;
     }
 
-    if (logsformat == ENCODING_CHOICE_DB) {
-        fdrLogWriter.reset(new FDRStore(logfilepath, logsformat, compClass, compID, paramClass));
-    }
-    else if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
+    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
         fdrLogWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat, STORE_WRITER));
     }
 }
