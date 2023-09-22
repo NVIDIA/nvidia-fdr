@@ -10,6 +10,9 @@ project(
   ],
 )
 
+# slience BOOST_HEADER_DEPRECATED if desired
+# add_global_arguments('-DBOOST_ALLOW_DEPRECATED_HEADERS', language : 'cpp')
+
 cmake = import('cmake')
 
 # Generate src from proto file
