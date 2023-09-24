@@ -282,20 +282,32 @@ int FlightDataRecorder_c::ExecutePreconditionRules(void)
 	bool allPrechecksPassed = true;
 	for (auto CheckRule : profile.Preconditions.Checks)
 	{
+		// for debugging
+		// std::cout << "ID: " << CheckRule.ID
+		// 		  << "; Command: " << CheckRule.CommandParams.Command
+		// 		  << "; Params.name: " << CheckRule.Params.name
+		// 		  << "; Params.value: " << CheckRule.Params.value
+		// 		  << "; CommandRetryPolicy: " << CheckRule.CommandRetryPolicy
+		// 		  << "; ExitOnFailure: " << CheckRule.ExitOnFailure
+		// 		  << std::endl;
+
+		FindAndReplaceAll(CheckRule.CommandParams.Command, "$" + CheckRule.Params.name, CheckRule.Params.value);
+		// std::cout << "Modified Command: " << CheckRule.CommandParams.Command << std::endl;
+
 		bool precheckPassed = false;
 		// Each check should be tried for a threshold limit
 		auto startTime = std::chrono::steady_clock::now();
-		auto endTime = startTime + std::chrono::seconds(
-			profile.Preconditions.Threshold);
-		while (std::chrono::steady_clock::now() < endTime){
-			try{
-				CommandResult_t cmdResult = exec(CheckRule.c_str());
-				if (cmdResult.cmdExitstatus == FDR_SUCCESS){
+		auto endTime = startTime + std::chrono::seconds(profile.Preconditions.Threshold);
+		while (std::chrono::steady_clock::now() < endTime) {
+			try {
+				CommandResult_t cmdResult = exec(CheckRule.CommandParams.Command.c_str());
+				if (cmdResult.cmdExitstatus == FDR_SUCCESS) {
 					precheckPassed = true;
 					break; // Run next check
-				}
-				else{
-					// Wait for pre-check condition
+				} else {
+					if (CheckRule.CommandRetryPolicy == "false") {
+						break;
+					}
 				}
 			}
 			catch (const std::exception& e) {
@@ -303,14 +315,25 @@ int FlightDataRecorder_c::ExecutePreconditionRules(void)
 			}
 			sleep(1);
 		}
+
+		// check what action needs to be done when this precondition failed
+		if (precheckPassed == false) {
+			if (CheckRule.ExitOnFailure == "true") {
+				this->log->error("Precheck failed: {} and ExitOnFailure is true; Exiting!!!",
+					CheckRule.CommandParams.Command);
+				exit(EXIT_FAILURE);
+			} else if (CheckRule.ExitOnFailure == "false") {
+				this->log->warn("Precheck failed: {} and ExitOnFailure is false; Continuing!!!",
+					CheckRule.CommandParams.Command);
+			}
+		}
 		allPrechecksPassed = allPrechecksPassed & precheckPassed;
 	}
 
-	if (allPrechecksPassed){
+	if (allPrechecksPassed) {
 		this->log->info("All precheck conditions passed, "
 			"FDR continues to collect telemetry");
 	} else {
-		// Future - FDR can exit if needed
 		this->log->warn("Precheck condition failed or threshold reached, "
 			"FDR continues to collect telemetry");
 	}
