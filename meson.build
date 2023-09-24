@@ -58,18 +58,6 @@ spdlog_dep = dependency(
     'tests=false'
   ])
 
-
-# Workaround for Docker Unit Test
-sqlite3_dep = dependency(
-  'sqlite3', 
-  fallback : ['sqlite3', 'sqlite3_dep'],
-  default_options: [
-    #'default_library=static',
-    'warning_level=0',
-    'werror=false',
-  ]
-)
-
 stdplus_dep = dependency(
   'stdplus', 
   fallback : ['stdplus', 'stdplus_dep'],
@@ -103,7 +91,6 @@ deps = [
   dependency('protobuf'),
   sdbusplus_dep,
   spdlog_dep,
-  sqlite3_dep,
   dependency('systemd'),
   yamlcpp_dep,
   stdplus_dep,

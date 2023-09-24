@@ -13,8 +13,8 @@ sudo apt install git meson libtool pkg-config g++-12 libsystemd-dev \
 
 ```bash
 sudo apt install cmake clang-tools nlohmann-json3-dev \
-    sqlite3 libsqlite3-dev libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml \
-    libspdlog-dev libfmt-dev clang-tools googletest google-mock
+    libyaml-cpp-dev libcurl4-gnutls-dev python3-yaml \
+    libspdlog-dev libfmt-dev clang-tools libgtest-dev libgmock-dev
 ```
 
 ## Protobuf
