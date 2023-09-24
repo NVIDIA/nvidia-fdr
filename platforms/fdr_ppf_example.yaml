@@ -64,6 +64,25 @@ GeneralConfig:
     RecordRetentionPolicy: Recreate
     CompactionMethod: Average
 
+Preconditions:
+  Threshold: 10 # In seconds, Each precondition should be tested till threshold limit
+  Checks: # Platform conditions to be prechecked before running FDR
+    - ID: CheckDumpDirMount
+      CommandParams:
+        # Command: "df $logbasepath | grep '/dev/mmcblk'"
+        Command: "df /tmp | grep '/dev/sda'"    # example df command
+      Params:
+        name: logbasepath
+        value: *LogsBasePath
+      CommandRetryPolicy: no    # what to do when the command failed? should retry till Threshold limit?
+      ExitOnFailure: Yes     # what to do when all the retries failed? should Exit or continue FDR?
+    - ID: Sample2ndCheck
+      CommandParams:
+        Command: "hostnamee"  #"invalidCommand"
+      CommandRetryPolicy: Yes
+      ExitOnFailure: No
+
+
 GPU: &gpu
   Params:
     - name: gpuid

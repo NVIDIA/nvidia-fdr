@@ -27,12 +27,6 @@ struct FingerPrint_t
 	std::vector<std::string> Checks; // list of checks to find the platform
 };
 
-struct Preconditions_t
-{
-	size_t Threshold; // Time threshold for precondition check
-	std::vector<std::string> Checks; // Platform preconditions list of checks
-};
-
 // Params for storing AML events configuration on OpenBMC platforms
 struct Events_t {
     std::string objectPath;
@@ -138,6 +132,21 @@ struct Section_t
 	Profile_t *parent_profile;			 // Pointer to the profile this section belongs to
 };
 
+struct PreConditionChecks_t
+{
+	std::string ID;				   // Unique ID for this information piece
+	CommandParams_t CommandParams; // If FetchMethod==Command
+	Param_t Params;		 // List of parameter & value pairs relevant for this component
+    std::string CommandRetryPolicy;
+    std::string ExitOnFailure;
+};
+
+struct Preconditions_t
+{
+	size_t Threshold; // Time threshold for precondition check
+	std::vector<PreConditionChecks_t> Checks; // Platform preconditions list of checks
+};
+
 struct Profile_t
 {
 	FingerPrint_t FingerPrint;
@@ -164,6 +173,26 @@ namespace YAML
 	};
 
 	template <>
+	struct convert<PreConditionChecks_t>
+	{
+		static bool decode(const Node &node, PreConditionChecks_t &rhs)
+		{
+			rhs.ID = node["ID"].as<std::string>();
+			if (node["CommandParams"])
+			{
+				rhs.CommandParams = node["CommandParams"].as<CommandParams_t>();
+			}
+			if (node["Params"])
+			{
+				rhs.Params = node["Params"].as<Param_t>();
+			}
+			rhs.CommandRetryPolicy = node["CommandRetryPolicy"].as<std::string>();
+			rhs.ExitOnFailure = node["ExitOnFailure"].as<std::string>();
+
+			return true;
+		}
+	};
+	template <>
 	struct convert<Preconditions_t>
 	{
 		static bool decode(const Node &node, Preconditions_t &rhs)
@@ -171,7 +200,7 @@ namespace YAML
 			rhs.Threshold = node["Threshold"] ? node["Threshold"].as<size_t>() : 60; // default 1min
 			if (node["Checks"])
 			{
-				rhs.Checks = node["Checks"].as<std::vector<std::string>>();
+				rhs.Checks = node["Checks"].as<std::vector<PreConditionChecks_t>>();
 			}
 
 			return true;
