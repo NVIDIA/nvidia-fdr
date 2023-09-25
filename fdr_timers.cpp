@@ -11,16 +11,6 @@
 
 #include "fdr.hpp"
 #include "fdr_utils.hpp"
-#include <sdeventplus/clock.hpp>
-#include <sdeventplus/utility/timer.hpp>
-
-using sdeventplus::Clock;
-using sdeventplus::ClockId;
-
-constexpr auto clockId = sdeventplus::ClockId::Monotonic;
-using Timer = sdeventplus::utility::Timer<clockId>;
-// just for storing all the Timer objects, so that these objects doesn't go out of scope
-std::vector<Timer> allFdrTimers;
 
 // for debugging
 void FlightDataRecorder_c::PrintRecListPollSubscribeMap(void)

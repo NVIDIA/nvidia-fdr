@@ -16,6 +16,7 @@
 /** @brief Get the bus connection. */
 inline auto& getBus()
 {
-    static auto bus = sdbusplus::bus::new_default();
+    // explictly connect to system bus
+    static auto bus = sdbusplus::bus::new_default_system();
     return bus;
 }
