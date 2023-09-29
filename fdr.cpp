@@ -87,6 +87,9 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 		exit(EXIT_FAILURE);
 	}
 
+	// check and exit if fdr partion disk availability is less during init time
+	CheckFdrPartitionDiskUsageAndExit();
+
 	// update the boot counter
 	UpdateGlobVariables(true);
 
@@ -274,6 +277,43 @@ int FlightDataRecorder_c::ExecuteFingerPrintRules(void)
 		}
 	}
 	return FDR_SUCCESS;
+}
+
+int FlightDataRecorder_c::CheckAvailableFdrPartitionDiskSize(void)
+{
+    std::filesystem::path path = profile.GeneralConfig.LogsBasePath; // Replace this with the actual path you want to check
+
+    try {
+        // Get available space on the file system containing the specified path
+        std::filesystem::space_info space = std::filesystem::space(path);
+		size_t availableSpaceMB = space.available / ONE_MB;
+
+        // log->warn("Available space: {} MB", availableSpaceMB);
+
+		if (availableSpaceMB <= profile.GeneralConfig.PartitionThresoldCheckMB) {
+	        log->warn("availableSpaceMB {}MB is less than fdr threshold {}MB",
+				availableSpaceMB, profile.GeneralConfig.PartitionThresoldCheckMB);
+			return FDR_ERR_PARTITION_SIZE_LESS;
+		}
+    } catch (const std::filesystem::filesystem_error& e) {
+        log->warn("Error getting filesystem space: {}", e.what());
+		return FDR_ERR_GENFAILURE;
+    }
+
+	return FDR_SUCCESS;
+}
+
+// check the FDR disk space usage on every FDR boot and on every compaction window expiry.
+// If available free space for FDR is low, then exit 0
+void FlightDataRecorder_c::CheckFdrPartitionDiskUsageAndExit(void)
+{
+	int retVal;
+
+	retVal = CheckAvailableFdrPartitionDiskSize();
+	if (retVal != FDR_SUCCESS) {
+		log->warn("High disk usage..Exiting FDR!!");
+		exit(EXIT_SUCCESS);
+	}
 }
 
 // Check platform preconditions before running FDR

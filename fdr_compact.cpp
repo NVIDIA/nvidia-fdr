@@ -129,14 +129,16 @@ int FlightDataRecorder_c::CheckCompactionWindowExpiry(bool viaTimerSkipChecks, s
 	// Skip if its not time to compact yet
 	if (viaTimerSkipChecks == true ||
 		timeSinceLastCompactionWindowDirCreation >= profile.GeneralConfig.CompactionWindowSecs) {
+		// check and exit fdr if disk availability is less.
+		CheckFdrPartitionDiskUsageAndExit();
+
 		log->debug("======================creating new directory for sensors======================");
 		// check for any compaction needs to be done and get the name of the directory to compact
 		auto directoryTocompact = CompactorGetDirectoryToCompact(RUN_TIME_DIR_COUNT);
-		log->debug("------------1. directoryTocompact: {}", directoryTocompact);
 		if (directoryTocompact.empty()) {
-			log->debug("------------Nothing to compact..Empty directoryTocompact!!------------");
+			log->debug("Nothing to compact..Empty directoryTocompact!!");
 		} else {
-			log->debug("------------2. directoryTocompact: {}", directoryTocompact);
+			log->debug("directoryTocompact: {}", directoryTocompact);
 
             // call the compactor engine which does the rest of the compaction job
 			CompactorEngine(directoryTocompact);
@@ -202,6 +204,9 @@ int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(bool viaTimerSkipChecks
 		timeSinceLastCompactionSubWindowDirCreation >= profile.GeneralConfig.CompactionSubWindowSecs ||
 		mainWindowCompactStatus == FDR_SUCCESS) {
 		log->debug("======================sub window timer expired======================");
+
+		// check and exit fdr if disk availability is less.
+		CheckFdrPartitionDiskUsageAndExit();
 
 		for (auto &rec : RecList) {
 			if (rec->infogroup.CompactionMethod != "Average") {
@@ -337,8 +342,8 @@ void FlightDataRecorder_c::CompactorRemoveSamplesLogfiles(std::string directoryT
 
 					// remove the file which contains all the samples
 					if (remove(logfiletodelete.c_str()) != 0) {
-						perror("CompactorRemoveSamplesLogfiles: Error deleting file");
-						log->warn("CompactorRemoveSamplesLogfiles: Failed to delete: {}", logfiletodelete);
+						// perror("CompactorRemoveSamplesLogfiles: Error deleting file");
+						// log->warn("CompactorRemoveSamplesLogfiles: Failed to delete: {}", logfiletodelete);
 					} else {
 						// std::cout << "CompactorRemoveSamplesLogfiles: Successfully deleted: " << logfiletodelete << std::endl;
 					}

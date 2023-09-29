@@ -128,6 +128,8 @@ public:
 	void InitTimerEvents(void);
 	void RunEventLoop(void);
 	void initRecordsSignalRegistration();
+	int CheckAvailableFdrPartitionDiskSize(void);
+	void CheckFdrPartitionDiskUsageAndExit(void);
 
 	/**
 	 * @brief This is the callback which handles DBUS properties changes
