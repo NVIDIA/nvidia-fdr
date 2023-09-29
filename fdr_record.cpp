@@ -421,8 +421,8 @@ void Record::refreshDataCallback(PropertyVariant val)
     else if (auto ptr (std::get_if<std::uint64_t>(&val)); ptr){
         data.fdr_sample_data.set_paramvalueint64(*ptr);
     }
-    // Update LastStoredAt timestamp
-    this->LastStoredAt = std::time(nullptr);
+    // Update LastFetchedAt timestamp
+    this->LastFetchedAt = std::time(nullptr);
 }
 
 void Record::Print(void)

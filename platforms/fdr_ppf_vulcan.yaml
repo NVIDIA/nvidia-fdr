@@ -26,6 +26,7 @@ GeneralConfig:
   #DatabaseName: "Database.db"   #Only used if logs format is DB
   LogsBasePath: &LogsBasePath
     - "/tmp/emmc/fdr/"
+  PartitionThresoldCheckMB: 300 # Partition threshold size check
   CompactionWindowSecs: 86400 # 1 day, every day new directory is created
   CompactionSubWindowSecs: 1800 # .5 hours, every 2 hours stats are created
   HiFiDataPreserveTimeSecs: 3600 # 1 hours, <-1 hours ---Error--- +1 hours> so total 2 hours worth of entires

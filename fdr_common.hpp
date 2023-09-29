@@ -18,13 +18,14 @@
 #include <vector>
 #include <iostream>
 
-#define ONE_MB              1024UL*1024UL
+#define ONE_MB              (1024UL*1024UL)
 #define BOOT_TIME_DIR_COUNT 1
 #define RUN_TIME_DIR_COUNT  2
 
 enum {
     FDR_SUCCESS             = 0,
     FDR_ERR_GENFAILURE,
+    FDR_ERR_PARTITION_SIZE_LESS,
     FDR_ERR_MAIN_WINDOW_NOT_EXPIRED,
     FDR_ERR_SUB_WINDOW_NOT_EXPIRED
 };
