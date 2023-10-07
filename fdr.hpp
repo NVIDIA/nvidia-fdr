@@ -23,9 +23,18 @@
 #include "fdr_events.hpp"
 
 #include <sdeventplus/event.hpp>
+#include <sdeventplus/clock.hpp>
+#include <sdeventplus/utility/timer.hpp>
+
+using sdeventplus::Clock;
+using sdeventplus::ClockId;
 using sdeventplus::Event;
 
 #define FDR_TIMER_EVENT_ENABLED
+
+
+constexpr auto clockId = sdeventplus::ClockId::Monotonic;
+using Timer = sdeventplus::utility::Timer<clockId>;
 
 class FlightDataRecorder_c
 {
@@ -45,6 +54,8 @@ private:
 	const std::string ParamDescKeeperName = "ParamDescription.log";
 	std::unique_ptr<FDRStore> CompactorBookKeeperAppender;
 	std::unique_ptr<FDRStore> fdrParamsWriter;
+	// just for storing all the Timer objects, so that these objects doesn't go out of scope
+	std::vector<Timer> allFdrTimers;
 
 	std::string PPFName;
 	std::string birthCertFilePath;

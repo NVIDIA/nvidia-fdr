@@ -6,8 +6,10 @@ meson setup build_coverage -Db_coverage=true
 ninja test -C build_coverage
 # block test 
 cd build_coverage
-./nvidia-fdr &
-sleep 120 && kill -SIGINT %1
+sudo ./nvidia-fdr &
+JOBID=$!
+sleep 10
+sudo kill -SIGINT  `pidof nvidia-fdr`
 
 # lcov
 ninja coverage-html

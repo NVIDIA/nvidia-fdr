@@ -76,7 +76,6 @@ int main(int argc, char *argv[])
 		sdbusp->request_name(FDR_BUSNAME);
 		fdr->InitTimerEvents();
 		fdr->RunEventLoop();
-		io->run();
 	}
 	catch (const std::exception& e)
 	{

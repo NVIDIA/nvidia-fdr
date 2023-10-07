@@ -63,22 +63,28 @@ ninja -C build
 
 ## Running FDR
 
-By default, nvidia-fdr looks for the platforms files under the relative path `./platforms`.
-It can be override by environment variable `PLATFORMS_PATH`.
+### Configure Systemd to allow name registration
 
-So here's the 2 options the start NVIDIA FDR:
+```bash
+cat > /etc/dbus-1/system.d/xyz.openbmc_project.FDR.conf << EOF
+<!DOCTYPE busconfig PUBLIC
+ "-//freedesktop//DTD D-BUS Bus Configuration 1.0//EN"
+ "http://www.freedesktop.org/standards/dbus/1.0/busconfig.dtd">
+<busconfig>
+  <policy user="root">
+    <allow own="xyz.openbmc_project.FDR"/>
+  </policy>
+</busconfig>
+EOF
 
-### Option 1: 
+sudo systemctl reload dbus
+```
+
+### Running FDR
 
 ```bash
 cd <build dir>
-./nvidia-fdr
-```
-
-### Option 2:
-```bash
-export PLATFORMS_PATH=/path/to/platforms
-./nvidia-fdr
+sudo ./nvidia-fdr
 ```
 
 FDR data would start landing under the path (LogsBasePath) provided in PPF.

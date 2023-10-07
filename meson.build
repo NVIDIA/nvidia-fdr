@@ -19,7 +19,7 @@ cmake = import('cmake')
 protoc = find_program('protoc', required : true)
 pbgen = generator(protoc, \
   output    : ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
-  arguments : ['--proto_path=@CURRENT_SOURCE_DIR@', '--cpp_out=@BUILD_DIR@', '@INPUT@'])
+  arguments : ['--experimental_allow_proto3_optional', '--proto_path=@CURRENT_SOURCE_DIR@', '--cpp_out=@BUILD_DIR@', '@INPUT@'])
 pbgenerated = pbgen.process('fdr_logs_schema.proto')
 
 

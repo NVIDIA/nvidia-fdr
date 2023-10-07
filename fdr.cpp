@@ -17,6 +17,14 @@
 #include <spdlog/sinks/stdout_sinks.h>
 #include "fdr.hpp"
 
+#include <sdeventplus/event.hpp>
+#include <sdeventplus/source/signal.hpp>
+#include <stdplus/signal.hpp>
+
+using sdeventplus::Event;
+using sdeventplus::source::Enabled;
+using sdeventplus::source::Signal;
+
 std::string bootCounter;
 std::string sensorDirTimestamp;
 // its a hardcoded value in the code as its compulsarily should be in /tmp directory
@@ -24,6 +32,11 @@ std::string sensorDirTimestamp;
 // it to some other directory, like, /mnt/.fdrHmcAlive or /emmc/.fdrHmcAlive, etc]
 std::string fdrHmcAlivePathName = "/tmp/.fdrHmcAlive"; 
 std::string CommonFdrKeepersDirName = "Bookkeeper";
+
+void sigCb(Signal& signal, const struct signalfd_siginfo*)
+{
+    signal.get_event().exit(0);
+}
 
 FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 {
@@ -109,6 +122,12 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	CompactorBookKeeperCleanEntries();
 	CompactorBookKeeperAppendEntry();
+	
+	// Add signal handler for SIGINT/SIGTERM
+	stdplus::signal::block(SIGINT);
+    Signal(FdrEvents, SIGINT, sigCb).set_floating(true);
+	stdplus::signal::block(SIGTERM);
+    Signal(FdrEvents, SIGTERM, sigCb).set_floating(true);
 }
 
 
