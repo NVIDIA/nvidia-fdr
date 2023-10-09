@@ -115,6 +115,7 @@ public:
 	std::unique_ptr<FDRStore> fdrbookoferrorswriter;
 	// Map of device name to FDRStore object for streaming AML events on all devices
 	std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>> fdrDeviceErrorsWriter;
+	static std::unordered_map<std::string, Record *> subscribedRecListMap; // Optimized map to fetch record in O(1) via unique composite key
     fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 	Profile_t profile;
 	std::shared_ptr<spdlog::logger> log;
@@ -145,9 +146,7 @@ public:
 	/**
 	 * @brief This is the callback which handles DBUS properties changes
 	 */
-	static void dbusEventHandlerCallback(
-		std::map<int, std::vector<Record *>>& recListSubscribeMap,
-		sdbusplus::message::message& msg);
+	static void dbusEventHandlerCallback(sdbusplus::message::message& msg);
 };
 
 // We have a global fdr variable defined in main.cpp

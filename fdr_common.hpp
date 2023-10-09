@@ -90,3 +90,10 @@ inline std::string GetDirectoryName(void)
 	std::string directoryName = "BootCount_" + bootCounter + "_DateStamp_" + sensorDirTimestamp;
 	return directoryName;
 }
+
+inline std::string getSubsRecordKey(std::string& objPath,
+    std::string& inf, std::string& property)
+{
+    auto key = objPath + '/' + inf + '/' + property;
+    return key;
+}
