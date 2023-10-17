@@ -33,6 +33,8 @@ std::string sensorDirTimestamp;
 std::string fdrHmcAlivePathName = "/tmp/.fdrHmcAlive"; 
 std::string CommonFdrKeepersDirName = "Bookkeeper";
 
+std::unordered_map<std::string, Record *> FlightDataRecorder_c::subscribedRecListMap;
+
 void sigCb(Signal& signal, const struct signalfd_siginfo*)
 {
     signal.get_event().exit(0);
@@ -543,6 +545,10 @@ void FlightDataRecorder_c::CreateRecords(void)
 						RecListSubscribeStoreMap[info.StoreFreqSecs].push_back(resource);
 						auto pair = std::make_pair(info.DbusParams.ObjectPath, info.DbusParams.Interface);
 						subscribedPaths.push_back(pair);
+						// Construct unique key to fetch record from propertyChangedSignal message
+						auto key = getSubsRecordKey(info.DbusParams.ObjectPath,
+							info.DbusParams.Interface, info.DbusParams.Property);
+						subscribedRecListMap[key] = resource;
 					} else if (info.FetchType == "Poll") {
 						RecListPollMap[info.FetchFreqSecs].push_back(resource);
 					}
@@ -875,7 +881,6 @@ void FlightDataRecorder_c::ModifySpecificRecords(std::string recRetentionPolicy)
 }
 
 void FlightDataRecorder_c::dbusEventHandlerCallback(
-	std::map<int, std::vector<Record *>>& recListSubscribeMap,
 	sdbusplus::message::message& msg)
 {
 	std::string msgInterface;
@@ -898,66 +903,61 @@ void FlightDataRecorder_c::dbusEventHandlerCallback(
 		{
 			fdr->log->debug("propertiesChanged signal message on objectPath = {},"
 				"interface = {}, property = {}", objectPath, msgInterface, eventProperty);
-			for (const auto& pair : recListSubscribeMap) {
-				const std::vector<Record*>& records = pair.second;
-				const auto it = std::find_if(records.begin(), records.end(),
-					[&](const Record *record){
-						return (record->info.DbusParams.Interface == msgInterface) &&
-							(record->info.DbusParams.ObjectPath == objectPath) &&
-							(record->info.DbusParams.Property == eventProperty);});
+
+			// Get unique key
+			auto key = getSubsRecordKey(objectPath, msgInterface, eventProperty);
+
+			if (subscribedRecListMap.find(key) != subscribedRecListMap.end()) {
+
+				Record* matchedRecord = subscribedRecListMap[key];
+				fdr->log->debug("propertiesChanged signal message record found for"
+					"objectPath = {}, interface = {}, property = {}",
+					objectPath, msgInterface, eventProperty);
 
 				std::uint64_t val = 0;
 				std::string value;
 
-				if (it != records.end()){
+				if (auto ptr (std::get_if<int64_t>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<uint32_t>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<uint64_t>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<uint16_t>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<int16_t>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<double>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<bool>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr (std::get_if<uint8_t>(&property.second)); ptr){
+					val = (uint64_t) *ptr;
+				}
+				else if (auto ptr =
+					(std::get_if<std::tuple<bool, unsigned int>>(&property.second)); ptr) {
+					val = std::get<1>(*ptr);
+				}
+				else if (auto ptr (std::get_if<std::string>(&property.second)); ptr){
+					const char* value1 = ptr->c_str();
+					std::string value(value1);
+				}
+				else{
+					return;
+				}
 
-					fdr->log->debug("propertiesChanged signal message record found for"
-						"objectPath = {}, interface = {}, property = {}",
-						objectPath, msgInterface, eventProperty);
-
-					Record* matchedRecord = *it;
-					if (auto ptr (std::get_if<int64_t>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<uint32_t>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<uint64_t>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<uint16_t>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<int16_t>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<double>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<bool>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr (std::get_if<uint8_t>(&property.second)); ptr){
-						val = (uint64_t) *ptr;
-					}
-					else if (auto ptr =
-						(std::get_if<std::tuple<bool, unsigned int>>(&property.second)); ptr) {
-						val = std::get<1>(*ptr);
-					}
-					else if (auto ptr (std::get_if<std::string>(&property.second)); ptr){
-						const char* value1 = ptr->c_str();
-						std::string value(value1);
-					}
-					else{
-						return;
-					}
-
-					if(val){
-						matchedRecord->refreshDataCallback(val);
-					}
-					else if (!(value.size() == 0)){
-						matchedRecord->refreshDataCallback(value);
-					}
+				if(val){
+					matchedRecord->refreshDataCallback(val);
+				}
+				else if (!(value.size() == 0)){
+					matchedRecord->refreshDataCallback(value);
 				}
 			}
 		}
@@ -985,7 +985,7 @@ void FlightDataRecorder_c::initRecordsSignalRegistration()
 		auto interface = obj.second;
 
 		auto genericHandler = std::bind(&FlightDataRecorder_c::dbusEventHandlerCallback,
-			RecListSubscribeStoreMap, std::placeholders::_1);
+			std::placeholders::_1);
 
 		eventHandlerMatcher.push_back(dbus::registerServicePropertyChanged(
 			bus, objPath, interface, genericHandler));
