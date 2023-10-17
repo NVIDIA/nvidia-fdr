@@ -51,7 +51,7 @@ struct GeneralConfig_t
 	uint64_t CompactionWindowSecs;
 	uint64_t CompactionSubWindowSecs;
 	uint64_t HiFiDataPreserveTimeSecs;
-	int PartitionThresoldCheckMB;
+	size_t PartitionThresoldCheckMB;
 
 	int64_t ExceptionAllowNumber;
 	double ExceptionAllowRate;
@@ -262,7 +262,7 @@ namespace YAML
 			rhs.CompactionSubWindowSecs = node["CompactionSubWindowSecs"] ? node["CompactionSubWindowSecs"].as<uint64_t>() : 0;
 			rhs.HiFiDataPreserveTimeSecs = node["HiFiDataPreserveTimeSecs"] ? node["HiFiDataPreserveTimeSecs"].as<uint64_t>() : 0;
 
-			rhs.PartitionThresoldCheckMB = node["PartitionThresoldCheckMB"] ? node["PartitionThresoldCheckMB"].as<int>() : 100; // default 100 MB
+			rhs.PartitionThresoldCheckMB = node["PartitionThresoldCheckMB"] ? node["PartitionThresoldCheckMB"].as<size_t>() : 100; // default 100 MB
 
 			rhs.ExceptionAllowNumber = node["ExceptionAllowNumber"] ? node["ExceptionAllowNumber"].as<int64_t>() : 128;
 			rhs.ExceptionAllowRate = node["ExceptionAllowRate"] ? node["ExceptionAllowRate"].as<float>() : 0.5;
