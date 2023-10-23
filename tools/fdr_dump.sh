@@ -3,8 +3,6 @@
 TMP_DIR="/tmp"
 EPOCHTIME=$(date +"%s")
 F_NAME_TEMPLATE=""
-TMP_DIR_PATH=""
-OUTPUT_ARCHIVE_PATH=""
 
 ARG_DUMP_ID="00000000"
 ARG_DUMP_ACTION="collect"
@@ -44,8 +42,6 @@ function on_clean_action()
 function initialize()
 {
     F_NAME_TEMPLATE=$"obmcdump_"$ARG_DUMP_ID"_$EPOCHTIME"
-    TMP_DIR_PATH="$TMP_DIR/$F_NAME_TEMPLATE"
-    OUTPUT_ARCHIVE_PATH="$TMP_DIR/$F_NAME_TEMPLATE.tar.xz"
 
     mkdir -p $ARG_DUMP_PATH
     if [ $? -ne 0 ]; then
@@ -54,55 +50,42 @@ function initialize()
     fi
     echo "Created dest dir $ARG_DUMP_PATH"
 
-    mkdir -p $TMP_DIR_PATH
-    if [ $? -ne 0 ]; then
-        echo "Failed to create temp work directory $TMP_DIR_PATH"
-        exit 1
-    fi
-    echo "Created tmp work dir $TMP_DIR_PATH"
 }
 
 function cleanup()
 {
     local res_ret=0
 
-    if [ -e "$TMP_DIR_PATH" ]; then
-        rm -r $TMP_DIR_PATH
-        if [ $? -ne 0 ]; then
-            echo "Cannot remove $TMP_DIR_PATH"
-            res_ret=1
-        fi
-    fi
-
-    if [ -e "$OUTPUT_ARCHIVE_PATH" ]; then
-        rm -r $OUTPUT_ARCHIVE_PATH
-        if [ $? -ne 0 ]; then
-            echo "Cannot remove $OUTPUT_ARCHIVE_PATH"
-            res_ret=1
-        fi
-    fi
-
     return $res_ret
 }
 
 function main()
 {
-    # copy all log files into TMP_DIR_PATH
-    cp -ap $FDR_LOG_PATH $TMP_DIR_PATH
+    local TEMP_DUMP_FILE="$ARG_DUMP_PATH/.$F_NAME_TEMPLATE.tar.xz"
+    local DEST_DUMP_FILE="$ARG_DUMP_PATH/$F_NAME_TEMPLATE.tar.xz"
 
-    # compress intermediate dir to archive
-    tar -Jcf $OUTPUT_ARCHIVE_PATH -C $(dirname "$TMP_DIR_PATH") \
-        $(basename "$TMP_DIR_PATH")
+    # compress fdr dir to destination dir directly to save memory
+    tar -Jcf $TEMP_DUMP_FILE -C $(dirname "$FDR_LOG_PATH") \
+        $(basename "$FDR_LOG_PATH")
 
     if [ $? -ne 0 ]; then
-        echo "Compression $OUTPUT_ARCHIVE_PATH failed"
+        echo "Compression $FDR_LOG_PATH failed"
+
+	# remove the temp file if error occured
+	rm -rf $TEMP_DUMP_FILE
+
         return 1
     fi
 
-    # cp compressed archive to destination dir
-    cp $OUTPUT_ARCHIVE_PATH $ARG_DUMP_PATH
+    # rename compressed archive
+    mv $TEMP_DUMP_FILE $DEST_DUMP_FILE
     if [ $? -ne 0 ]; then
-        echo "Failed to copy $OUTPUT_ARCHIVE_PATH to $ARG_DUMP_PATH"
+        echo "Failed to move $TEMP_DUMP_FILE to $DEST_DUMP_FILE"
+
+	# remove both files if error occured
+	rm -rf $TEMP_DUMP_FILE
+	rm -rf $DEST_DUMP_FILE
+
         return 1
     fi
 
