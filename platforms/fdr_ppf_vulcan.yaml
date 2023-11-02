@@ -24,7 +24,7 @@ FingerPrint:
 GeneralConfig:
   LogsFormat: BINARY  #Choices=JSON|BINARY
   LogsBasePath: &LogsBasePath
-    - "/tmp/emmc/fdr/"
+    - "/var/emmc/fdr/"
   PartitionThresoldCheckMB: 300 # Partition threshold size check
   CompactionWindowSecs: 86400 # 1 day, every day new directory is created
   CompactionSubWindowSecs: 1800 # .5 hours, every 2 hours stats are created
