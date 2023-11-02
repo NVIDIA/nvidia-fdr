@@ -7945,6 +7945,23 @@ HMC: &hmc
             Interface: "xyz.openbmc_project.State.Decorator.Health"
             Property: "Health"
 
+    - ID: Sensor.Thermal
+      InfoList:
+        - &hmc-sensorthermal-defaults
+          ID: TEMP-HMC
+          ParamID: 0
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
+          FetchMethod: DBUS
+          StorePolicy: EveryFetch
+          FetchType: Poll
+          DataType: Uint64
+          DbusParams:
+            Service: "xyz.openbmc_project.HwmonTempSensor"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_BMC_0_Temp_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+      <<: *compaction-definition-sensors
 
 FPGA: &fpga
   Params:
@@ -8720,7 +8737,26 @@ PCIeSwitch: &pcieswitch
   Params:
     - name: pcieswitch
       values: 0
+
   InfoGroups:
+    - ID: Sensor.Thermal
+      InfoList:
+        - &pcieswitch-sensorthermal-defaults
+          ID: TEMP-PCIESWITCH
+          ParamID: 0
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
+          FetchMethod: DBUS
+          StorePolicy: EveryFetch
+          FetchType: Poll
+          DataType: Uint64
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_PCIeSwitch_$pcieswitchid_TEMP_0"
+            Interface: "xyz.openbmc_project.Sensor.Value"
+            Property: "Value"
+      <<: *compaction-definition-sensors
+
     - ID: Config
       InfoList:
         - &pcieswitch-config-defaults
