@@ -82,28 +82,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
     data.fdr_sample_data.set_paramid(info.ParamID);
     LastFetchedAt = current_time;
 
-    if (info.FetchMethod == "Command")
-    {
-        CommandResult_t cmdResult = exec(info.CommandParams.Command.c_str());
-		if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
-            spdlog::warn("command Failed: {}", info.CommandParams.Command);
-			return;
-		}
-
-        std::string commandresult = cmdResult.cmdOutput;
-        if (data.paramtype == "Uint64")
-        {
-            std::istringstream str2num(commandresult);
-            uint64_t val;
-            str2num >> val;
-            data.fdr_sample_data.set_paramvalueint64(val);
-        }
-        else
-        {
-            data.fdr_sample_data.set_paramvaluestring(commandresult);
-        }
-    }
-    else if (info.FetchMethod == "DBUS")
+    if (info.FetchMethod == "DBUS")
     {
         // std::cout << "DbusParams Are: " << std::endl
         //           << "\tService: " << info.DbusParams.Service.c_str() << std::endl
@@ -120,9 +99,9 @@ void Record::Refresh(bool viaTimerSkipChecks)
 
         if (data.paramtype == "Uint64")
         {
-            if (auto ptr (std::get_if<int64_t>(&val)); ptr)
+            if (auto ptr (std::get_if<double>(&val)); ptr)
             {
-                // printf("int64 = %ld\n", *ptr);
+                // printf("double = %lf\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<uint32_t>(&val)); ptr)
@@ -130,28 +109,19 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 // printf("uint32 = %u\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
-            else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
-            {
-                // printf("uint64 = %lu\n", *ptr);
-                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
-            }
-            else if (auto ptr (std::get_if<uint8_t>(&val)); ptr)
-            {
-                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
-            }
             else if (auto ptr (std::get_if<uint16_t>(&val)); ptr)
             {
                 // printf("uint16 = %u\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
-            else if (auto ptr (std::get_if<int16_t>(&val)); ptr)
+            else if (auto ptr (std::get_if<uint64_t>(&val)); ptr)
             {
-                // printf("int16 = %d\n", *ptr);
+                // printf("uint64 = %lu\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
-            else if (auto ptr (std::get_if<double>(&val)); ptr)
+            else if (auto ptr (std::get_if<int64_t>(&val)); ptr)
             {
-                // printf("double = %lf\n", *ptr);
+                // printf("int64 = %ld\n", *ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else if (auto ptr (std::get_if<bool>(&val)); ptr)
@@ -165,6 +135,15 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 const unsigned int intVal = std::get<1>(*ptr);
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) intVal);
                 // std::cout << intVal << std::endl;
+            }
+            else if (auto ptr (std::get_if<uint8_t>(&val)); ptr)
+            {
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
+            }
+            else if (auto ptr (std::get_if<int16_t>(&val)); ptr)
+            {
+                // printf("int16 = %d\n", *ptr);
+                data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else {
                 // spdlog::warn("DBus read failed: Unknown numerical variant type: "
@@ -182,6 +161,25 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 // printf("val =%s\n", ptr->c_str());
                 data.fdr_sample_data.set_paramvaluestring(*ptr);
             }
+        }
+    } else if (info.FetchMethod == "Command") {
+        CommandResult_t cmdResult = exec(info.CommandParams.Command.c_str());
+		if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
+            spdlog::warn("command Failed: {}", info.CommandParams.Command);
+			return;
+		}
+
+        std::string commandresult = cmdResult.cmdOutput;
+        if (data.paramtype == "Uint64")
+        {
+            std::istringstream str2num(commandresult);
+            uint64_t val;
+            str2num >> val;
+            data.fdr_sample_data.set_paramvalueint64(val);
+        }
+        else
+        {
+            data.fdr_sample_data.set_paramvaluestring(commandresult);
         }
     } else if (info.FetchMethod == "Redfish") {
         if (!fdr->rfc) {
@@ -366,33 +364,32 @@ void print_data(const std::string name, const fdr_sample_ext &dat)
 void Record::Store(void)
 {   
     // Skip if update not necessary per the policy
-    if ((info.StorePolicy == "OnChange") && (same_data_values(data, last_stored_data)))
-    {
-        return;
+    if (info.StorePolicy == "OnChange") {
+        if (same_data_values(data, last_stored_data)) {
+            return;
+        }
     }
-
-    // Skip if its not time to store yet
-    if ((info.StorePolicy == "Periodic") && (difftime(std::time(nullptr), LastStoredAt) < info.StoreFreqSecs))
-    {
-        return;
-    }
-
     // Skip if last store is quite older than last fetch
-    if ((info.StorePolicy == "EveryFetch") && (difftime(LastFetchedAt, LastStoredAt) < info.FetchFreqSecs))
-    {
-        return;
+    else if (info.StorePolicy == "EveryFetch") {
+        if (difftime(LastFetchedAt, LastStoredAt) < info.FetchFreqSecs) {
+            return;
+        }
+    }
+    // Skip if its not time to store yet
+    else if (info.StorePolicy == "Periodic") {
+        if (difftime(std::time(nullptr), LastStoredAt) < info.StoreFreqSecs) {
+            return;
+        }
     }
 
     // For debugging : No debugging needed for poll records
-    if (info.FetchType == "Subscribe")
-    {
-        fdr->log->debug("Store record for objectPath = {}, interface = {}, property = {}",
-            info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
-    }
+    // if (info.FetchType == "Subscribe")
+    // {
+    //     fdr->log->debug("Store record for objectPath = {}, interface = {}, property = {}",
+    //         info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
+    // }
 
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrLogReaderWriter->append(data.fdr_sample_data);
-    }
+    fdrLogReaderWriter->append(data.fdr_sample_data);
 
     last_stored_data = data;
     LastStoredAt = std::time(nullptr);
@@ -442,7 +439,7 @@ void Record::Print(void)
               << "\t\t\tLastCompactedAt: " << infogroup.LastCompactedAt << std::endl
               << "\t\t\tRecordRetentionPolicy: " << infogroup.RecordRetentionPolicy << std::endl
               << "\t\t\tinfo.ID: " << info.ID << std::endl
-              << "\t\t\t\tFetchPolicy: " << info.FetchPolicy << std::endl
+              << "\t\t\t\tFetchType: " << info.FetchType << std::endl
               << "\t\t\t\tFetchMethod: " << info.FetchMethod << std::endl
               << "\t\t\t\tStorePolicy: " << info.StorePolicy << std::endl
               << "\t\t\t\tFetchFreqSecs: " << info.FetchFreqSecs << std::endl

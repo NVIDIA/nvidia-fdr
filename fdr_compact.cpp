@@ -28,7 +28,6 @@ bool FlightDataRecorder_c::CompactorCheckBookOfErrors(const std::string director
 	// check if the file exists
 	if (!(std::filesystem::exists(bookOfErrorsFileName))) {
 		log->warn("Book of errors file Not Exist!!: {}", bookOfErrorsFileName);
-		//std::cout << "Book of errors file Not Exist!!: " << bookOfErrorsFileName << std::endl;
 		return false;
 	}
 
@@ -273,48 +272,45 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 					continue; // Only numerical stats can be compacted not text etc. for now
 				}
 
-				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON || 
-					profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY) {
-					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + 
-										 directoryTocompact + "/" +
-										 section.ID + "/" +
-										 component.ID + "/";
+				std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + 
+										directoryTocompact + "/" +
+										section.ID + "/" +
+										component.ID + "/";
 
-					// check is the directory exist
-					// std::cout << "CompactorCreateHighFidelityFiles: 1. directory to compact: logdir: " << logdir << std::endl;
-					if (!(std::filesystem::exists(logdir))) {
-						log->warn("1. directory to compact Not Exist!!, logdir: {}", logdir);
-						continue;
-					}
+				// check is the directory exist
+				// std::cout << "CompactorCreateHighFidelityFiles: 1. directory to compact: logdir: " << logdir << std::endl;
+				if (!(std::filesystem::exists(logdir))) {
+					log->warn("1. directory to compact Not Exist!!, logdir: {}", logdir);
+					continue;
+				}
 
-					std::string logfile = logdir + infogroup.ID + ".log";
-					fdrpb::fdr_sample readrec;
+				std::string logfile = logdir + infogroup.ID + ".log";
+				fdrpb::fdr_sample readrec;
 
-					// 1. read every record from the sensor*.log file
-					FDRStore fdrLogSamplesReader(logfile, profile.GeneralConfig.LogsFormat, STORE_READER);
-					while (fdrLogSamplesReader.readnext(&readrec)) {
-						// loop through the errorList and find if this record is falling in any of the hifi range
-						for (auto &errorRecord : errorList) {
-							// std::cout << "erroroccurtimestamp: " << errorRecord.erroroccurtimestamp()
-							// 		  << "; starthifitimestamp: " << errorRecord.starthifitimestamp()
-							// 		  << "; stophifitimestamp: " << errorRecord.stophifitimestamp()
-							// 		  << "; readrec.timestamp: " << readrec.timestamp()
-							// 		  << std::endl;
-							if (CheckIsInRange(errorRecord.starthifitimestamp(), errorRecord.stophifitimestamp(), readrec.timestamp())) {
-								// if the current log is in range of any of the error list, then this log needs to be collected for hifi log.
-								hifiRecords.push_back(readrec);
-								break;
-							}
+				// 1. read every record from the sensor*.log file
+				FDRStore fdrLogSamplesReader(logfile, profile.GeneralConfig.LogsFormat, STORE_READER);
+				while (fdrLogSamplesReader.readnext(&readrec)) {
+					// loop through the errorList and find if this record is falling in any of the hifi range
+					for (auto &errorRecord : errorList) {
+						// std::cout << "erroroccurtimestamp: " << errorRecord.erroroccurtimestamp()
+						// 		  << "; starthifitimestamp: " << errorRecord.starthifitimestamp()
+						// 		  << "; stophifitimestamp: " << errorRecord.stophifitimestamp()
+						// 		  << "; readrec.timestamp: " << readrec.timestamp()
+						// 		  << std::endl;
+						if (CheckIsInRange(errorRecord.starthifitimestamp(), errorRecord.stophifitimestamp(), readrec.timestamp())) {
+							// if the current log is in range of any of the error list, then this log needs to be collected for hifi log.
+							hifiRecords.push_back(readrec);
+							break;
 						}
 					}
+				}
 
-					// 2. this loop will write the collected data into their respective directories
-					std::string highFidelityFile = logdir + infogroup.ID + ".hifilog";
-                	FDRStore fdrHifiWriter(highFidelityFile, profile.GeneralConfig.LogsFormat, STORE_WRITER);
-					// loop through the hifiRecords and put them into the hifi log file
-					for (auto &hifiRecord : hifiRecords) {
-						fdrHifiWriter.append(hifiRecord);
-					}
+				// 2. this loop will write the collected data into their respective directories
+				std::string highFidelityFile = logdir + infogroup.ID + ".hifilog";
+				FDRStore fdrHifiWriter(highFidelityFile, profile.GeneralConfig.LogsFormat, STORE_WRITER);
+				// loop through the hifiRecords and put them into the hifi log file
+				for (auto &hifiRecord : hifiRecords) {
+					fdrHifiWriter.append(hifiRecord);
 				}
 			}
 		}
@@ -332,21 +328,18 @@ void FlightDataRecorder_c::CompactorRemoveSamplesLogfiles(std::string directoryT
 				if (infogroup.CompactionMethod != "Average") {
 					continue; // Only numerical stats can be compacted not text etc. for now
 				}
-				if (profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_JSON ||
-					profile.GeneralConfig.LogsFormat == ENCODING_CHOICE_BINARY) {
-					std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + 
-										 directoryTocompact + "/" +
-										 section.ID + "/" +
-										 component.ID + "/";
-					std::string logfiletodelete = logdir + infogroup.ID + ".log";
+				std::string logdir = profile.GeneralConfig.LogsBasePath + "/" + 
+										directoryTocompact + "/" +
+										section.ID + "/" +
+										component.ID + "/";
+				std::string logfiletodelete = logdir + infogroup.ID + ".log";
 
-					// remove the file which contains all the samples
-					if (remove(logfiletodelete.c_str()) != 0) {
-						// perror("CompactorRemoveSamplesLogfiles: Error deleting file");
-						// log->warn("CompactorRemoveSamplesLogfiles: Failed to delete: {}", logfiletodelete);
-					} else {
-						// std::cout << "CompactorRemoveSamplesLogfiles: Successfully deleted: " << logfiletodelete << std::endl;
-					}
+				// remove the file which contains all the samples
+				if (remove(logfiletodelete.c_str()) != 0) {
+					perror("CompactorRemoveSamplesLogfiles: Error deleting file");
+					log->warn("CompactorRemoveSamplesLogfiles: Failed to delete: {}", logfiletodelete);
+				} else {
+					// std::cout << "CompactorRemoveSamplesLogfiles: Successfully deleted: " << logfiletodelete << std::endl;
 				}
 			}
 		}
@@ -369,9 +362,7 @@ void FlightDataRecorder_c::CompactorBookKeeperRemoveEntry(std::string directoryT
     std::string logfile = CompactorBookKeeperName;
 
 	std::string logfilepath;
-    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
-        logfilepath = logdir + logfile;
-    }
+	logfilepath = logdir + logfile;
 
 	// vectorize all the current entires from compactorBookKeeper.log file
 	fdrpb::fdr_compactor_bookkeep compactorBookKeeperRecord;
@@ -482,9 +473,7 @@ std::string FlightDataRecorder_c::CompactorGetDirectoryToCompact(int numberOfDir
     std::string logfile = CompactorBookKeeperName;
 
 	std::string compactorBookKeepLogFilepath;
-    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
-        compactorBookKeepLogFilepath = logdir + logfile;
-    }
+	compactorBookKeepLogFilepath = logdir + logfile;
 
 	// check if the file exists
 	if (!(std::filesystem::exists(compactorBookKeepLogFilepath))) {
