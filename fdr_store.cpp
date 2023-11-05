@@ -49,14 +49,12 @@ FDRStore::~FDRStore()
     // std::cout << "FDRStore[destrutor]: numFdsObjs: " << numFdsObjs
     //           << "; storagefilepath: " << storagefilepath
     //           << std::endl;
-    if (encodingtouse == ENCODING_CHOICE_JSON || encodingtouse == ENCODING_CHOICE_BINARY) {
-        if (binaryinzerocopystream) {
-            delete binaryinzerocopystream;
-        }
-        instream.close();
-
-        // std::cout << "2. FDRStore Destructor called" << std::endl;
+    if (binaryinzerocopystream) {
+        delete binaryinzerocopystream;
     }
+    instream.close();
+
+    // std::cout << "2. FDRStore Destructor called" << std::endl;
     // std::cout << "3. FDRStore Destructor called" << std::endl;
 }
 
@@ -102,7 +100,6 @@ int FDRStore::readnext(google::protobuf::Message *datap){
                 return 1;
             }
         }
-        // std::cout << "readnext: ENCODING_CHOICE_JSON: instream not open: storagefilepath: " << storagefilepath << std::endl;
         return 0;
     }
     else if(encodingtouse == ENCODING_CHOICE_BINARY)

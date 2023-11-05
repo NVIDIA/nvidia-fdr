@@ -411,14 +411,11 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
     std::string logfile = filename;
 
 	std::string logfilepath;
-    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
-        logfilepath = logdir + logfile;
-    }
+	logfilepath = logdir + logfile;
+
 	// Create log directory if missing
     std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
-        dir = logdir;
-    }
+	dir = logdir;
 
     if (!(std::filesystem::exists(dir))) {
         if (!(std::filesystem::create_directories(dir)))
@@ -427,9 +424,7 @@ std::unique_ptr<FDRStore> FlightDataRecorder_c::CreateKeeperWriter(const std::st
     }
 
     std::unique_ptr<FDRStore> fdrKeepersWriter;
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
-        fdrKeepersWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat, STORE_WRITER));
-    }
+	fdrKeepersWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat, STORE_WRITER));
 	return fdrKeepersWriter;
 }
 
@@ -445,30 +440,28 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
     std::string logfile = paramClass + fileExtention; // relative filename of logs
 
     std::string logfilepath; // full filepath of logs
-    if (logsformat == ENCODING_CHOICE_BINARY || logsformat == ENCODING_CHOICE_JSON) {
-        // let the BootEvent record entries go to common directory "BookKeeper"
-        if (paramClass == "BootEvent") {
-            logdir += "/" + CommonFdrKeepersDirName + "/";
-        } else {
-            logdir += "/" + GetDirectoryName() + "/";
-            logdir += compClass + "/" + compID + "/";
-        }
-        // For faults create file name as Event_<event_timestamp>.log
-        if (paramClass == "FAULTS")
-        {
-            logfile = "Event_" + fileTimestamp + fileExtention;
-        }
-        else
-        {
-            logfile = paramClass + fileExtention;
-        }
-        logfilepath = logdir + logfile;
-    }
+	// let the BootEvent record entries go to common directory "BookKeeper"
+	if (paramClass == "BootEvent") {
+		logdir += "/" + CommonFdrKeepersDirName + "/";
+	} else {
+		logdir += "/" + GetDirectoryName() + "/";
+		logdir += compClass + "/" + compID + "/";
+	}
+	// For faults create file name as Event_<event_timestamp>.log
+	if (paramClass == "FAULTS")
+	{
+		logfile = "Event_" + fileTimestamp + fileExtention;
+	}
+	else
+	{
+		logfile = paramClass + fileExtention;
+	}
+
+	logfilepath = logdir + logfile;
 	// Create log directory if missing
     std::filesystem::path dir;
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY) {
-        dir = logdir;
-    }
+	dir = logdir;
+
     if (!(std::filesystem::exists(dir))) {
         if (!(std::filesystem::create_directories(dir))) {
             log->warn("Failed to create directory: {}", dir.string());
@@ -478,10 +471,7 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
             // std::cout << "directory exist: " << dir << std::endl;
             // std::cout << "\tlogfilepath: " << logfilepath << std::endl;
     }
-
-    if (logsformat == ENCODING_CHOICE_JSON || logsformat == ENCODING_CHOICE_BINARY){
-        fdrLogWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat, STORE_WRITER));
-    }
+	fdrLogWriter.reset(new FDRStore(logfilepath, profile.GeneralConfig.LogsFormat, STORE_WRITER));
 }
 
 void FlightDataRecorder_c::CreateRecords(void)
@@ -917,10 +907,10 @@ void FlightDataRecorder_c::dbusEventHandlerCallback(
 				std::uint64_t val = 0;
 				std::string value;
 
-				if (auto ptr (std::get_if<int64_t>(&property.second)); ptr){
+				if (auto ptr (std::get_if<uint32_t>(&property.second)); ptr){
 					val = (uint64_t) *ptr;
 				}
-				else if (auto ptr (std::get_if<uint32_t>(&property.second)); ptr){
+				else if (auto ptr (std::get_if<int64_t>(&property.second)); ptr){
 					val = (uint64_t) *ptr;
 				}
 				else if (auto ptr (std::get_if<uint64_t>(&property.second)); ptr){

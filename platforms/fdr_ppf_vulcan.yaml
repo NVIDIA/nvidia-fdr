@@ -22,14 +22,13 @@ FingerPrint:
       - "grep -q -i VULCAN /etc/os-release"
 
 GeneralConfig:
-  LogsFormat: BINARY  #Choices=JSON|BINARY|DB
-  #DatabaseName: "Database.db"   #Only used if logs format is DB
+  LogsFormat: BINARY  #Choices=JSON|BINARY
   LogsBasePath: &LogsBasePath
     - "/tmp/emmc/fdr/"
   PartitionThresoldCheckMB: 300 # Partition threshold size check
   CompactionWindowSecs: 86400 # 1 day, every day new directory is created
   CompactionSubWindowSecs: 1800 # .5 hours, every 2 hours stats are created
-  HiFiDataPreserveTimeSecs: 3600 # 1 hours, <-1 hours ---Error--- +1 hours> so total 2 hours worth of entires
+  HiFiDataPreserveTimeSecs: 300 # 5 minutes, <-5 minutes ---Error--- +5 minutes> so total 10minutes worth of entires
   DefaultCompactionSensors: &compaction-definition-sensors
     RecordRetentionPolicy: Recreate
     CompactionMethod: Average
@@ -67,10 +66,9 @@ GPU: &gpu
           ID: VENDOR #Name of the this info/parameter/metric inside the log file
           ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: string
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
           FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
           FetchFreqSecs: 3600         #Sampling freq in seconds    #1 hour
-          StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
+          StorePolicy: OnChange       #Choices=EveryFetch|OnChange|OnEvent
           StoreFreqSecs: 3600
           FetchType: Subscribe
           DbusParams: 
@@ -184,10 +182,9 @@ GPU: &gpu
         - &gpu-config-defaults
           ID: DRVR-VER
           DataType: string
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 3600         #Sampling freq in seconds    #1 hour
-          StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
+          FetchMethod: DBUS
+          FetchFreqSecs: 3600
+          StorePolicy: OnChange
           StoreFreqSecs: 3600
           FetchType: Subscribe
           ParamID: 0
@@ -259,9 +256,8 @@ GPU: &gpu
       InfoList:
         - &gpu-error-defaults
           ID: NVLINK-ERR-CTR-REPLAY[0]
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
+          FetchMethod: DBUS
+          StorePolicy: OnChange
           FetchType: Subscribe
           ParamID: 0
           FetchFreqSecs: 30
@@ -1444,10 +1440,9 @@ GPU: &gpu
           ID: CURR-CLK-GFX #Name of the this info/parameter/metric inside the log file
           ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: Uint64
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 10         #Sampling freq in seconds    #1 hour
-          StorePolicy: OnChange       #Choices=Periodic|OnChange|OnEvent
+          FetchMethod: DBUS
+          FetchFreqSecs: 10
+          StorePolicy: OnChange
           StoreFreqSecs: 10
           FetchType: Subscribe
           DbusParams: 
@@ -1492,11 +1487,10 @@ GPU: &gpu
           ID: CTR-ENERGY #Name of the this info/parameter/metric inside the log file
           ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: Uint64
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 1       #Sampling freq in seconds  
-          StorePolicy: EveryFetch       #Choices=Periodic|OnChange|OnEvent
-          StoreFreqSecs: 1
+          FetchMethod: DBUS
+          FetchFreqSecs: 2
+          StorePolicy: EveryFetch
+          StoreFreqSecs: 2
           FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1530,11 +1524,10 @@ GPU: &gpu
           ID: TEMP-TLIMIT #Name of the this info/parameter/metric inside the log file
           ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: Uint64
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 1        #Sampling freq in seconds   
-          StoreFreqSecs: 1
-          StorePolicy: EveryFetch       #Choices=Periodic|OnChange|OnEvent
+          FetchMethod: DBUS
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
+          StorePolicy: EveryFetch
           FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -1577,10 +1570,9 @@ GPU: &gpu
           ID: VOLTAGE #Name of the this info/parameter/metric inside the log file
           ParamID: 0                  #Must be a unique number for each parameter class. Please DON"T change it once assigned, and pick the next available number while adding a new parameter.
           DataType: Uint64
-          FetchPolicy: Periodic       #Choices=Periodic|OnEvent
-          FetchMethod: DBUS        #Choices=Command|DBUS|SysFS|IPMI|RF etc.
-          FetchFreqSecs: 10         #Sampling freq in seconds    #1 hour
-          StorePolicy: EveryFetch       #Choices=Periodic|OnChange|OnEvent
+          FetchMethod: DBUS
+          FetchFreqSecs: 10
+          StorePolicy: EveryFetch
           StoreFreqSecs: 10
           FetchType: Poll
           DbusParams: 
@@ -1598,8 +1590,7 @@ GPU: &gpu
           ParamID: 0
           FetchFreqSecs: 10
           StoreFreqSecs: 10
-          StorePolicy: EveryFetch
-          FetchPolicy: Periodic 
+          StorePolicy: OnChange
           FetchType: Subscribe
           FetchMethod: DBUS 
           DataType: Uint64
@@ -2450,7 +2441,6 @@ GPU: &gpu
           FetchType: Subscribe
           StoreFreqSecs: 600
           DataType: string
-          FetchPolicy: Periodic 
           FetchMethod: DBUS  
           FetchFreqSecs: 600
           StorePolicy: OnChange    
@@ -3043,7 +3033,6 @@ NVSwitch: &nvswitch
         - &nvswitch-config-defaults
           ID: FW-VER
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           FetchMethod: DBUS
           StorePolicy: OnChange
@@ -3058,7 +3047,6 @@ NVSwitch: &nvswitch
 
         - ID: TEMP-THRESH-SHUTDOWN
           <<: *nvswitch-config-defaults
-          FetchType: Subscribe
           ParamID: 1
           DataType: Uint64
           DbusParams:
@@ -3974,7 +3962,6 @@ NVSwitch: &nvswitch
           ID: PCI-ERR-CTR-CORR
           ParamID: 0
           DataType: Uint64
-          FetchPolicy: Periodic
           FetchFreqSecs: 30
           StoreFreqSecs: 30
           FetchMethod: DBUS
@@ -5270,7 +5257,6 @@ NVSwitch: &nvswitch
           ID: GUID
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -5317,7 +5303,6 @@ NVSwitch: &nvswitch
           ID: NVLINK-STATUS-V1[0]
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -6227,11 +6212,10 @@ NVSwitch: &nvswitch
           ID: NVLINK-BANDWIDTH
           ParamID: 0
           DataType: Uint64
-          FetchPolicy: Periodic
           FetchFreqSecs: 10
           StoreFreqSecs: 10
           FetchMethod: DBUS
-          StorePolicy: EveryFetch
+          StorePolicy: OnChange
           FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -7708,9 +7692,8 @@ NVSwitch: &nvswitch
           ID: TEMP-CURR
           ParamID: 0
           DataType: Uint64
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1
-          StoreFreqSecs: 1
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           FetchType: Poll
@@ -7732,9 +7715,8 @@ PCIeRetimer: &retimer
         - &retimer-sensorthermal-defaults
           ID: TEMP-RETIMER
           ParamID: 0
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1 
-          StoreFreqSecs: 1
+          FetchFreqSecs: 2 
+          StoreFreqSecs: 2
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           FetchType: Poll
@@ -7752,7 +7734,6 @@ PCIeRetimer: &retimer
         - &retimer-config-defaults
           ID: FW-VER
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600 
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -7770,7 +7751,6 @@ PCIeRetimer: &retimer
         - &retimer-status-defaults
           ID: HEALTH
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600 
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -7794,7 +7774,6 @@ HMC: &hmc
           ID: BRD-MFG-DATE[0]
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -7938,7 +7917,6 @@ HMC: &hmc
           ID: FW-VER
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -7956,7 +7934,6 @@ HMC: &hmc
           ID: HEALTH
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -7980,7 +7957,6 @@ FPGA: &fpga
           ID: FW-VER
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -7998,7 +7974,6 @@ FPGA: &fpga
           ID: VENDOR
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -8016,12 +7991,11 @@ FPGA: &fpga
           ID: TEMP-GB-FPGA
           ParamID: 0
           DataType: Uint64
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1
+          FetchFreqSecs: 2
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           FetchType: Poll
-          StoreFreqSecs: 1
+          StoreFreqSecs: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_FPGA_$fpgaid_TEMP_0"
@@ -8036,9 +8010,8 @@ FPGA: &fpga
           ID: HEALTH
           ParamID: 0
           DataType: string
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1
-          StoreFreqSecs: 1
+          FetchFreqSecs: 2
+          StoreFreqSecs: 2
           FetchMethod: DBUS
           StorePolicy: OnChange
           FetchType: Subscribe
@@ -8059,7 +8032,6 @@ Baseboard: &baseboard
         - &baseboard-config-defaults
           ID: EEPROM-WP-STATUS
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -8086,7 +8058,6 @@ Baseboard: &baseboard
         - &baseboard-inventory-defaults
           ID: CHAS-TYPE
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -8231,12 +8202,11 @@ Baseboard: &baseboard
         - &baseboard-sensorthermal-defaults
           ID: TEMP-PCB-CURR
           ParamID: 0
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1  
+          FetchFreqSecs: 2  
           FetchMethod: DBUS
           FetchType: Poll
           DataType: Uint64
-          StoreFreqSecs: 1
+          StoreFreqSecs: 2
           StorePolicy: EveryFetch
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -8251,7 +8221,6 @@ Baseboard: &baseboard
         - &baseboard-sensorpressure-defaults
           ID: ALT-PRESSURE
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 10  
           FetchMethod: DBUS
           FetchType: Poll
@@ -8271,13 +8240,12 @@ Baseboard: &baseboard
         - &baseboard-sensorpower-defaults
           ID: PWR-GB-HSC-TOTAL
           ParamID: 0
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1  
+          FetchFreqSecs: 2  
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           FetchType: Poll
           DataType: Uint64
-          StoreFreqSecs: 1
+          StoreFreqSecs: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_Chassis_$baseboardid_HSC_0_Power_0"
@@ -8291,7 +8259,6 @@ Baseboard: &baseboard
         - &baseboard-status-defaults
           ID: WP-JMPR-PRESENCE
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -8585,13 +8552,12 @@ HSC: &hsc
         - &hsc-sensorthermal-defaults
           ID: TEMP-GB-HSC
           ParamID: 0
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1  
+          FetchFreqSecs: 2  
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           FetchType: Poll
           DataType: Uint64
-          StoreFreqSecs: 1
+          StoreFreqSecs: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_HSC_$hscid_Temp_0"
@@ -8605,13 +8571,12 @@ HSC: &hsc
         - &hsc-sensorpower-defaults
           ID: PWR-GB-HSC
           ParamID: 0
-          FetchPolicy: Periodic
-          FetchFreqSecs: 1  
+          FetchFreqSecs: 2  
           FetchMethod: DBUS
-          StorePolicy: Periodic
+          StorePolicy: EveryFetch
           FetchType: Poll
           DataType: Uint64
-          StoreFreqSecs: 1
+          StoreFreqSecs: 2
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/power/HGX_Chassis_0_HSC_$hscid_Power_0"
@@ -8628,7 +8593,6 @@ HSC: &hsc
     #       ID: HSC-FAULT-REG-ARG81
     #       ParamID: 0
     #       FetchFreqSecs: 30
-    #       FetchPolicy: Periodic
     #       StorePolicy: OnChange
     #       FetchType: Subscribe
     #       DataType: string
@@ -8762,7 +8726,6 @@ PCIeSwitch: &pcieswitch
         - &pcieswitch-config-defaults
           ID: FW-VER
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -8780,7 +8743,6 @@ PCIeSwitch: &pcieswitch
         - &pcieswitch-status-defaults
           ID: HEALTH
           ParamID: 0
-          FetchPolicy: Periodic
           FetchFreqSecs: 3600  
           StoreFreqSecs: 3600
           FetchMethod: DBUS
@@ -8800,7 +8762,6 @@ BOOTEVENT: &bootevent
         - ID: BootEventLog
           ParamID: 0
           DataType: string
-          FetchPolicy: OnBoot
           StorePolicy: EveryFetch
           FetchMethod: Command
           CommandParams:

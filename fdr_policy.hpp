@@ -38,7 +38,6 @@ struct GeneralConfig_t
 {
 	std::string LogsBasePath; // Root directory for all logs for this system
 	std::string LogsFormat;	  // Data encoding format to use (JSON|Binary etc.)
-	std::string DatabaseName; // Database name to be used
 
 	size_t LoggingFileMaxSize;   // Rotate the logging file once it exceed the size
 	size_t LoggingFileNumber;    // How many logging files to keep
@@ -87,7 +86,6 @@ struct Info_t
 {
 	std::string ID;				   // Unique ID for this information piece
 	unsigned int ParamID;		   // Unique ID to be used instead of ParamName when needed
-	std::string FetchPolicy;	   // Periodic|OnEvent
 	std::string FetchMethod;	   // Fetch method (Command|File|DBUS|GPIO)
 	std::string StorePolicy;	   // Storage policy (EveryFetch|OnChange|etc.)
 	int FetchFreqSecs;			   // Seconds between each fetch
@@ -248,9 +246,6 @@ namespace YAML
 			// just take the first element[of type std::string] from the vector
 			rhs.LogsBasePath = node["LogsBasePath"].as<std::vector<std::string>>().front();
 			rhs.LogsFormat = node["LogsFormat"].as<std::string>();
-			if (node["DatabaseName"] || rhs.LogsFormat == "DB")
-				rhs.DatabaseName = node["DatabaseName"].as<std::string>();
-
 			rhs.LoggingFileMaxSize = node["LoggingFileMaxSize"] ? node["LoggingFileMaxSize"].as<size_t>() : 1048576; // default 1 MB
 			rhs.LoggingFileNumber = node["LoggingFileNumber"] ? node["LoggingFileNumber"].as<size_t>() : 3; // default 3 log files
 			rhs.LoggingLevel = node["LoggingLevel"] ? node["LoggingLevel"].as<std::string>() : std::string{"info"}; // default log level
@@ -366,10 +361,6 @@ namespace YAML
 			if (node["FetchMethod"])
 			{
 				rhs.FetchMethod = node["FetchMethod"].as<std::string>();
-			}
-			if (node["FetchPolicy"])
-			{
-				rhs.FetchPolicy = node["FetchPolicy"].as<std::string>();
 			}
 			if (node["StorePolicy"])
 			{
