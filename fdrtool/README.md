@@ -68,20 +68,20 @@ values which override defaults.
 We'll need to provide the host ip address, username and password while running fdrtool. For example, if we're using port-forwarding
 as mentioned above, we'll be providing HMC's IP address and authentication information as following.
 ```bash
-./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --json
+./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --json -ld
 ```
 ### Option 2: Manually copy the FDR dump from HMC
 After copying over the FDR dump from HMC to local machine, we'll need to provide the tarball's path while running fdrtool.
 For example,
 ```bash
-./fdrtool --local_file '../../binary-logs.tar.gz' --json
+./fdrtool --local_file '../../binary-logs.tar.gz' --json -ld
 ```
 **Note:** The tool can take either local_file or {ip, username, password} as cmdline arg. That means only one of the above
 options can be used at a time.
 ## To store JSON logs in local drive
 
 ```bash
-./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --json
+./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --json -ld
 ```
 **Note:** If the decoding is successful, the json logs will be located under *./fdr_logs* directory. Otherwise, the binary logs
 may be found under the same directory given that the API calls or the unzipping of the tar archive is successful.
@@ -90,7 +90,7 @@ Add the "-kn" or "--key_name" flag as cmdline arg, or set the value to True in c
 ## To write logs to InfluxDB
 
 ```bash
-./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --influx
+./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --influx -ld
 ```
 **Note:** The binary logs can be found under the *./fdr_logs* directory given that the API calls or the unzipping of the tar archive is successful.
 The bucket name will be 'telemetry_db_hgx_serial_num_' + BRD-SERIAL from Baseboard/Inventory.log.
@@ -100,12 +100,12 @@ it'll delete any existing DB with same name under that directory. If we want to 
 to it, we need to use the *"--append"* flag.
 ### To create a new database
 ```bash
-./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --sqlite
+./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --sqlite -ld
 ```
 ### To append to existing db
 
 ```bash
-./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --sqlite --append
+./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --sqlite --append -ld
 ```
 **Note:** The binary logs can be found under the *./fdr_logs* directory given that the API calls or the unzipping of the tar archive is successful.
 The database name will be 'telemetry_db_hgx_serial_num_' + BRD-SERIAL from Baseboard/Inventory.log.
