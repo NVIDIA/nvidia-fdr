@@ -322,10 +322,15 @@ class CatalogEntry:
         if 'BootCount' in pathpart:
           import re
           try:
-            bootid, timestamp = re.findall(r'(\d+)', pathpart)
+            fields = re.findall(r'(\d+)', pathpart)
+            if len(fields) == 2: 
+              bootid, timestamp = fields
+            elif len(fields) == 1:
+              bootid = 0
+              timestamp = fields[0]
           except Exception as e:
             bootid = None
-    if 'Bookkeeper' not in filepath and bootid is None: # bootid can be 0, so "if not result" will raise false condition
+    if 'Bookkeeper' not in filepath and bootid is None and 'fdr.log' not in filepath: # bootid can be 0, so "if not result" will raise false condition
       print(f"WARNING: BootCount cannot be retrieved from filepath {filepath}")
     return bootid
 
