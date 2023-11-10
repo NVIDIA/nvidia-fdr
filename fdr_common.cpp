@@ -12,7 +12,7 @@
 #include <array>
 #include <chrono>
 #include <cmath>
-#include <spdlog/spdlog.h>
+#include "fdr_log.hpp"
 #include "fdr_common.hpp"
 
 CommandResult_t exec(const char *cmd)
@@ -25,7 +25,7 @@ CommandResult_t exec(const char *cmd)
 	if (pipe == nullptr)
 	{
         // it can be called before fdr init
-		spdlog::warn("exec cmd failed: {}", cmd);
+		fdrlog::warn("exec cmd failed: {}", cmd);
 		throw std::runtime_error("popen() failed!");
 	}
 	try

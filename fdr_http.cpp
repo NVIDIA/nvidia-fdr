@@ -9,7 +9,7 @@
 *
 */
 
-#include <spdlog/spdlog.h>
+#include "fdr_log.hpp"
 #include "fdr_http.hpp"
 
 HttpException::HttpException(long code, std::string message) : code(code)
@@ -48,7 +48,7 @@ HttpResponse HttpClient::request(const HttpRequestType &req_type, const std::str
 
   HttpResponse response;
 
-  spdlog::debug ("HttpClient requesting {}", url);
+  fdrlog::debug ("HttpClient requesting {}", url);
 
   curl = curl_easy_init();
   if (curl == NULL)

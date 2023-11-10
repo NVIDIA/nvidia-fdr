@@ -11,7 +11,7 @@
 
 #include <string>
 #include <sstream>
-#include <spdlog/spdlog.h>
+#include "fdr_log.hpp"
 #include "fdr_store.hpp"
 
 #include "fdr_logs_schema.pb.h"
@@ -117,7 +117,7 @@ int FDRStore::readnext(google::protobuf::Message *datap){
                 }
                 else
                 {
-                    spdlog::warn("Binary file seems corrupted");
+                    fdrlog::warn("Binary file seems corrupted");
                     return 0; // Unexpected end of file
                 }
             }

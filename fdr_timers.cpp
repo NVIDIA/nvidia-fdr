@@ -11,21 +11,22 @@
 
 #include "fdr.hpp"
 #include "fdr_utils.hpp"
+#include "fdr_log.hpp"
 
 // for debugging
 void FlightDataRecorder_c::PrintRecListPollSubscribeMap(void)
 {
-    log->info("----------------------Elements in RecListPollMap:----------------------");
+    fdrlog::info("----------------------Elements in RecListPollMap:----------------------");
     for (const auto& entry : RecListPollMap) {
         int fetchFreqSec = entry.first;
         const std::vector<Record *> recListPoll = entry.second;
 
-        log->info("\tfetchFreqSec: {};count: {}", fetchFreqSec, recListPoll.size());
+        fdrlog::info("\tfetchFreqSec: {};count: {}", fetchFreqSec, recListPoll.size());
 
         // generic debug print which prints all the entires
-        log->debug("\t\tvalues: ");
+        fdrlog::debug("\t\tvalues: ");
         for (auto &rec : recListPoll) {
-            log->debug("\t\t{}:{}:{}:{}:{}{}", 
+            fdrlog::debug("\t\t{}:{}:{}:{}:{}{}", 
                 rec->info.FetchFreqSecs, rec->info.StoreFreqSecs, rec->GetComponentID(),
                 rec->GetInfoGroupID(), rec->GetInfoListID(),
                 (rec->info.FetchFreqSecs != rec->info.StoreFreqSecs)?"    <<<<<<<<<<<<<<":"");
@@ -34,27 +35,27 @@ void FlightDataRecorder_c::PrintRecListPollSubscribeMap(void)
         // specific debug print which prints all the entires with not matching fetch anf store frequencies.
         // These prints are made as info, so that it comes in log be default for finding the record
         // which have not matching fetch anf store frequencies.
-        log->info("\t\tNot matching values: ");
+        fdrlog::info("\t\tNot matching values: ");
         for (auto &rec : recListPoll) {
             if (rec->info.FetchFreqSecs != rec->info.StoreFreqSecs) {
-                log->info("\t\t{}:{}:{}:{}:{}    <<<<<<<<<<<<<<", 
+                fdrlog::info("\t\t{}:{}:{}:{}:{}    <<<<<<<<<<<<<<", 
                     rec->info.FetchFreqSecs, rec->info.StoreFreqSecs, rec->GetComponentID(),
                     rec->GetInfoGroupID(), rec->GetInfoListID());
             }
         }
     }
 
-    log->info("----------------------Elements in RecListSubscribeStoreMap:----------------------");
+    fdrlog::info("----------------------Elements in RecListSubscribeStoreMap:----------------------");
     for (const auto& entry : RecListSubscribeStoreMap) {
         int storeFreqSec = entry.first;
         const std::vector<Record *> recListSubscribeStore = entry.second;
 
-        log->info("\tstoreFreqSec: {}; count: {}", storeFreqSec, recListSubscribeStore.size());
+        fdrlog::info("\tstoreFreqSec: {}; count: {}", storeFreqSec, recListSubscribeStore.size());
 
         // generic debug print which prints all the entires
-        log->debug("\t\tvalues: ");
+        fdrlog::debug("\t\tvalues: ");
         for (auto &rec : recListSubscribeStore) {
-            log->debug("\t\t{}:{}:{}:{}:{}{}", 
+            fdrlog::debug("\t\t{}:{}:{}:{}:{}{}", 
                 rec->info.FetchFreqSecs, rec->info.StoreFreqSecs, rec->GetComponentID(),
                 rec->GetInfoGroupID(), rec->GetInfoListID(),
                 (rec->info.FetchFreqSecs != rec->info.StoreFreqSecs)? "    <<<<<<<<<<<<<<": "");
@@ -63,10 +64,10 @@ void FlightDataRecorder_c::PrintRecListPollSubscribeMap(void)
         // specific debug print which prints all the entires with not matching fetch anf store freuencies
         // These prints are made as info, so that it comes in log be default for finding the record
         // which have not matching fetch anf store frequencies.
-        log->info("\t\tNot matching values: ");
+        fdrlog::info("\t\tNot matching values: ");
         for (auto &rec : recListSubscribeStore) {
             if (rec->info.FetchFreqSecs != rec->info.StoreFreqSecs) {
-                log->info("\t\t{}:{}:{}:{}:{}    <<<<<<<<<<<<<<", 
+                fdrlog::info("\t\t{}:{}:{}:{}:{}    <<<<<<<<<<<<<<", 
                     rec->info.FetchFreqSecs, rec->info.StoreFreqSecs, rec->GetComponentID(),
                     rec->GetInfoGroupID(), rec->GetInfoListID());
             }
@@ -85,9 +86,9 @@ void FlightDataRecorder_c::PollRecordTimerCBEngine(int fetchFreqSecKey)
         auto const& recListPoll = RecListPollMap[fetchFreqSecKey];
 
         // for debugging
-        // log->debug("PollRecordTimerCBEngine: fetchFreqSecKey: {}", fetchFreqSecKey);
+        // fdrlog::debug("PollRecordTimerCBEngine: fetchFreqSecKey: {}", fetchFreqSecKey);
         // for (auto &rec : recListPoll) {
-        //     log->debug("{}", rec->info.ID);
+        //     fdrlog::debug("{}", rec->info.ID);
         // }
 
         // real work of this timer callback
@@ -106,9 +107,9 @@ void FlightDataRecorder_c::SubscribeStoreRecordTimerCBEngine(int storeFreqSec)
         auto const& recListSubscribeStore = RecListSubscribeStoreMap[storeFreqSec];
 
         // for debugging
-        // log->debug("SubscribeStoreRecordTimerCBEngine: storeFreqSec: {}", storeFreqSec);
+        // fdrlog::debug("SubscribeStoreRecordTimerCBEngine: storeFreqSec: {}", storeFreqSec);
         // for (auto &rec : recListSubscribeStore) {
-        //     log->debug("{}", rec->info.ID);
+        //     fdrlog::debug("{}", rec->info.ID);
         // }
 
         // real work of this timer callback which is to call only the Store() of its resource object
@@ -133,7 +134,7 @@ void FlightDataRecorder_c::CompactionSubWindowTimerCBEngine(void)
 // compaction window and compaction sub window.
 void FlightDataRecorder_c::InitTimerEvents(void)
 {
-	log->info("Enable the timers for all the POLL records, Subscribe records for Store, Compaction window & sub window!");
+	fdrlog::info("Enable the timers for all the POLL records, Subscribe records for Store, Compaction window & sub window!");
 
     auto& sdbusConn = getBus();
     sdbusConn.attach_event(FdrEvents.get(), SD_EVENT_PRIORITY_NORMAL);
@@ -149,13 +150,13 @@ void FlightDataRecorder_c::InitTimerEvents(void)
 
         // define Timer call back
         auto PollRecordTimerCB = [&](Timer&, int fetchFreqSec) {
-            log->debug("PollRecordTimerCB: fetchFreqSec: {}", fetchFreqSec);
+            fdrlog::debug("PollRecordTimerCB: fetchFreqSec: {}", fetchFreqSec);
             PollRecordTimerCBEngine(fetchFreqSec);
         };
         auto PollRecordHandler = std::bind(PollRecordTimerCB, std::placeholders::_1, fetchFreqSec);
 
         // register a timer and its call back to be called
-        log->info("Registering for Poll Record time: {}", fetchFreqSec);
+        fdrlog::info("Registering for Poll Record time: {}", fetchFreqSec);
         Timer PollRecordTimer(FdrEvents, std::move(PollRecordHandler), std::chrono::seconds{fetchFreqSec});
 
         // push to global variable to not to loose the scope of local pointer
@@ -171,13 +172,13 @@ void FlightDataRecorder_c::InitTimerEvents(void)
 
         // define Timer call back
         auto SubscribeStoreRecordTimerCB = [&](Timer&, int storeFreqSec) {
-            log->debug("SubscribeStoreRecordTimerCB: storeFreqSec: {}", storeFreqSec);
+            fdrlog::debug("SubscribeStoreRecordTimerCB: storeFreqSec: {}", storeFreqSec);
             SubscribeStoreRecordTimerCBEngine(storeFreqSec);
         };
         auto SubscribeStoreRecordHandler = std::bind(SubscribeStoreRecordTimerCB, std::placeholders::_1, storeFreqSec);
 
         // register a timer and its call back to be called
-        log->info("Registering for Subscribe Store Record time: {}", storeFreqSec);
+        fdrlog::info("Registering for Subscribe Store Record time: {}", storeFreqSec);
         Timer SubscribeStoreRecordTimer(FdrEvents, std::move(SubscribeStoreRecordHandler), std::chrono::seconds{storeFreqSec});
 
         // push to global variable to not to loose the scope of local pointer
@@ -188,13 +189,13 @@ void FlightDataRecorder_c::InitTimerEvents(void)
 	// step 3: Init Timer for CompactionWindowSecs
     // define Timer call back
     auto CompactionWindowTimerCB = [&](Timer&, int compactionWindowSecs) {
-        log->debug("CompactionWindowTimerCB: compactionWindowSecs: {}", compactionWindowSecs);
+        fdrlog::debug("CompactionWindowTimerCB: compactionWindowSecs: {}", compactionWindowSecs);
         CompactionWindowTimerCBEngine();
     };
     auto CompactionWindowHandler = std::bind(CompactionWindowTimerCB, std::placeholders::_1, profile.GeneralConfig.CompactionWindowSecs);
 
     // register a timer and its call back to be called
-    log->info("Registering for CompactionWindow time: {}", profile.GeneralConfig.CompactionWindowSecs);
+    fdrlog::info("Registering for CompactionWindow time: {}", profile.GeneralConfig.CompactionWindowSecs);
     Timer CompactionWindowTimer(FdrEvents, std::move(CompactionWindowHandler), std::chrono::seconds{profile.GeneralConfig.CompactionWindowSecs});
 
     // push to global variable to not to loose the scope of local pointer
@@ -204,13 +205,13 @@ void FlightDataRecorder_c::InitTimerEvents(void)
 	// step 4: Init Timer for CompactionSubWindowSecs
     // define Timer call back
     auto CompactionSubWindowTimerCB = [&](Timer&, int CompactionSubWindowSecs) {
-        log->debug("CompactionSubWindowTimerCB: CompactionSubWindowSecs: {}", CompactionSubWindowSecs);
+        fdrlog::debug("CompactionSubWindowTimerCB: CompactionSubWindowSecs: {}", CompactionSubWindowSecs);
         CompactionSubWindowTimerCBEngine();
     };
     auto CompactionSubWindowHandler = std::bind(CompactionSubWindowTimerCB, std::placeholders::_1, profile.GeneralConfig.CompactionSubWindowSecs);
 
     // register a timer and its call back to be called
-    log->info("Registering for CompactionSubWindow time: {}", profile.GeneralConfig.CompactionSubWindowSecs);
+    fdrlog::info("Registering for CompactionSubWindow time: {}", profile.GeneralConfig.CompactionSubWindowSecs);
     Timer CompactionSubWindowTimer(FdrEvents, std::move(CompactionSubWindowHandler), std::chrono::seconds{profile.GeneralConfig.CompactionSubWindowSecs});
 
     // push to global variable to not to loose the scope of local pointer
@@ -221,7 +222,7 @@ void FlightDataRecorder_c::InitTimerEvents(void)
 
 void FlightDataRecorder_c::RunEventLoop(void)
 {
-    log->info("starting FdrEvents.loop()");
+    fdrlog::info("starting FdrEvents.loop()");
     FdrEvents.loop();
-    log->info("FdrEvents.loop() terminated");
+    fdrlog::info("FdrEvents.loop() terminated");
 }

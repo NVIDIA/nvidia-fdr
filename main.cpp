@@ -11,10 +11,10 @@
 
 #include <unistd.h>
 #include <systemd/sd-bus.h>
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_sinks.h"
 #include "fdr.hpp"
 #include "fdr_utils.hpp"
+
+#include "fdr_log.hpp"
 
 FlightDataRecorder_c *fdr;
 
@@ -29,10 +29,11 @@ void signalHandler(__attribute__((unused))int signum)
 
 int main(int argc, char *argv[])
 {
-	// the fdr-init logger is used before fdr->log initialization
-	auto console = spdlog::stdout_logger_mt("fdr-init");
-	console->set_level(spdlog::level::info);
-	spdlog::set_default_logger(console);
+#ifdef FDR_USE_SPDLOG
+	fdrlog::debug ("Using spdlog");
+#else
+	fdrlog::debug ("using phosphor-logging");
+#endif
 
 	// GOOGLE_PROTOBUF_VERIFY_VERSION;//Ensure protobuf header and library are compatible.
 
@@ -47,7 +48,7 @@ int main(int argc, char *argv[])
 	}
 	fdr = new FlightDataRecorder_c(filename);
 	if (fdr == nullptr) {
-		spdlog::error("Error instantiating fdr instance");
+		fdrlog::error("Error instantiating fdr instance");
 		exit(1);
 	}
 
@@ -67,7 +68,7 @@ int main(int argc, char *argv[])
 		auto rc = sd_bus_default_system(&fdrBus);
 		if (rc < 0)
 		{
-			spdlog::error("Exiting, Failed to connect to system bus");
+			fdrlog::error("Exiting, Failed to connect to system bus");
 			return EXIT_FAILURE;
 		}
 		auto io = std::make_shared<boost::asio::io_context>();
@@ -79,7 +80,7 @@ int main(int argc, char *argv[])
 	}
 	catch (const std::exception& e)
 	{
-		spdlog::error("FDR init error: {}", e.what());
+		fdrlog::error("FDR init error: {}", e.what());
 		return EXIT_FAILURE;
 	}
 #else
@@ -89,7 +90,7 @@ int main(int argc, char *argv[])
 	while (true)
 	{
 		if (exitSignal) {
-			spdlog::info("Received received, exiting!");
+			fdrlog::info("Received received, exiting!");
 			// TODO: some clean up?
 			exit(0);
 		}
@@ -115,10 +116,10 @@ int main(int argc, char *argv[])
 
 		} catch (const std::exception& e) {
 			expt = true;
-			fdr->log->warn("RefreshAndStore Got Exception: {}", e.what());
+			fdrlog::warn("RefreshAndStore Got Exception: {}", e.what());
 		} catch (...) {
 			expt = true;
-			fdr->log->warn("RefreshAndStore Got Unknown Exception !!!");
+			fdrlog::warn("RefreshAndStore Got Unknown Exception !!!");
 		}
 
 		if (expt) {

@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://github.com/openbmc/phosphor-logging.git
+revision = 5fb575ae382384e073bfc26366ac06de5c19c023
+depth = 1
+
+[provide]
+dependency_names = phosphor-logging
