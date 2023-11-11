@@ -15,12 +15,13 @@
 #include <filesystem>
 #include <fstream>
 #include <regex>
+#include "fdr_log.hpp"
 
 bool FlightDataRecorder_c::CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg, const std::string& logFile)
 {
 
 	if (!(std::filesystem::exists(logFile))) {
-		log->warn("Book of errors file Not Exist!!: {}", logFile);
+		fdrlog::warn("Book of errors file Not Exist!!: {}", logFile);
 		return false;
 	}
     else

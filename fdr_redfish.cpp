@@ -9,7 +9,7 @@
 *
 */
 
-#include <spdlog/spdlog.h>
+#include "fdr_log.hpp"
 #include "fdr_redfish.hpp"
 #include "fdr_http.hpp"
 
@@ -24,7 +24,7 @@ RedfishClient::RedfishClient(const std::string &prefix, const std::string &user,
         this->login();
     }
 
-    spdlog::debug("Created redfish client");
+    fdrlog::debug("Created redfish client");
 }
 
 RedfishClient::~RedfishClient()
@@ -37,7 +37,7 @@ RedfishClient::~RedfishClient()
 
     delete this->httpc;
 
-    spdlog::debug("Destroyed redfish client");
+    fdrlog::debug("Destroyed redfish client");
 }
 
 void RedfishClient::login()
@@ -57,7 +57,7 @@ void RedfishClient::login()
 
     if (rsp.status_code != 200)
     {
-        spdlog::warn("RedfishClient::login() error, status code: {} body: {}", rsp.status_code, rsp.body);
+        fdrlog::warn("RedfishClient::login() error, status code: {} body: {}", rsp.status_code, rsp.body);
         throw HttpException(rsp.status_code, rsp.body);
     }
 
@@ -84,7 +84,7 @@ void RedfishClient::logout()
     }
     catch (const HttpException &e)
     {
-        spdlog::warn("RedfishClient::logout() Error Code: {}, message: {}", e.code, e.what());
+        fdrlog::warn("RedfishClient::logout() Error Code: {}, message: {}", e.code, e.what());
     }
 
     // 200: successfully logout
@@ -92,7 +92,7 @@ void RedfishClient::logout()
     // other status code might indicate some problem
     if (rsp.status_code != 200 || rsp.status_code != 401)
     {
-        spdlog::warn("RedfishClient::logout() Error Code: {}, body: {}", rsp.status_code, rsp.body);
+        fdrlog::warn("RedfishClient::logout() Error Code: {}, body: {}", rsp.status_code, rsp.body);
     }
 }
 
@@ -103,7 +103,7 @@ std::string RedfishClient::query(const std::string &uri)
     {
         if (this->token.empty())
         {
-            spdlog::warn("Redfish client is not logged in");
+            fdrlog::warn("Redfish client is not logged in");
             return "";
         }
         else
@@ -123,7 +123,7 @@ std::string RedfishClient::query(const std::string &uri)
     }
     else if ((rsp.status_code == 401) && this->need_login())
     {
-        spdlog::info("Session probably timed out, try login again");
+        fdrlog::info("Session probably timed out, try login again");
         this->login();
 
         // update the token header, is it needed?
@@ -160,8 +160,8 @@ json RedfishClient::query_json(const std::string &uri)
     }
     catch (json::parse_error &e)
     {
-        spdlog::warn("RedfishClient::query_json(): error parsing json at byte {} from input: {}", e.byte, result);
-        spdlog::debug("RedfishClient::query_json(): return default value std::string{}");
+        fdrlog::warn("RedfishClient::query_json(): error parsing json at byte {} from input: {}", e.byte, result);
+        fdrlog::debug("RedfishClient::query_json(): return default value std::string");
 
         return "";
     }
@@ -186,16 +186,16 @@ std::string RedfishClient::query_string(const std::string &uri, const std::strin
     }
     else if (val.is_object())
     {
-        spdlog::debug("Val at {} is an object", json_pointer);
+        fdrlog::debug("Val at {} is an object", json_pointer);
         return val.dump();
     }
     else if (val.is_array())
     {
-        spdlog::debug("Val at {} is an array", json_pointer);
+        fdrlog::debug("Val at {} is an array", json_pointer);
         return val.dump();
     }
 
-    spdlog::warn("Val({}) at {} is not string, return default value std::string{{}}", val.dump(), json_pointer);
+    fdrlog::warn("Val({}) at {} is not string, return default value std::string{{}}", val.dump(), json_pointer);
     return "";
 }
 
@@ -212,7 +212,7 @@ uint64_t RedfishClient::query_uint64t(const std::string &uri, const std::string 
         return val.get<uint64_t>();
     }
 
-    spdlog::warn("Val({}) at {} is not unsigned int, return default value uint64_t{{0}}", val.dump(), json_pointer);
+    fdrlog::warn("Val({}) at {} is not unsigned int, return default value uint64_t{{0}}", val.dump(), json_pointer);
     return uint64_t{0};
 }
 
@@ -229,6 +229,6 @@ int64_t RedfishClient::query_int64t(const std::string &uri, const std::string &j
         return val.get<int64_t>();
     }
 
-    spdlog::warn("Val({}) at {} is not a integer number, return default value int64_t{{0}} ", val.dump(), json_pointer);
+    fdrlog::warn("Val({}) at {} is not a integer number, return default value int64_t{{0}} ", val.dump(), json_pointer);
     return int64_t{0};
 }

@@ -1,7 +1,5 @@
 #include <gtest/gtest.h>
 
-#include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_sinks.h"
 #include "fdr_http.hpp"
 
 TEST(FdrHttp, Sanity) {

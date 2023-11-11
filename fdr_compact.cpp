@@ -12,6 +12,7 @@
 // This file contain definitions for all the methods related to compaction in FDR
 
 #include "fdr.hpp"
+#include "fdr_log.hpp"
 #include <filesystem>
 
 // This method will slide through BookOfError.log file and find any error occured between the given 2 timestamps.
@@ -27,14 +28,14 @@ bool FlightDataRecorder_c::CompactorCheckBookOfErrors(const std::string director
 
 	// check if the file exists
 	if (!(std::filesystem::exists(bookOfErrorsFileName))) {
-		log->warn("Book of errors file Not Exist!!: {}", bookOfErrorsFileName);
+		fdrlog::warn("Book of errors file Not Exist!!: {}", bookOfErrorsFileName);
 		return false;
 	}
 
 	auto splittedList = split(directoryTocompact, '_');
 	if (splittedList.size() != 4) {
 		// should never happen at this point..but checking for code completeness.
-		log->warn("not a valid directoryTocompact: {}"
+		fdrlog::warn("not a valid directoryTocompact: {}"
 					   "; splittedList.size(): {}",
 					   directoryTocompact,
 					   splittedList.size());
@@ -42,7 +43,7 @@ bool FlightDataRecorder_c::CompactorCheckBookOfErrors(const std::string director
 	}
 
 	std::string givenBootId = splittedList[1];
-	log->debug("CompactorCheckBookOfErrors: givenBootId: {}", givenBootId);
+	fdrlog::debug("CompactorCheckBookOfErrors: givenBootId: {}", givenBootId);
 
 	// loop through the BookOfError.log file and check if any error occured during this given time period
 	fdrpb::fdr_book_of_errors errorRecord;
@@ -118,7 +119,7 @@ int FlightDataRecorder_c::CheckCompactionWindowExpiry(bool viaTimerSkipChecks, s
 {
 	double timeSinceLastCompactionWindowDirCreation = difftime(current_time, LastCompactWindowDirCreationSecsAt);
 
-	log->debug("timeSinceLastCompactionWindowDirCreation: {}"
+	fdrlog::debug("timeSinceLastCompactionWindowDirCreation: {}"
 	           "; LastCompactWindowDirCreationSecsAt: {}"
 			   "; CompactionWindowSecs: {}",
 			   timeSinceLastCompactionWindowDirCreation,
@@ -131,13 +132,13 @@ int FlightDataRecorder_c::CheckCompactionWindowExpiry(bool viaTimerSkipChecks, s
 		// check and exit fdr if disk availability is less.
 		CheckFdrPartitionDiskUsageAndExit();
 
-		log->debug("======================creating new directory for sensors======================");
+		fdrlog::debug("======================creating new directory for sensors======================");
 		// check for any compaction needs to be done and get the name of the directory to compact
 		auto directoryTocompact = CompactorGetDirectoryToCompact(RUN_TIME_DIR_COUNT);
 		if (directoryTocompact.empty()) {
-			log->debug("Nothing to compact..Empty directoryTocompact!!");
+			fdrlog::debug("Nothing to compact..Empty directoryTocompact!!");
 		} else {
-			log->debug("directoryTocompact: {}", directoryTocompact);
+			fdrlog::debug("directoryTocompact: {}", directoryTocompact);
 
             // call the compactor engine which does the rest of the compaction job
 			CompactorEngine(directoryTocompact);
@@ -186,7 +187,7 @@ int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(bool viaTimerSkipChecks
 {
 	double timeSinceLastCompactionSubWindowDirCreation = difftime(current_time, LastCompactSubWindowDirCreationSecsAt);
 
-	log->debug("timeSinceLastCompactionSubWindowDirCreation: {}"
+	fdrlog::debug("timeSinceLastCompactionSubWindowDirCreation: {}"
 	           "; LastCompactSubWindowDirCreationSecsAt: {}"
 			   "; CompactionSubWindowSecs: {}"
 			   "; mainWindowCompactStatus: {}",
@@ -202,7 +203,7 @@ int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(bool viaTimerSkipChecks
 	if (viaTimerSkipChecks == true ||
 		timeSinceLastCompactionSubWindowDirCreation >= profile.GeneralConfig.CompactionSubWindowSecs ||
 		mainWindowCompactStatus == FDR_SUCCESS) {
-		log->debug("======================sub window timer expired======================");
+		fdrlog::debug("======================sub window timer expired======================");
 
 		// check and exit fdr if disk availability is less.
 		CheckFdrPartitionDiskUsageAndExit();
@@ -236,18 +237,18 @@ void FlightDataRecorder_c::CompactorGetLeastAndFarTimestamp(const std::string di
 	auto splittedList = split(directoryTocompact, '_');
 	if (splittedList.size() != 4) {
 		// should never happen at this point..but checking for code completeness.
-		log->warn("not a valid directoryTocompact: {}"
+		fdrlog::warn("not a valid directoryTocompact: {}"
 					   "; splittedList.size(): {}",
 					   directoryTocompact,
 					   splittedList.size());
 	} else {
-		log->debug("CompactorGetLeastAndFarTimestamp: directory timestamp: {}", splittedList[3]);
+		fdrlog::debug("CompactorGetLeastAndFarTimestamp: directory timestamp: {}", splittedList[3]);
 		leastWindowTimestamp = std::strtoull(splittedList[3].c_str(), &endPtr, 10);
 		if (*endPtr == '\0') {
 			// std::cout << "Converted value: " << leastWindowTimestamp << std::endl;
 			farWindowTimestamp = leastWindowTimestamp + profile.GeneralConfig.CompactionWindowSecs;
 		} else {
-			log->warn("Error converting string: {}", splittedList[3]);
+			fdrlog::warn("Error converting string: {}", splittedList[3]);
 		}
 	}
 	// std::cout << "2. finally: leastWindowTimestamp: " << leastWindowTimestamp
@@ -280,7 +281,7 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 				// check is the directory exist
 				// std::cout << "CompactorCreateHighFidelityFiles: 1. directory to compact: logdir: " << logdir << std::endl;
 				if (!(std::filesystem::exists(logdir))) {
-					log->warn("1. directory to compact Not Exist!!, logdir: {}", logdir);
+					fdrlog::warn("1. directory to compact Not Exist!!, logdir: {}", logdir);
 					continue;
 				}
 
@@ -337,7 +338,7 @@ void FlightDataRecorder_c::CompactorRemoveSamplesLogfiles(std::string directoryT
 				// remove the file which contains all the samples
 				if (remove(logfiletodelete.c_str()) != 0) {
 					perror("CompactorRemoveSamplesLogfiles: Error deleting file");
-					log->warn("CompactorRemoveSamplesLogfiles: Failed to delete: {}", logfiletodelete);
+					fdrlog::warn("CompactorRemoveSamplesLogfiles: Failed to delete: {}", logfiletodelete);
 				} else {
 					// std::cout << "CompactorRemoveSamplesLogfiles: Successfully deleted: " << logfiletodelete << std::endl;
 				}
@@ -404,7 +405,7 @@ void FlightDataRecorder_c::CompactorBookKeeperRemoveEntry(std::string directoryT
         std::string compactorNewBookKeeper = logdir + "new" + logfile;
         // 1. remove the new file if already exist
         if (remove(compactorNewBookKeeper.c_str()) == 0) {
-            log->debug("Successfully deleted if any stray compactorNewBookKeeper: {}", 
+            fdrlog::debug("Successfully deleted if any stray compactorNewBookKeeper: {}", 
                     	compactorNewBookKeeper);
         }
 
@@ -416,23 +417,23 @@ void FlightDataRecorder_c::CompactorBookKeeperRemoveEntry(std::string directoryT
 
         // 3. copy newCompactor.log to Compactor.log
         std::string copyCommandStr = "cp " + compactorNewBookKeeper + " " + logfilepath;
-        log->debug("copyCommandStr: {}", copyCommandStr);
+        fdrlog::debug("copyCommandStr: {}", copyCommandStr);
         CommandResult_t cmdResult = exec(copyCommandStr.c_str());
         if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
-            log->warn("copy command Failed: {}", copyCommandStr);
+            fdrlog::warn("copy command Failed: {}", copyCommandStr);
             return;
         }
-        log->debug("Successfully copied the new to current compactorBookKeeper file: {}", logfilepath);
+        fdrlog::debug("Successfully copied the new to current compactorBookKeeper file: {}", logfilepath);
 
         // 4. then remove the newCompactor.log
         if (remove(compactorNewBookKeeper.c_str()) == 0) {
-            log->debug("Successfully deleted compactorNewBookKeeper: {}", compactorNewBookKeeper);
+            fdrlog::debug("Successfully deleted compactorNewBookKeeper: {}", compactorNewBookKeeper);
         }
     } else {
-        log->debug("length of CompactorBookKeeperName: 0..so simply remove the file");
+        fdrlog::debug("length of CompactorBookKeeperName: 0..so simply remove the file");
         // if no entries, then simply remove the Compactor.log
         if (remove(logfilepath.c_str()) == 0) {
-            log->debug("Successfully deleted Compactor.log: {}", logfilepath);
+            fdrlog::debug("Successfully deleted Compactor.log: {}", logfilepath);
         }
     }
 }
@@ -447,12 +448,12 @@ void FlightDataRecorder_c::CompactorBookKeeperCleanEntries(void) {
     for (;;) {
         // check for any compaction needs to be done and get the name of the directory to compact
         auto directoryTocompact = CompactorGetDirectoryToCompact(BOOT_TIME_DIR_COUNT);
-        log->debug("------------BOOT_TIME: 1. directoryTocompact: {}", directoryTocompact);
+        fdrlog::debug("------------BOOT_TIME: 1. directoryTocompact: {}", directoryTocompact);
         if (directoryTocompact.empty()) {
-			log->debug("------------BOOT_TIME: Nothing to compact..Empty directoryTocompact!!------------");
+			fdrlog::debug("------------BOOT_TIME: Nothing to compact..Empty directoryTocompact!!------------");
             break;
         } else {
-            log->debug("------------BOOT_TIME: 2. directoryTocompact: {}", directoryTocompact);
+            fdrlog::debug("------------BOOT_TIME: 2. directoryTocompact: {}", directoryTocompact);
 
             // call the compactor engine which does the rest of the compaction job
             CompactorEngine(directoryTocompact);
@@ -477,7 +478,7 @@ std::string FlightDataRecorder_c::CompactorGetDirectoryToCompact(int numberOfDir
 
 	// check if the file exists
 	if (!(std::filesystem::exists(compactorBookKeepLogFilepath))) {
-		log->warn("Compactor bookkeeper log file Not Exist!!: {}", compactorBookKeepLogFilepath);
+		fdrlog::warn("Compactor bookkeeper log file Not Exist!!: {}", compactorBookKeepLogFilepath);
 		return "";
 	}
 
@@ -493,7 +494,7 @@ std::string FlightDataRecorder_c::CompactorGetDirectoryToCompact(int numberOfDir
 		// 		  << std::endl;
 
 		if (counter >= numberOfDirToLook) {
-			log->debug("CompactorGetDirectoryToCompact: counter reached. directoryTocompact: {}", directoryTocompact);
+			fdrlog::debug("CompactorGetDirectoryToCompact: counter reached. directoryTocompact: {}", directoryTocompact);
 			break;
 		}
 	}
@@ -517,12 +518,12 @@ void FlightDataRecorder_c::CompactorEngine(std::string directoryTocompact)
     //    any errors or events reported between these timestamps.
     std::vector<fdrpb::fdr_book_of_errors> errorList;
     if (CompactorCheckBookOfErrors(directoryTocompact, leastWindowTimestamp, farWindowTimestamp, errorList)) {
-        log->warn ("Error found on directoryTocompact: {}",  directoryTocompact);
+        fdrlog::warn ("Error found on directoryTocompact: {}",  directoryTocompact);
         // 2.1. in one stretch collect the high fidelity data if needed, and collect for all the
         //      sensor types on all the devices[and its instances]
         CompactorCreateHighFidelityFiles(directoryTocompact, errorList);
     } else {
-		log->debug ("No Error found on directoryTocompact: {}", directoryTocompact);
+		fdrlog::debug ("No Error found on directoryTocompact: {}", directoryTocompact);
     }
 
     // 3. after collecting and updating the high fidelity data, delete the .log file

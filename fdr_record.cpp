@@ -14,9 +14,10 @@
 #include <filesystem>
 #include <sdbusplus/bus.hpp>
 #include <sdbusplus/exception.hpp>
-#include <spdlog/spdlog.h>
+#include "fdr_log.hpp"
 #include "fdr.hpp"
 #include "fdr_common.hpp"
+#include "fdr_log.hpp"
 
 
 Record::Record(Profile_t &profile, Section_t &section,
@@ -146,7 +147,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 data.fdr_sample_data.set_paramvalueint64((uint64_t) *ptr);
             }
             else {
-                // spdlog::warn("DBus read failed: Unknown numerical variant type: "
+                // fdrlog::warn("DBus read failed: Unknown numerical variant type: "
                 //          "; ObjectPath: {}; Property: {}",
                 //           info.DbusParams.ObjectPath,
                 //           info.DbusParams.Property);
@@ -165,7 +166,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
     } else if (info.FetchMethod == "Command") {
         CommandResult_t cmdResult = exec(info.CommandParams.Command.c_str());
 		if (cmdResult.cmdExitstatus != FDR_SUCCESS) {
-            spdlog::warn("command Failed: {}", info.CommandParams.Command);
+            fdrlog::warn("command Failed: {}", info.CommandParams.Command);
 			return;
 		}
 
@@ -183,12 +184,12 @@ void Record::Refresh(bool viaTimerSkipChecks)
         }
     } else if (info.FetchMethod == "Redfish") {
         if (!fdr->rfc) {
-            spdlog::debug("Redfish not configured or not connected, skipping");
+            fdrlog::debug("Redfish not configured or not connected, skipping");
             return;
         }
         std::string uri = info.RedfishParams.URI;
         std::string json_pointer = info.RedfishParams.JSONPointer;
-        spdlog::debug("RedfishParams URI: {}, JSONPointer: {}", uri, json_pointer);
+        fdrlog::debug("RedfishParams URI: {}, JSONPointer: {}", uri, json_pointer);
 
         try {
             if (data.paramtype == "Uint64") {
@@ -200,7 +201,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 data.fdr_sample_data.set_paramvaluestring(s);
             }
         } catch (const std::exception &e) {
-            spdlog::warn("Error fetching redfish: {}", e.what());
+            fdrlog::warn("Error fetching redfish: {}", e.what());
             return;
         }
     }
@@ -299,7 +300,7 @@ void Record::appendRunningStatToStatfile(void)
         // finish at the same time and Compactor() could have already append the statistic data to the stat files
         // and would have cleared the runningStatus elements; hence, CompactionSubWindowSecs timerCB when tries
         // append the runningStatus data, it sees all are cleared and will return from here.
-        // fdr->log->warn("{}: num sample is zero: skipping stat update!", infogroup.parent_component->ID);
+        // fdrlog::warn("{}: num sample is zero: skipping stat update!", infogroup.parent_component->ID);
         return;
     }
     runningStatus.set_avg(runningStatus.avg() / runningStatus.numsamples());
@@ -385,7 +386,7 @@ void Record::Store(void)
     // For debugging : No debugging needed for poll records
     // if (info.FetchType == "Subscribe")
     // {
-    //     fdr->log->debug("Store record for objectPath = {}, interface = {}, property = {}",
+    //     fdrlog::debug("Store record for objectPath = {}, interface = {}, property = {}",
     //         info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
     // }
 
@@ -400,7 +401,7 @@ void Record::refreshDataCallback(PropertyVariant val)
     // For errors counter run book of errors
     // Write to both fdr reader writer as well as book of errors
 
-    fdr->log->debug("Refresh record data for objectPath = {}, interface = {}, property = {}",
+    fdrlog::debug("Refresh record data for objectPath = {}, interface = {}, property = {}",
         info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
 
     std::time_t current_time = std::time(nullptr);

@@ -1,1 +1,2 @@
 option('tests', type: 'feature', description: 'Build tests', value: 'enabled')
+option('logging', type : 'combo', choices : ['spdlog', 'phosphor-logging'], value : 'phosphor-logging')

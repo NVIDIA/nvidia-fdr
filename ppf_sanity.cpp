@@ -14,12 +14,12 @@
 #include <iostream>
 #include <string>
 #include <exception>
-#include <spdlog/spdlog.h>
 #include "yaml-cpp/yaml.h" //yaml-cpp lib used for parsing input (yaml) files
 
 #include "fdr_common.hpp"
 #include "fdr_policy.hpp"
 #include "ppf_sanity.hpp"
+#include "fdr_log.hpp"
 
 // Sanity check the Platform Profile File [PPF]
 int PPFSanity::SanityTestPPF(const std::string PPFName){
@@ -28,7 +28,7 @@ int PPFSanity::SanityTestPPF(const std::string PPFName){
 		YAML::Node PlatformProfile = YAML::LoadFile(PPFName);
 		ComponentsMap = CreateComponentsMap(PlatformProfile);
 	} catch(std::exception& e) {
-		spdlog::warn("Exception while parsing {}: {}", PPFName, e.what());
+		fdrlog::warn("Exception while parsing {}: {}", PPFName, e.what());
 		return EXIT_FAILURE;
 	}
 	int retval = ValidatePPFComponents(ComponentsMap);
@@ -85,7 +85,7 @@ int PPFSanity::UniqueParamChecker(const T& paramValue, std::string paramName, st
 	}
 	else {
 		// The ParamID is repeated
-		spdlog::error ("Error: Duplicate {} {} assigned in {} of {}", paramName, paramValue, paramClass, component);
+		fdrlog::error ("Error: Duplicate {} {} assigned in {} of {}", paramName, paramValue, paramClass, component);
 		retval = FDR_ERR_GENFAILURE;
 	}
 	return retval;

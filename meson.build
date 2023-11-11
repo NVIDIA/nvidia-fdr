@@ -28,47 +28,29 @@ pbgenerated = pbgen.process('fdr_logs_schema.proto')
 #   - OpenBMC (bitbake):  all dependecies should be available.
 #   - Ubuntu amd64 (native build): some OpenBMC specified packages are not available.
 #   - Ubuntu Unit Test (docker): some OpenBMC & distro devel packages are not available
-
-# Workaround for Docker Unit Test
 libcurl_dep = dependency(
   'libcurl',
   version: '>=7.58.0',
   default_options: [
-    'default_library=static',
     'warning_level=0',
     'werror=false',
-  ]
-)
+  ])
 
-# Workaround for Docker Unit Test / amd64 native
 sdbusplus_dep = dependency(
   'sdbusplus', 
   fallback : ['sdbusplus', 'sdbusplus_dep'],
-  default_options: [
-    'default_library=static',
-    'tests=disabled'
-  ])
-
-# Workaround for Docker Unit Test
-spdlog_dep = dependency(
-  'spdlog', 
-  fallback : ['spdlog', 'spdlog_dep'],
-  default_options: [
-    #'default_library=static',
-    'tests=false'
-  ])
+  default_options: [ 'tests=disabled' ])
 
 stdplus_dep = dependency(
   'stdplus', 
   fallback : ['stdplus', 'stdplus_dep'],
-  default_options: ['default_library=static'])
+  default_options: [])
 
 sdeventplus_dep = dependency(
   'sdeventplus', 
   fallback : ['sdeventplus', 'sdeventplus_dep'],
-  default_options: ['default_library=static'])
+  default_options: [])
 
-# Workaround for Docker Unit Test
 yamlcpp_dep = dependency('yaml-cpp', version: '>= 0.5.1', required: false)
 if not yamlcpp_dep.found()
     yamlcpp_opts = cmake.subproject_options()
@@ -88,14 +70,38 @@ endif
 
 deps = [
   libcurl_dep,
+  dependency('fmt'),
   dependency('protobuf'),
   sdbusplus_dep,
-  spdlog_dep,
   dependency('systemd'),
   yamlcpp_dep,
   stdplus_dep,
   sdeventplus_dep
 ]
+
+if get_option('logging') == 'spdlog'
+  add_project_arguments('-DFDR_USE_SPDLOG', language : 'cpp')
+
+  spdlog_dep = dependency(
+    'spdlog', 
+    fallback : ['spdlog', 'spdlog_dep'],
+    default_options: [
+      'tests=false'
+  ])
+
+  deps += spdlog_dep
+
+else
+  phosphor_logging_dep = dependency(
+    'phosphor-logging', 
+    fallback : ['phosphor-logging', 'phosphor_logging_dep'],
+    default_options: [
+      'tests=disabled'
+  ])
+
+  deps += phosphor_logging_dep
+
+endif
 
 if get_option('tests').enabled()
     gtest = dependency('gtest', main: true, disabler: true, required: false)
@@ -128,6 +134,7 @@ src = [
   'fdr_compact.cpp',
   'fdr_events.cpp',
   'fdr_http.cpp',
+  'fdr_log.cpp',
   'fdr_policy.cpp',
   'fdr_record.cpp',
   'fdr_redfish.cpp',

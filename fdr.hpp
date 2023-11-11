@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include <spdlog/spdlog.h>
 #include <sdbusplus/bus/match.hpp>
 #include "fdr_common.hpp"
 #include "fdr_policy.hpp"
@@ -74,8 +73,6 @@ private:
 	void CreateSpecificRecords(std::string recordSubName);
 	void ModifySpecificRecords(std::string recordSubName);
 
-	void InitLogger();
-
 	LeakyBucket *ExceptionRateLimiter;
 	void InitExceptionRateLimiter();
 
@@ -118,7 +115,6 @@ public:
 	static std::unordered_map<std::string, Record *> subscribedRecListMap; // Optimized map to fetch record in O(1) via unique composite key
     fdrpb::fdr_book_of_errors book_of_errors; // Data that will land in book of errors
 	Profile_t profile;
-	std::shared_ptr<spdlog::logger> log;
 	RedfishClient *rfc;
 	FlightDataRecorder_c(const std::string filename = std::string{});
 	~FlightDataRecorder_c();

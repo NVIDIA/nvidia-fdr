@@ -1,6 +1,8 @@
 test_src = declare_dependency(
           sources: [
-            '../fdr_http.cpp'])
+            '../fdr_log.cpp',
+            '../fdr_http.cpp'
+          ])
 
 tests = [
   'fdr_http_test',
