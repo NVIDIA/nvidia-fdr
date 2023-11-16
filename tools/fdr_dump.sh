@@ -8,7 +8,7 @@ ARG_DUMP_ID="00000000"
 ARG_DUMP_ACTION="collect"
 ARG_DUMP_PATH=""
 
-FDR_LOG_PATH="/tmp/emmc/fdr/"
+FDR_LOG_PATH="/var/emmc/fdr/"
 
 function help()
 {
