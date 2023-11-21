@@ -61,7 +61,7 @@ function cleanup()
 
 function main()
 {
-    local TEMP_DUMP_FILE="$ARG_DUMP_PATH/.$F_NAME_TEMPLATE.tar.xz"
+    local TEMP_DUMP_FILE="/tmp/.$F_NAME_TEMPLATE.tar.xz"
     local DEST_DUMP_FILE="$ARG_DUMP_PATH/$F_NAME_TEMPLATE.tar.xz"
 
     # compress fdr dir to destination dir directly to save memory
@@ -71,8 +71,8 @@ function main()
     if [ $? -ne 0 ]; then
         echo "Compression $FDR_LOG_PATH failed"
 
-	# remove the temp file if error occured
-	rm -rf $TEMP_DUMP_FILE
+        # remove the temp file if error occured
+        rm -rf $TEMP_DUMP_FILE
 
         return 1
     fi
@@ -82,9 +82,9 @@ function main()
     if [ $? -ne 0 ]; then
         echo "Failed to move $TEMP_DUMP_FILE to $DEST_DUMP_FILE"
 
-	# remove both files if error occured
-	rm -rf $TEMP_DUMP_FILE
-	rm -rf $DEST_DUMP_FILE
+        # remove both files if error occured
+        rm -rf $TEMP_DUMP_FILE
+        rm -rf $DEST_DUMP_FILE
 
         return 1
     fi
