@@ -15,6 +15,8 @@ import sqlite3
 from enum import Enum
 import traceback
 # Import third-party library modules
+import logging
+logging.basicConfig(level=logging.INFO)
 
 # Import locally developed modules
 import fdr_logs_schema_pb2 as fdr_schema
@@ -136,6 +138,7 @@ class SQLiteConnection:
     # if tabletype is FDR_TABLE_TYPE.PVT:
     #   primary_key = ('TimeStamp', 'ParamID')
     sql_cmd_create_table = self.CreateTableQuery(tablename, tabletype, primary_key)
+    #print("Table create command : %s " % sql_cmd_create_table)
     #self.ExecuteOneCmd(sql_cmd_create_table)
     self.ExecuteCmd(self.connection.execute, sql_cmd_create_table)
 
@@ -156,12 +159,15 @@ class SQLiteConnection:
 Child class for holding a single data entry/message for SQLite
 '''
 class SQLiteDBCatalogEntry(CatalogEntry):
+  logging.debug('SQLiteDBCatalogEntry: Entry')
   APV_cmd_list = [] # SQL cmd to see all PVT together. Strings will be appended as we read logs.
   ASV_cmd_list = [] # SQL cmd to see all Stats together. Strings will be appended as we read logs.
-  def __init__(self, filepath):
-    super().__init__(filepath)
-
+  
+  def __init__(self, filepath, ParamIDClassDict = None, ParamIDNameDict= None):
+    super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
+    self.ParamIDClassDict = ParamIDClassDict
     self.tablename = self.FindTablename()
+
     if self.tablename.startswith(tuple(FDR_TABLE_SCHEMA)):
       self.tabletype = [key for key in FDR_TABLE_TYPE if self.tablename.startswith(key.name)][0] # List should have only one item
     else:
@@ -169,17 +175,32 @@ class SQLiteDBCatalogEntry(CatalogEntry):
 
   @staticmethod
   def AppendToCombinedList(tabletype, fetch_cmd):
+    logging.debug('AppendToCombinedList: Entry')
+
     if tabletype is FDR_TABLE_TYPE.PVT:
       if fetch_cmd not in SQLiteDBCatalogEntry.APV_cmd_list:
         SQLiteDBCatalogEntry.APV_cmd_list.append(fetch_cmd)
     elif tabletype is FDR_TABLE_TYPE.PST:
       if fetch_cmd not in SQLiteDBCatalogEntry.ASV_cmd_list:
         SQLiteDBCatalogEntry.ASV_cmd_list.append(fetch_cmd)
-      
-  def AddMessage(self, proto_msg):
+  
+  def UpdateTableName(self, param_class):
+    #print('param class %s and tablename %s' % (param_class, self.tablename))
+    if "_" in self.tablename:
+      field_list = self.tablename.split('_')
+      self.tablename = '_'.join([field_list[0], param_class, field_list[-1]])
+
+  def AddMessage(self, proto_msg, is_event_type= False):
     table_columns = FDR_TABLE_SCHEMA[self.tabletype.name]
     values = CatalogEntry.get_message_values(proto_msg, list(table_columns.keys()))
+
     values['BootId'] = self.bootid
+    if (not is_event_type) and self.tabletype is not FDR_TABLE_TYPE.PDT and \
+      self.tabletype is not FDR_TABLE_TYPE.BootEvent and \
+      self.tabletype is not FDR_TABLE_TYPE.BookKeeper and \
+      self.tabletype is not FDR_TABLE_TYPE.EventDetails:
+      values['ParamClass'] = self.ParamIDClassDict[values['ParamID']]
+      self.UpdateTableName(values['ParamClass'])
     self.messages.append(values)
   
   def GetMessageDict(self, message):
@@ -188,8 +209,9 @@ class SQLiteDBCatalogEntry(CatalogEntry):
   def UpdateParamID(self, sqliteClient):
     for message in self.messages:
       if message.get("ParamName") and message.get("ParamID") is None:
+        message_ParamClass = message_dict.get("ParamClass").replace('.', '_')
         sql_cmd = "SELECT ParamID from PDT WHERE CompClass = '" +  str(self.compClass) + "' AND ParamClass = '" +\
-                  str(self.paramClass) + "' AND ParamName = '" + str(message["ParamName"]) + "'"
+                  str(message_ParamClass) + "' AND ParamName = '" + str(message["ParamName"]) + "'"
         res = sqliteClient.ExecuteCmd(sqliteClient.connection.execute, sql_cmd)
         print('Updating ParamID for {}'.format(self.tablename))
         message["ParamID"] = res[0][0] if res else None
@@ -251,10 +273,12 @@ def CreateOneCombinedView(sqliteClient, all_tables_view_name, all_tables_cmd_lis
 def CreateCombinedViews(sqliteClient):
   all_tables_view_name = "APV" # APV (All Parameters View)
   combined_view_name = "CDV" # CDV (Combined Data View)
+
   combined_view_create_cmd = "SELECT datetime(" + all_tables_view_name + ".TimeStamp, 'unixepoch') as Time, \
                       " + all_tables_view_name + ".ParamValue, " + all_tables_view_name + ".CompID, PDT.* FROM PDT \
                       INNER JOIN " + all_tables_view_name + " ON " + all_tables_view_name + ".ParamID=PDT.ParamID AND "\
-                      + all_tables_view_name + ".CompClass=PDT.CompClass AND  " + all_tables_view_name + ".ParamClass=PDT.ParamClass"
+                      + all_tables_view_name + ".CompClass=PDT.CompClass"
+
   CreateOneCombinedView(sqliteClient, all_tables_view_name, SQLiteDBCatalogEntry.APV_cmd_list, combined_view_name, combined_view_create_cmd)
   
   all_tables_view_name = "ASV" # ASV (All Stats View)
@@ -264,5 +288,6 @@ def CreateCombinedViews(sqliteClient):
                       " + all_tables_view_name + ".Min, " + all_tables_view_name + ".Max, " + all_tables_view_name + ".Avg, "\
                       + all_tables_view_name + ".CompID, PDT.* FROM PDT \
                       INNER JOIN " + all_tables_view_name + " ON " + all_tables_view_name + ".ParamID=PDT.ParamID AND "\
-                      + all_tables_view_name + ".CompClass=PDT.CompClass AND  " + all_tables_view_name + ".ParamClass=PDT.ParamClass"
+                      + all_tables_view_name + ".CompClass=PDT.CompClass "
+
   CreateOneCombinedView(sqliteClient, all_tables_view_name, SQLiteDBCatalogEntry.ASV_cmd_list, combined_view_name, combined_view_create_cmd)
