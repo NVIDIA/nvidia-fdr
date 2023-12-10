@@ -33,17 +33,13 @@ bool FlightDataRecorder_c::CompareMessageWithLog(const fdrpb::fdr_book_of_errors
             // std::cout << "In book of errors INSIDE BOE READER WHILE" << std::endl;
             
             // std::cout << "From log file boot id" << errorBOERecord.bootid() << "From error message boot id" << errMssg.bootid() <<std::endl;
-            // std::cout << "From log file comp class" << errorBOERecord.compclass() << "From error message comp class" << errMssg.compclass() <<std::endl;
             // std::cout << "From log file device instance" << errorBOERecord.deviceinstance() << "From error message device instance" << errMssg.deviceinstance() <<std::endl;
-            // std::cout << "From log file param class" << errorBOERecord.paramclass() << "From error message param class" << errMssg.paramclass() <<std::endl;
             // std::cout << "From log file param id" << std::to_string(errorBOERecord.paramid()) << "From error message param id" << std::to_string(errMssg.paramid()) <<std::endl;
             // std::cout << "From log file error type" << errorBOERecord.errortype() << "From error message error type" << errMssg.errortype() <<std::endl;
 
             if (errMssg.bootid() == errorBOERecord.bootid() && 
-                errMssg.compclass() == errorBOERecord.compclass() && 
                 errMssg.deviceinstance() == errorBOERecord.deviceinstance() && 
-                errMssg.paramclass() == errorBOERecord.paramclass() && 
-                std::to_string(errMssg.paramid()) == std::to_string(errorBOERecord.paramid()) && 
+                errMssg.paramid() == errorBOERecord.paramid() && 
                 errMssg.errortype() == errorBOERecord.errortype()){
                     return true; }
         }
@@ -52,16 +48,14 @@ bool FlightDataRecorder_c::CompareMessageWithLog(const fdrpb::fdr_book_of_errors
 
 }
 
-void FlightDataRecorder_c::SetBookOfErrorsRecord(unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
+void FlightDataRecorder_c::SetBookOfErrorsRecord(unsigned int paramID, std::string componentID,
                                                  const char *value, time_t current_time, std::string bookOfErrorsFileName)
 {
     book_of_errors.set_bootid(bootCounter);
     book_of_errors.set_paramid(paramID);
-    book_of_errors.set_compclass(sectionID);
     book_of_errors.set_deviceinstance(componentID);
     book_of_errors.set_errortype(value);
     book_of_errors.set_erroroccurtimestamp(current_time); 
-    book_of_errors.set_paramclass(paramClass);
 
     bool result = CompareMessageWithLog(book_of_errors, bookOfErrorsFileName);
 
@@ -71,7 +65,7 @@ void FlightDataRecorder_c::SetBookOfErrorsRecord(unsigned int paramID, std::stri
     }
 }
 
-void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
+void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string componentID,
                                              time_t current_time, PropertyVariant val)
 {
 
@@ -102,32 +96,32 @@ void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int pa
 
         if (err1_int64 != nullptr) {
             if (*err1_int64 <=0){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (err1_uint64 != nullptr) {
             if (*err1_uint64 <=0){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (err1_uint32 != nullptr) {
             if (*err1_uint32 <=0){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (err1_int32 != nullptr) {
             if (*err1_int32 <=0){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (err1_uint16 != nullptr) {
             if (*err1_uint16 <=0){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (err1_int16 != nullptr) {
             if (*err1_int16 <=0){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         
@@ -145,32 +139,32 @@ void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int pa
 
         if (ptr_int64 != nullptr) {
             if (*ptr_int64 <=2){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (ptr_uint64 != nullptr) {
             if (*ptr_uint64 <=2){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (ptr_uint32 != nullptr) {
             if (*ptr_uint32 <=2){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (ptr_int32 != nullptr) {
             if (*ptr_int32 <=2){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (ptr_int16 != nullptr) {
             if (*ptr_int16 <=2){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
         if (ptr_uint16 != nullptr) {
             if (*ptr_uint16 <=2){
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Error Counter", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Error Counter", current_time, bookOfErrorsFileName);
             }
         }
     }
@@ -189,7 +183,7 @@ void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int pa
 
             if (found_critical!=std::string::npos or found_warning!=std::string::npos)
             {
-                SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass, "Health Related Fault", current_time, bookOfErrorsFileName);
+                SetBookOfErrorsRecord(paramID, componentID, "Health Related Fault", current_time, bookOfErrorsFileName);
             }
 
         }
@@ -198,7 +192,6 @@ void FlightDataRecorder_c::BookOfErrorEngine(std::string infoID, unsigned int pa
     // Record Faults into book of errors
     else if (infoID == "FAULTS")
     {
-        SetBookOfErrorsRecord(paramID, sectionID, componentID, paramClass,
-            "Faults and Errors", current_time, bookOfErrorsFileName);
+        SetBookOfErrorsRecord(paramID, componentID, "Faults and Errors", current_time, bookOfErrorsFileName);
     }
 }
