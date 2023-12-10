@@ -36,6 +36,8 @@ typedef struct CommandResult {
 } CommandResult_t;
 
 CommandResult_t exec(const char *cmd);
+std::string get_procuptime(void);
+uint64_t convertStrToUint64(const std::string& strValue, std::string errStr);
 std::vector<std::string> split(std::string str, char delimter);
 
 void FindAndReplaceFirst(std::string &s, const std::string &search, const std::string &replace);
@@ -71,6 +73,7 @@ extern std::string sensorDirTimestamp;
 extern std::string fdrHmcAlivePathName; 
 extern std::string CommonFdrKeepersDirName;
 extern uint64_t numFdsObjs;
+extern const uint32_t currentDataFormatVersion;
 
 // some of the short and inlined function definition in header file
 // [so that these functions are guranteed to be inlined by the compiler]

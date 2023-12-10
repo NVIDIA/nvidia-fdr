@@ -48,9 +48,10 @@ private:
 	sdeventplus::Event FdrEvents = sdeventplus::Event::get_default();
 	std::time_t LastCompactWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
 	std::time_t LastCompactSubWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
-	const std::string CompactorBookKeeperName = "Compactor.log";
-	const std::string BookOfErrorKeeperName = "BookOfErrors.log";
-	const std::string ParamDescKeeperName = "ParamDescription.log";
+	const std::string BootEventKeeperName = "BootEvent.dat";
+	const std::string CompactorBookKeeperName = "Compactor.dat";
+	const std::string BookOfErrorKeeperName = "BookOfErrors.dat";
+	const std::string ParamDescKeeperName = "ParamDescription.dat";
 	std::unique_ptr<FDRStore> CompactorBookKeeperAppender;
 	std::unique_ptr<FDRStore> fdrParamsWriter;
 	// just for storing all the Timer objects, so that these objects doesn't go out of scope
@@ -67,10 +68,10 @@ private:
 	int ExecuteFingerPrintRules(void);
 	int ExecutePreconditionRules(void);
 	void UpdateGlobVariables(bool needtoUpdateBootcounter);
+	void UpdateBootEventLog(void);
 	void CreateFdrHmcAlive(void);
 	std::unique_ptr<FDRStore> CreateKeeperWriter(const std::string dirName, const std::string filename);
 	void DeleteSpecificRecords(std::string recordSubName);
-	void CreateSpecificRecords(std::string recordSubName);
 	void ModifySpecificRecords(std::string recordSubName);
 
 	LeakyBucket *ExceptionRateLimiter;
@@ -85,6 +86,7 @@ private:
 							uint64_t farWindowTimestamp,
 							std::vector<fdrpb::fdr_book_of_errors> &errorMap);
 	void CompactorBookKeeperRemoveEntry(std::string directoryTocompact);
+	uint32_t CompactorGetItsDataFormat(std::string directoryTocompact);
 	void CompactorBookKeeperAppendEntry(void);
 	void CompactorBookKeeperCleanEntries(void);
 	void CompactorRemoveSamplesLogfiles(std::string directoryTocompact);
@@ -97,8 +99,8 @@ private:
 	void CompactorEngine(std::string directoryTocompact);
 
 	// all private functions related to Book Of Errors
-	void SetBookOfErrorsRecord(unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
-                                                 const char *value, time_t current_time, std::string bookOfErrorsFileName);
+	void SetBookOfErrorsRecord(unsigned int paramID, std::string componentID,
+                               const char *value, time_t current_time, std::string bookOfErrorsFileName);
 
 	bool CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg, const std::string& logFile);
 	void PrintRecListPollSubscribeMap(void);
@@ -128,8 +130,8 @@ public:
 	void RefreshAndStore(bool viaTimerSkipChecks);
 	void StoreSubscribeRecords(const std::vector<Record *>& recordListToStore);
 	void Compactor(bool viaTimerSkipChecks);
-	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string sectionID, std::string componentID, std::string paramClass,
-                                             time_t current_time, PropertyVariant val);
+	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string componentID,
+                           time_t current_time, PropertyVariant val);
 	void CheckForErrorsToUpdateBookOfErrors(void);
     void CheckExceptionRateLimit();
 	void initEventsSignalRegistration();

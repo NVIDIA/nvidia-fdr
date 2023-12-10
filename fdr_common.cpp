@@ -14,6 +14,8 @@
 #include <cmath>
 #include "fdr_log.hpp"
 #include "fdr_common.hpp"
+#include <iostream>
+#include <fstream>
 
 CommandResult_t exec(const char *cmd)
 {
@@ -44,6 +46,51 @@ CommandResult_t exec(const char *cmd)
 	exitcode = WEXITSTATUS(pclose(pipe));
 
 	return CommandResult_t{result, exitcode};
+}
+
+// convert the string to uint64_t
+uint64_t convertStrToUint64(const std::string& strValue, std::string errStr)
+{
+    uint64_t retVal = 0;
+    try {
+        retVal = std::stoull(strValue);
+        fdrlog::debug("convertStrToUint64: str:strValue: {}; converted value: {}",
+			strValue, retVal);
+    } catch (const std::invalid_argument& e) {
+        fdrlog::error("convertStrToUint64: Invalid argument: strValue: {}; error: {}",
+			strValue, e.what());
+        errStr = std::string(e.what());
+    } catch (const std::out_of_range& e) {
+        fdrlog::error("convertStrToUint64: Out of range: strValue: {}; error: {}",
+			strValue, e.what());
+        errStr = std::string(e.what());
+    }
+
+    return retVal;
+}
+
+// alternate for exec("uptime");
+std::string get_procuptime(void)
+{
+    // Open /proc/uptime file
+    std::ifstream uptimeFile("/proc/uptime");
+
+    if (!uptimeFile.is_open()) {
+        fdrlog::error("Error: Unable to open /proc/uptime");
+        return "";
+    }
+
+    // Read the entire content of the file
+    std::string uptimeContent;
+    std::getline(uptimeFile, uptimeContent);
+
+    // Output the contents
+    fdrlog::debug("Content of /proc/uptime: {}", uptimeContent);
+
+    // Close the file
+    uptimeFile.close();
+
+    return uptimeContent;
 }
 
 std::vector<std::string> split(std::string str, char delimter)
