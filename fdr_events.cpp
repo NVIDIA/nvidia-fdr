@@ -38,24 +38,24 @@ std::string EventSignalHandler::getFDRDeviceName(
     if (deviceName.find("GPU") != std::string::npos)
     {
         auto deviceId = getDeviceId(deviceName);
-        fdrDeviceName = "GPU" + deviceId;
+        fdrDeviceName = "HGX_GPU_SXM_" + deviceId;
     }
     // Translate NVSwitch_0 to NVSwitch0
     else if (deviceName.find("NVSwitch") != std::string::npos)
     {
         auto deviceId = getDeviceId(deviceName);
-        fdrDeviceName = "NVSwitch" + deviceId;
+        fdrDeviceName = "HGX_NVSwitch_" + deviceId;
     }
     // Translate HGX_Baseboard_0 to Baseboard0
     else if (deviceName.find("Baseboard") != std::string::npos)
     {
         auto deviceId = getDeviceId(deviceName);
-        fdrDeviceName = "Baseboard" + deviceId;
+        fdrDeviceName = "HGX_Chassis_" + deviceId;
     }
     // Default device will be Baseboard0
     else
     {
-        fdrDeviceName = "Baseboard0";
+        fdrDeviceName = "HGX_Chassis_0";
     }
 
     return fdrDeviceName;
@@ -195,13 +195,13 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         auto record = fdrDeviceEventRec.second;
 
                         // Write descriptive event details data into new single file
-                        // Filepath BootCount_<id>_DateStamp_<fdr_timestamp>/GPU/GPU<id>/Event_<event_timestamp>.log
+                        // Filepath BootCount_<id>_DateStamp_<fdr_timestamp>/GPU/GPU<id>/Event_<event_timestamp>.dat
                         std::shared_ptr<FDRStore> eventFDRStoreObj;
                         std::stringstream timeStampString;
                         timeStampString << eventTimestamp;
 
 			            fdr->CreateSamplesWriter(*record.profile, record.sectionID,
-                            record.componentID, "FAULTS", ".log", eventFDRStoreObj,
+                            record.componentID, "FAULTS", ".dat", eventFDRStoreObj,
                             timeStampString.str());
 
                         // Create event details data protobuf message
@@ -216,7 +216,7 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         // Write event details to fdr space
                         eventFDRStoreObj->append(fdr_event_details_data);
 
-                        // Add entry for event details log to Error.log
+                        // Add entry for event details log to Error.dat
                         auto filePath = eventFDRStoreObj->getStoreFilePath();
                         // Create protobuf message
                         fdr_event_data.set_eventtimestamp(eventTimestamp);
@@ -229,12 +229,11 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         PropertyVariant val = std::string(""); // No value associated
                         // Use infoID as 'FAULTS'
                         // Use paramID as default 9999 - No params
-                        fdr->BookOfErrorEngine("FAULTS", 9999, record.sectionID,
-                            record.componentID, record.infogroupID, eventTimestamp, val);
+                        fdr->BookOfErrorEngine("FAULTS", 9999, record.componentID, eventTimestamp, val);
                     }
                     else
                     {
-                        std::cout << "Event store got unkown device: " << fdrDeviceName << std::endl;
+                        std::cout << "Event store got unknown device: " << fdrDeviceName << std::endl;
                     }
                     break; // Skip processing other elements
                 }

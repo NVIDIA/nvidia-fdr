@@ -88,7 +88,7 @@ GPU: &gpu
     - name: gpuid
       value: 0
   InfoGroups:                         #A Logfile shall be created for each item in this list
-    - ID: Inventory                   #This for eg. will create $LogsBasePath/GPU/GPU0/Inventory.log
+    - ID: Inventory                   #This for eg. will create $LogsBasePath/GPU/GPU0/Inventory.dat
       InfoList:
         - &defaults
           ID: Model                   #Name of the this info/parameter/metric inside the log file
@@ -263,28 +263,7 @@ NIC: &nic
             Property: "RxBytes"
       <<: *compaction-definition-sensors
 
-BOOTEVENT: &bootevent
-  InfoGroups:
-    - ID: BootEvent
-      InfoList:
-        - ID: BootEventLog
-          ParamID: 0
-          DataType: string
-          StorePolicy: EveryFetch
-          FetchMethod: Command
-          CommandParams:
-            Command: "cat $logbasepath/Bookkeeper/BootCount.txt; echo ';'; uptime -s"
-      RecordRetentionPolicy: AfterBootDelete
-
 Sections:
-  - ID: BOOT              # which are needed to be executed only at every FDR start/boot instance
-    Components:
-      - ID: BOOTEVENT
-        <<: *bootevent
-        Params:           #and change parameter values
-          - name: logbasepath
-            value: *LogsBasePath
-
   - ID: GPU
     Components:
       - ID: GPU0

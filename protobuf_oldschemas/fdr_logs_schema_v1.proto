@@ -12,8 +12,8 @@ message fdr_sample {
 }
 
 message fdr_stat {
-  uint64 FromTime = 1;   // Start of time period within which samples lie
-  uint64 ToTime = 2;     // End of time period within which samples lie
+  int64 FromTime = 1;   // Start of time period within which samples lie
+  int64 ToTime = 2;     // End of time period within which samples lie
   int64 NumSamples = 3; // Number of samples this stat took into consideration
   int64 Min = 4;        // Minimum value seen across all samples
   int64 Max = 5;        // Maximum value seen across all samples
@@ -39,14 +39,14 @@ message fdr_compactor_bookkeep {
 
 message fdr_book_of_errors {
   string BootId = 1;          // Boot Index/Counter of the Host
-  string DeviceInstance = 2;  // device instance on which error occured [should be same as Sections.Components.ID like, GPU0,GPU1, NVSwitch0, Retimer1, etc]
-                              // CompClass can be dervied from DeviceInstance itself. This DeviceInstance is little different than
-                              // all other DeviceInstance in other message structs, where in the latter, it only holds the number 0,1, etc.
-  string ErrorType = 3;       // type of error [may be of type Threshold, Fault, PCIe, etc]
-  optional uint64 ParamID = 4;      // Unique parameter ID (Used to identify parameter name)
+  string CompClass = 2;      // type of device on which error occured [should be same as Sections.ID like, GPU, NVSwitch, Retimer, etc]
+  string DeviceInstance = 3;  // device instance on which error occured [should be same as Sections.Components.ID like, GPU0,GPU1, NVSwitch0, Retimer1, etc]
+  string ErrorType = 4;       // type of error [may be of type Threshold, Fault, PCIe, etc]
+  optional uint64 ParamID = 9999; // Unique parameter ID (Used to identify parameter name)
   uint64 ErrorOccurTimeStamp = 5; // Time at which this error occured
   uint64 StartHifiTimeStamp = 6;  // ErrorOccurTimeStamp - HiFi-Data-Preserve-Time
   uint64 StopHifiTimeStamp = 7;   // ErrorOccurTimeStamp + HiFi-Data-Preserve-Time
+  string ParamClass = 8;
 }
 
 message fdr_event {
@@ -62,11 +62,4 @@ message fdr_event_details {
   string EventMessage = 4; // Details of event occured
   string EventOriginOfCondition = 5; // Associated device where event occurred
   string EventAdditionalInfo = 6; // Descriptive information for event
-}
-
-message fdr_boot_event {
-  uint64 EventTimeStamp = 1; // Time at which FDR booted
-  string BootId = 2;   // number of times HMC booted. Even though its a counter, data type is string purposefuly. 
-  string UpTimeOfHMC = 3;    // uptime of HMC [output of uptime -s]
-  uint32 DataDirFormatVersion = 4;  // data/directory structure layout format followed in FDR
 }

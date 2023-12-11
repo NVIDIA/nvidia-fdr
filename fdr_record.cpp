@@ -93,7 +93,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
 
         PropertyVariant val = dbus::readDbusProperty(info.DbusParams.Service, info.DbusParams.ObjectPath, 
                                                      info.DbusParams.Interface, info.DbusParams.Property);
-        fdr->BookOfErrorEngine(info.ID, info.ParamID, section.ID, component.ID, info.parent_infogroup->ID ,current_time, val);
+        fdr->BookOfErrorEngine(info.ID, info.ParamID, component.ID, current_time, val);
 
         // Sensors
         
@@ -410,7 +410,7 @@ void Record::refreshDataCallback(PropertyVariant val)
     data.fdr_sample_data.set_paramid(info.ParamID);
 
     if (infogroup.ID == "Error"){
-        fdr->BookOfErrorEngine(info.ID, info.ParamID, section.ID, component.ID, info.parent_infogroup->ID ,current_time, val);
+        fdr->BookOfErrorEngine(info.ID, info.ParamID, component.ID, current_time, val);
     }
 
     if (auto ptr (std::get_if<std::string>(&val)); ptr){

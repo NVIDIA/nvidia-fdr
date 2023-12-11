@@ -32,6 +32,11 @@ std::string sensorDirTimestamp;
 std::string fdrHmcAlivePathName = "/tmp/.fdrHmcAlive"; 
 std::string CommonFdrKeepersDirName = "Bookkeeper";
 
+// FDR file structure layout or file content version control.
+// Version 1. multi-level directory structure
+// Version 2. zero-level or flat directory structure
+const uint32_t currentDataFormatVersion = 2;
+
 std::unordered_map<std::string, Record *> FlightDataRecorder_c::subscribedRecListMap;
 
 void sigCb(Signal& signal, const struct signalfd_siginfo*)
@@ -73,7 +78,7 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 #ifdef FDR_USE_SPDLOG
 	fdrlog::InitLogger(profile.GeneralConfig.LoggingLevel,
-	                   profile.GeneralConfig.LogsBasePath + "/fdr.log",
+	                   profile.GeneralConfig.LogsBasePath + "/fdr.dat",
 					   profile.GeneralConfig.LoggingFileMaxSize,
 					   profile.GeneralConfig.LoggingFileNumber);
 #else
@@ -114,6 +119,9 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
 
 	// update the boot counter
 	UpdateGlobVariables(true);
+
+	// update FDR boot event
+	UpdateBootEventLog();
 
 	// create a hidden empty file /tmp/.fdrHmcAlive, if it not exist 
 	CreateFdrHmcAlive();
@@ -416,24 +424,16 @@ void FlightDataRecorder_c::CreateSamplesWriter(Profile_t &profile, std::string c
 
 	// Only used if encoding type is binary/json
     std::string logdir = profile.GeneralConfig.LogsBasePath; // base directory for logs
-    std::string logfile = paramClass + fileExtention; // relative filename of logs
+    std::string logfile;
 
     std::string logfilepath; // full filepath of logs
-	// let the BootEvent record entries go to common directory "BookKeeper"
-	if (paramClass == "BootEvent") {
-		logdir += "/" + CommonFdrKeepersDirName + "/";
+	if (paramClass == "FAULTS") {
+		// For faults create file name as Event_<event_timestamp>.dat
+		logdir += "/" + GetDirectoryName() + "/";
+		logfile = compClass + "." + compID + ".Event_" + fileTimestamp + fileExtention;
 	} else {
 		logdir += "/" + GetDirectoryName() + "/";
-		logdir += compClass + "/" + compID + "/";
-	}
-	// For faults create file name as Event_<event_timestamp>.log
-	if (paramClass == "FAULTS")
-	{
-		logfile = "Event_" + fileTimestamp + fileExtention;
-	}
-	else
-	{
-		logfile = paramClass + fileExtention;
+		logfile = compClass + "." + compID + fileExtention;
 	}
 
 	logfilepath = logdir + logfile;
@@ -476,7 +476,17 @@ void FlightDataRecorder_c::CreateRecords(void)
 				// create the FDRStore[samples storage file] here itself and
 				// use the same FDRStore pointer for all the records on this infogroup
 			    std::shared_ptr<FDRStore> fdrStoreObj;
-			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".log", fdrStoreObj);
+				if ((infogroup.ID).find("Sensor.") != std::string::npos) {
+					// create the FDRStore[samples storage file for Sensor.* infogroups] here itself and
+					// use the same FDRStore pointer for all the records for all the Sensor.* infogroups
+				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".sensors.dat", fdrStoreObj);
+				} else {
+					// create the FDRStore[samples storage file for non Sensor.* infogroups like Inventory,
+					// Config, Error, Status] here itself and use the same FDRStore pointer for all the
+					// records for all the non Sensor.* infogroups
+				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".others.dat", fdrStoreObj);
+				}
+
 				// For AML events store FDRStore objects for devices having `Error` fields
 				if ((infogroup.ID).find("Error") != std::string::npos)
 				{
@@ -493,7 +503,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 				// create writer store object for statistic file only for Average CompactionMethod records
 			    std::shared_ptr<FDRStore> fdrStatStoreObj;
 			    if (infogroup.CompactionMethod == "Average") {
-				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".stats", fdrStatStoreObj);
+				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".sensors.stat.dat", fdrStatStoreObj);
 				}
 
 				for (auto &info : infogroup.InfoList)
@@ -546,7 +556,7 @@ void FlightDataRecorder_c::CreateRecords(void)
 	}
 }
 
-// This method will creates a snapshot of all Inventory.log, config.log and Versions.log
+// This method will creates a snapshot of all Inventory.dat, config.dat and Versions.dat
 // of all the inventory only for the very first time when fdr booted
 void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 {
@@ -557,7 +567,7 @@ void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 	if (!(std::filesystem::exists(birthCertFilePath)))
 	{
 		std::string fdrDumpPath = profile.GeneralConfig.LogsBasePath;
-		std::string commandStr = "find " + fdrDumpPath + " | grep -e Inventory.log -e Config.log -e Versions.log | xargs tar -cJf " + birthCertFilePath;
+		std::string commandStr = "find " + fdrDumpPath + " | grep -e .others.dat -e Bookkeeper | xargs tar -cJf " + birthCertFilePath;
 
 		// std::cout << "tarCmd: " << commandStr << std::endl;
 		CommandResult_t cmdResult = exec(commandStr.c_str());
@@ -645,7 +655,7 @@ void FlightDataRecorder_c::StoreSubscribeRecords(const std::vector<Record *>& re
 // 		* with this infra, fdr will identify itself, whether the restart of fdr is due
 // 		  to HMC reboot or fdr restart[due to any malfunction or crash or config change, etc]
 // 		* This way of identifying the fdr instance restart is required to get the correct
-// 		  boot counter maintained as per the BootEventLog.log file
+// 		  boot counter maintained as per the BootEventLog.dat file
 // NOTE:
 // 1. This way of identifying the fdr restart will work fine only in HMC[as /tmp directory
 // 	  content is cleared on every reboot of HMC]
@@ -719,6 +729,26 @@ void FlightDataRecorder_c::UpdateGlobVariables(bool needtoUpdateBootcounter)
 	sensorDirTimestamp = ss.str();
 }
 
+// dependency: This function should get called after calling UpdateGlobVariables(), so that the
+// bootcounter variable would have got updated value.
+void FlightDataRecorder_c::UpdateBootEventLog(void)
+{
+	std::unique_ptr<FDRStore> bootEventWriter;
+	bootEventWriter = CreateKeeperWriter(CommonFdrKeepersDirName, BootEventKeeperName);
+
+	// Create fdr_boot_event data
+	fdrpb::fdr_boot_event fdr_boot_event_data;
+
+    std::time_t current_time = std::time(nullptr);
+	fdr_boot_event_data.set_eventtimestamp(current_time);
+	fdr_boot_event_data.set_bootid(bootCounter);
+ 	fdr_boot_event_data.set_uptimeofhmc(get_procuptime());
+	fdr_boot_event_data.set_datadirformatversion(currentDataFormatVersion);
+	bootEventWriter->append(fdr_boot_event_data);
+
+	fdrlog::info("Fdr Data Format Version: {}", currentDataFormatVersion);
+ }
+
 void FlightDataRecorder_c::DeleteSpecificRecords(std::string recRetentionPolicy)
 {
 	// for Debugging:
@@ -755,52 +785,6 @@ void FlightDataRecorder_c::DeleteSpecificRecords(std::string recRetentionPolicy)
 	// std::cout << "-------------------------------------------------------------------------" << std::endl;
 }
 
-// This method will loops throug the entire FDR profile and if it finds the infogroup name
-// matching the specified recRetentionPolicy[even if it matches the part of the name], then create
-// the record and push it to the RecList. This method will be called at every CompactionWindowSecs expiry.
-// This function is now obsolete.
-void FlightDataRecorder_c::CreateSpecificRecords(std::string recRetentionPolicy)
-{
-	for (auto &section : profile.Sections)
-	{
-		section.parent_profile = &profile;
-		for (auto &component : section.Components)
-		{
-			component.parent_section = &section;
-			for (auto &infogroup : component.InfoGroups)
-			{
-				
-				if (infogroup.RecordRetentionPolicy != recRetentionPolicy) {
-					continue;
-				}
-				infogroup.parent_component = &component;
-
-				// create the FDRStore[samples storage file] here itself and
-				// use the same FDRStore pointer for all the records on this infogroup
-			    std::shared_ptr<FDRStore> fdrLogStoreObj;
-			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".log", fdrLogStoreObj);
-				// create writer store object for statistic file
-			    std::shared_ptr<FDRStore> fdrStatStoreObj;
-			    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".stats", fdrStatStoreObj);
-
-				for (auto &info : infogroup.InfoList)
-				{
-					// Save link to the parent
-					info.parent_infogroup = &infogroup;
-
-					// Create a record object
-					Record *resource = new Record(profile, section, component, fdrLogStoreObj, fdrStatStoreObj, infogroup, info);
-
-					// Append it to the list
-					RecList.push_back(resource);
-				}
-				// std::cout << "CreateSpecificRecords: fdrLogStoreObj.use_count: " << fdrLogStoreObj.use_count() 
-				// 		  << "; fdrStatStoreObj.use_count(): " << fdrStatStoreObj.use_count() << std::endl;
-			}
-		}
-	}
-}
-
 // This function will just modify the store pointer for the intended records.
 void FlightDataRecorder_c::ModifySpecificRecords(std::string recRetentionPolicy)
 {
@@ -829,11 +813,23 @@ void FlightDataRecorder_c::ModifySpecificRecords(std::string recRetentionPolicy)
 			// use the same FDRStore pointer for all the records on this Section.ID, Component.ID and infogroup.ID
 			std::shared_ptr<FDRStore> fdrStoreObj;
 			CreateSamplesWriter(profile, outerRec->GetSectionID(), outerRec->GetComponentID(),
-								outerRec->GetInfoGroupID(), ".log", fdrStoreObj);
+								outerRec->GetInfoGroupID(), ".dat", fdrStoreObj);
+			if (outerRec->GetInfoGroupID().find("Sensor.") != std::string::npos) {
+				// create the FDRStore[samples storage file for Sensor.* infogroups] here itself and
+				// use the same FDRStore pointer for all the records for all the Sensor.* infogroups
+				CreateSamplesWriter(profile, outerRec->GetSectionID(), outerRec->GetComponentID(),
+								outerRec->GetInfoGroupID(), ".sensors.dat", fdrStoreObj);
+			} else {
+				// create the FDRStore[samples storage file for non Sensor.* infogroups like Inventory,
+				// Config, Error, Status] here itself and use the same FDRStore pointer for all the
+				// records for all the non Sensor.* infogroups
+				CreateSamplesWriter(profile, outerRec->GetSectionID(), outerRec->GetComponentID(),
+								outerRec->GetInfoGroupID(), ".others.dat", fdrStoreObj);
+			}
 			// create writer store object for statistic file
 			std::shared_ptr<FDRStore> fdrStatStoreObj;
 			CreateSamplesWriter(profile, outerRec->GetSectionID(), outerRec->GetComponentID(),
-								outerRec->GetInfoGroupID(), ".stats", fdrStatStoreObj);
+								outerRec->GetInfoGroupID(), ".sensors.stat.dat", fdrStatStoreObj);
 
 			// assign same store pointer for all other records having same Section.ID, Component.ID and infogroup.ID
 			for (auto &innerRec : RecList) {
