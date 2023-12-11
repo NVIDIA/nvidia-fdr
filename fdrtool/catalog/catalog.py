@@ -11,8 +11,13 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
 # Import standard library modules
 import os
 import logging
+import json
+import google.protobuf.json_format as protobuf_json_format
+
+logging.basicConfig(level=logging.INFO)
 import traceback
 from enum import Enum
+from exception import FileNotFound
 import copy
 # Import third-party library modules
 from google.protobuf.internal.decoder import _DecodeVarint32
@@ -25,12 +30,14 @@ DECODE_FORMAT = Enum('DECODE_FORMAT', ['JSON', 'INFLUX', 'SQLITE'])
 
 FDR_TABLE_SCHEMA = {
                     "CDT": {"CompClass": "TEXT", "CompID": "INTEGER", "CompLabel": "TEXT"},\
-                    "PDT": {"CompClass": "TEXT", "ParamClass": "TEXT", "ParamID": "INTEGER", "ParamName": "TEXT", "ParamType": "TEXT", "Units": "TEXT", "Notes": "TEXT"},\
+                    "PDT": {"CompClass": "TEXT", "ParamClass": "TEXT",  "ParamName": "TEXT", "ParamID": "INTEGER","ParamType": "TEXT", "ParamUnit": "TEXT", "ParamNotes": "TEXT"},\
                     "PVT": {"TimeStamp": "INTEGER", "ParamID": "INTEGER", "ParamValue": "TEXT", "BootId":"INTEGER"},\
                     "PST": {"FromTime": "INTEGER", "ToTime": "INTEGER", "ParamID": "INTEGER",\
                               "NumSamples": "INTEGER", "Min": "INTEGER", "Max": "INTEGER", "Avg": "INTEGER"},\
                     "BookOfErrors": {"BootId":"INTEGER","DeviceType":"TEXT","DeviceInstance":"TEXT","ErrorType":"TEXT","ErrorOccurTimeStamp":"INTEGER","ParamID":"INTEGER"},\
-                    "BookKeeper": {"CompactDirectory":"TEXT","compactStatus":"TEXT"}
+                    "BookKeeper": {"CompactDirectory":"TEXT","compactStatus":"TEXT"},\
+                    "BootEvent" : {"EventTimeStamp":"INTEGER", "HMCBootCount":"TEXT", "UpTimeOfHMC":"TEXT" , "CurrentDate":"TEXT", "DataDirFormatVersion":"INTEGER"},
+                    "EventDetails" : {"EventTimeStamp":"INTEGER", "EventName":"TEXT", "EventDeviceName":"TEXT" , "EventMessage":"TEXT", "EventOriginOfCondition":"TEXT", "EventAdditionalInfo":"TEXT"}
                     }
 
 FDR_TABLE_TYPE = Enum('FDR_TABLE_TYPE', FDR_TABLE_SCHEMA) # All the keys of FDR_TABLE_SCHEMA dictionary
@@ -40,32 +47,62 @@ FDR_TABLE_TYPE = Enum('FDR_TABLE_TYPE', FDR_TABLE_SCHEMA) # All the keys of FDR_
 MessageClasses = [v.DESCRIPTOR.name for v in  vars(fdr_schema).values() if isinstance(v, type) and issubclass(v, Message)]
 PROTO_MSG_TYPE = Enum('PROTO_MSG_TYPE', MessageClasses)
 
+param_description_filename = 'ParamDescription.dat'
+sensor_file_extenstion = 'stat.dat'
+error_book_filename = 'BookOfErrors.dat'
+compactor_filename = 'Compactor.dat'
+Boot_event_filename = 'BootEvent.dat'
+other_file_extention = 'others.dat'
+event_file_contains = '.Event_'
+
 '''
 Class for holding ALL the messages in form of CatalogEntry
 '''
 class Catalog:
   def __init__(self, config, log_root_dir):
     self.CatalogEntries = {key: [] for key in MessageClasses}
+
     self.decode_format = config['decode_format']
     self.length_delimited_binary = config['length_delimited']
     self.json_key_name = config['key_name']
-    
+    self.ParamIDClassDict = dict()
+    self.ParamIDNameDict = dict()
     self.log_dir = log_root_dir
+    self.DecodeErrorEvents()
     self.CreateParamDescriptions()
-    self.CreateCatalog()
-
+    self.ParamIDClassDict[9999] = "Error and Fault"
     self.catalog_name = self.GetCatalogName()
+    self.CreateCatalog()   
+ 
     from .influx import  InfluxDBConnection
     from .sqlite import  SQLiteConnection
     self.influxClient = InfluxDBConnection(self.catalog_name, url=config['influx_url'], org=config['influx_org'], token=config['influx_token']) if self.decode_format == DECODE_FORMAT.INFLUX else None
     self.sqliteClient = SQLiteConnection(self.catalog_name, config['append']) if self.decode_format == DECODE_FORMAT.SQLITE else None
      
-  def FindParamFilename(self):
+  def DecodeErrorEvents(self):
+    param_filename = self.FindParamFilename(Boot_event_filename)
+
+    if param_filename is None:
+      raise FileNotFound("%s file is not found in the dump. " % Boot_event_filename)
+
+    self.decode_binary_file(param_filename)
+
+    for entry in self.CatalogEntries[PROTO_MSG_TYPE.fdr_boot_event.name]:
+      for message in entry.messages:
+        message_dict = entry.GetMessageDict(message)
+        version_number = message_dict.get('DataDirFormatVersion')
+        if version_number != 2:
+          raise VersionMisMatch("Version of the fdr-dump is not matching with the FDRTool. Please use the latest image.")
+        else:
+          logging.info("FDRTool using the %s version for decoding the FDR dump" % version_number)
+        return
+
+  def FindParamFilename(self, file_name):
     param_filename = None
     for root, dirs, files in os.walk(self.log_dir):
-      for filename in files:
-        if 'ParamDescription.log' in filename:
-          param_filename = os.path.join(root, filename)
+      for file in files:
+        if file_name in file:
+          param_filename = os.path.join(root, file)
     return param_filename
 
   def CreateCatalog(self):
@@ -74,7 +111,7 @@ class Catalog:
     for root, dirs, files in os.walk(self.log_dir):
       for filename in files:
         file_extension = os.path.splitext(filename)[1]
-        if (file_extension != '.log' and file_extension != '.stats' and file_extension != '.hifilog') or filename.endswith('ParamDescription.log'): # To ignore any non-log and non-stats files (e.g. BirthCertificate.tar)
+        if (file_extension != '.dat') or filename.endswith(param_description_filename) or filename.endswith(Boot_event_filename): # To ignore any non-log and non-stats files (e.g. BirthCertificate.tar)
           continue
         try:
           self.decode_binary_file(os.path.join(root, filename))
@@ -83,27 +120,30 @@ class Catalog:
           #traceback.print_exc()
     end_time = datetime.now()
     print("\nFinished decoding all the binary logs. Time taken: {} seconds".format((end_time - start_time).total_seconds()))
+    print("creating is done")
   
   def AddEntry(self, CatalogEntry):
     self.CatalogEntries.get(CatalogEntry.msg_type.name).append(CatalogEntry)
 
   def decode_binary_file(self, filepath):
     # Read the binary file
+    logging.debug('Decoding the file %s' % filepath)
+
     with open(filepath, 'rb') as fd:
       buf = fd.read()
     
     if self.decode_format == DECODE_FORMAT.JSON:
       from .json import JSONCatalogEntry
-      entry = JSONCatalogEntry(filepath, self.json_key_name)
+      entry = JSONCatalogEntry(filepath, self.json_key_name, self.ParamIDClassDict, self.ParamIDNameDict)
     elif self.decode_format == DECODE_FORMAT.INFLUX:  
       from .influx import InfluxDBCatalogEntry
-      entry = InfluxDBCatalogEntry(filepath)
+      entry = InfluxDBCatalogEntry(filepath, self.ParamIDClassDict, self.ParamIDNameDict)
     elif self.decode_format == DECODE_FORMAT.SQLITE:
       from .sqlite import SQLiteDBCatalogEntry
-      entry = SQLiteDBCatalogEntry(filepath)
+      entry = SQLiteDBCatalogEntry(filepath, self.ParamIDClassDict, self.ParamIDNameDict)
     else:
       raise RuntimeError("Decoding is not implemented for {}.".format(self.decode_format))
-    
+
     # Convert the binary log into json log.
     # Note that any exception thrown here will be caught by the caller (CreateCatalog method)
     if self.length_delimited_binary:
@@ -113,23 +153,42 @@ class Catalog:
     self.AddEntry(entry)
     return
 
+
   def GetCatalogName(self):
-    brd_serial = None
+    Param_ID = self.GetSerialNumber()
+    if(Param_ID == None):
+      print("Param ID of the BaseBoard Serial Number is None; considering xxx as a Baseboard serial number")
+
+    for root, dirs, files in os.walk(self.log_dir):
+      for filename in files:
+        if filename.startswith('Baseboard.'):
+          file_extension = ('.').join(filename.split('.')[-2:])
+          if (file_extension == 'others.dat'):
+            self.decode_binary_file(os.path.join(root, filename))
+
     for entry in self.CatalogEntries[PROTO_MSG_TYPE.fdr_sample.name]:
-      # Looking for Inventory.log under Baseboard
-      if entry.compClass == 'Baseboard' and entry.paramClass == 'Inventory':
-        brd_serial = entry.GetBrdSerial()
-    if brd_serial is None: # Can't do "if not brd_serial" as empty string raises wrong condition
-      brd_serial = 'xxx'
-      print("Couldn't retrieve Baseboard Serial Number. Setting it to '{}'.".format(brd_serial))
-    return brd_serial
-    
+      for message in entry.messages:
+        message_dict = entry.GetMessageDict(message)
+        message_ParamID = message_dict.get("ParamID")
+        if(message_ParamID == Param_ID) :
+          if "ParamValueString" in message_dict.keys():
+            return message_dict.get("ParamValueString")
+          elif "ParamValue" in message_dict.keys():
+            return message_dict.get("ParamValue")
+    return "xyz"
+
+  def GetSerialNumber(self):
+    for item in ParamDescription['Baseboard']['Inventory']:
+        if(ParamDescription['Baseboard']['Inventory'][item]['ParamName'] == 'BRD-SERIAL') :
+          return item
+    return None
+
   def WriteAllEntries(self):
     print("Starting to write the decoded logs....")
     from datetime import datetime
     start_time = datetime.now()
     kwargs = {'influxClient': self.influxClient, 'sqliteClient': self.sqliteClient}
-    table_creation_order = ['fdr_params', 'fdr_sample', 'fdr_book_of_errors', 'fdr_compactor_bookkeep', 'fdr_stat']
+    table_creation_order = ['fdr_params', 'fdr_sample', 'fdr_book_of_errors', 'fdr_compactor_bookkeep', 'fdr_stat', 'fdr_boot_event', 'fdr_event_details']
     for entry_type in table_creation_order:
       print(f"Writing {entry_type} table(s)....", end = " ")
       success = 0
@@ -156,7 +215,13 @@ class Catalog:
     print("\nFinished writing all the decoded logs. Time taken: {} seconds".format((end_time - start_time).total_seconds()))
       
   def CreateParamDescriptions(self):
-    param_filename = self.FindParamFilename()
+    # get the path of the param description file
+    
+    param_filename = self.FindParamFilename(param_description_filename)
+
+    if param_filename is None:
+      raise FileNotFound("%s file is not found in the dump. " % param_description_filename)
+
     self.decode_binary_file(param_filename)
     
     global ParamDescription
@@ -173,6 +238,8 @@ class Catalog:
           ParamDescription[message_CompClass] = {}
         if not ParamDescription[message_CompClass].get(message_ParamClass):
           ParamDescription[message_CompClass][message_ParamClass] = {}
+        self.ParamIDClassDict[message_ParamID] = message_ParamClass
+        self.ParamIDNameDict[message_ParamID] = message_dict.get('ParamName')
         parameter = {}
         for key in ["ParamName", "DataType", "Units", "Notes"]:
           parameter[key] = message_dict.get(key)
@@ -188,22 +255,56 @@ class Catalog:
 Parent class for holding a single data entry/message
 '''
 class CatalogEntry:
-  def __init__(self, filepath):
+  def __init__(self, filepath, ParamIDClassDict = None, ParamIDNameDict= None):
     self.messages = []
-    self.paramClass, self.compClass, self.compID = CatalogEntry.parse_param_and_component(filepath)
+    self.ParamIDClassDict = ParamIDClassDict
+    self.ParamIDNameDict = ParamIDNameDict
+    file_name = os.path.split(filepath)[1]
+    self.compClass = file_name.split('.')[0]
+    self.compID = file_name.split('.')[1].split('_')[-1]
     self.bootid = CatalogEntry.parse_bootid(filepath)
+    
+    self.is_other_file = False
+    if ".others.dat" in filepath:
+      self.is_other_file = True
 
     # Check the message type from file extension
-    if filepath.endswith('.stats'):
+    if filepath.endswith(sensor_file_extenstion):
       self.msg_type = PROTO_MSG_TYPE.fdr_stat
-    elif filepath.endswith('ParamDescription.log'):
+    elif filepath.endswith(param_description_filename):
       self.msg_type = PROTO_MSG_TYPE.fdr_params
-    elif filepath.endswith('BookOfErrors.log'):
+    elif filepath.endswith(error_book_filename):
       self.msg_type = PROTO_MSG_TYPE.fdr_book_of_errors
-    elif filepath.endswith('Compactor.log'):
+    elif filepath.endswith(compactor_filename):
       self.msg_type = PROTO_MSG_TYPE.fdr_compactor_bookkeep
+    elif filepath.endswith(Boot_event_filename):
+      self.msg_type = PROTO_MSG_TYPE.fdr_boot_event
+    elif event_file_contains in filepath: # Both for log and hifilog
+      self.msg_type = PROTO_MSG_TYPE.fdr_event_details
     else: # Both for log and hifilog
       self.msg_type = PROTO_MSG_TYPE.fdr_sample
+
+
+  def FindTablename(self):
+    tablename = None
+    self.paramClass = ""
+    if self.msg_type == PROTO_MSG_TYPE.fdr_stat or self.msg_type == PROTO_MSG_TYPE.fdr_sample:
+      tablename_prefix = 'PST' if self.msg_type == PROTO_MSG_TYPE.fdr_stat else 'PVT'
+      tablename_suffix = '_{}'.format(self.compID) if self.compID else ''
+      tablename = '{}_{}_{}{}'.format(tablename_prefix, self.paramClass, self.compClass, tablename_suffix)
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_params:
+      tablename = 'PDT'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_book_of_errors:
+      tablename = 'BookOfErrors'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_compactor_bookkeep:
+      tablename = 'BookKeeper'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_boot_event:
+      tablename = 'BootEvent'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_event_details:
+      tablename = 'EventDetails'
+    else:
+      tablename = 'Unknown'
+    return tablename
 
   def decode_length_delimited_binary(self, buf):
     # Since each log file can have multiple messages, we need to separate the messages from each other
@@ -216,10 +317,20 @@ class CatalogEntry:
       msg_buf = buf[n:n+msg_len]
       n += msg_len
       proto_msg = getattr(fdr_schema, self.msg_type.name)()
+
       proto_msg.ParseFromString(msg_buf)
+      is_event_type = False
+      if self.is_other_file:
+        proto_msg_temp = json.loads(protobuf_json_format.MessageToJson(proto_msg))
+        if "ParamID" not in proto_msg_temp.keys():
+          proto_msg = getattr(fdr_schema, PROTO_MSG_TYPE.fdr_event.name)()
+          proto_msg.ParseFromString(msg_buf)
+          is_event_type = True
+
+      #print(proto_msg)
       # At this point, proto_msg is of type protobuf message...
       # For example, either fdr_logs_schema_pb2.fdr_sample and fdr_logs_schema_pb2.fdr_stats
-      self.AddMessage(proto_msg)
+      self.AddMessage(proto_msg, is_event_type)
     return
   
   def decode_zero_delimited_binary(self, buf):
@@ -233,9 +344,18 @@ class CatalogEntry:
       msg_buf = cobsr.decode(msg_buf)
       proto_msg = getattr(fdr_schema, self.msg_type.name)()
       proto_msg.ParseFromString(msg_buf)
+      is_event_type = False
+      if self.is_other_file:
+        proto_msg_temp = json.loads(protobuf_json_format.MessageToJson(proto_msg))
+        if "ParamID" not in proto_msg_temp.keys():
+          proto_msg = getattr(fdr_schema, PROTO_MSG_TYPE.fdr_event.name)()
+          proto_msg.ParseFromString(msg_buf)
+          is_event_type = True
+
+
       # At this point, proto_msg is of type protobuf message...
       # For example, either fdr_logs_schema_pb2.fdr_sample and fdr_logs_schema_pb2.fdr_stats
-      self.AddMessage(proto_msg)
+      self.AddMessage(proto_msg, is_event_type)
     return
 
   def GetBrdSerial(self):
@@ -247,37 +367,20 @@ class CatalogEntry:
         break
     return brd_serial
   
-  def FindTablename(self):
-    if self.msg_type == PROTO_MSG_TYPE.fdr_stat or self.msg_type == PROTO_MSG_TYPE.fdr_sample:
-      tablename_prefix = 'PST' if self.msg_type == PROTO_MSG_TYPE.fdr_stat else 'PVT'
-      tablename_suffix = '_{}'.format(self.compID) if self.compID else ''
-      tablename = '{}_{}_{}{}'.format(tablename_prefix, self.paramClass, self.compClass, tablename_suffix)
-    elif self.msg_type == PROTO_MSG_TYPE.fdr_params:
-      tablename = 'PDT'
-    elif self.msg_type == PROTO_MSG_TYPE.fdr_book_of_errors:
-      tablename = 'BookOfErrors'
-    elif self.msg_type == PROTO_MSG_TYPE.fdr_compactor_bookkeep:
-      tablename = 'BookKeeper'
-    else:
-      tablename = 'Unknown'
-    return tablename
-  
+
   # If compClass and paramClass are not provided, this method will use the predefined values
   # which were parsed from the filepath
   def GetParamNameFromID(self, paramID, compClass=None, paramClass=None):
-    compClass = compClass if compClass else self.compClass
-    paramClass = paramClass if paramClass else self.paramClass
-    result = ParamDescription.get(compClass, {}).get(paramClass, {}).get(str(paramID), {}).get("ParamName")
-    if not result:
-      print(f"WARNING: {compClass}.{paramClass}.{paramID} not found in PDT.")
-    return result
+    if paramID in self.ParamIDNameDict.keys():
+      return self.ParamIDNameDict[paramID]
+    else:
+      print(f"WARNING: {paramID} {type(paramID)}not found in PDT.")
+      return None
   
   def GetParamNameFromMsg(self, proto_msg):
     match self.msg_type:
-      case PROTO_MSG_TYPE.fdr_sample | PROTO_MSG_TYPE.fdr_stat:
-        return self.GetParamNameFromID(proto_msg.ParamID)
-      case PROTO_MSG_TYPE.fdr_book_of_errors:
-        return self.GetParamNameFromID(proto_msg.ParamID, proto_msg.CompClass, proto_msg.ParamClass)
+      case PROTO_MSG_TYPE.fdr_sample | PROTO_MSG_TYPE.fdr_stat | PROTO_MSG_TYPE.fdr_book_of_errors:
+        return self.GetParamNameFromID(str(proto_msg.ParamID))
       case _:
         return None      
   
@@ -291,27 +394,6 @@ class CatalogEntry:
       print(f"WARNING: {self.compClass}.{self.paramClass}.{paramName} not found in PDT.")
     return result
 
-  @staticmethod
-  def parse_param_and_component(filepath):
-    # Parse filepath to get ParamClass and Component
-    filepath, ParamClass = os.path.split(filepath)
-
-    ParamClass = ParamClass.replace('.log', '') # e.g.: Config.log becomes Config
-    ParamClass = ParamClass.replace('.stats', '') # e.g.: Config.stats becomes Config
-    ParamClass = ParamClass.replace('.hifilog', '') # e.g.: Sensor.Thermal.hifilog becomes Sensor.Thermal
-    
-    ParamClass = ParamClass.replace('.', '_') # e.g.: Sensor.Clock becomes Sensor_Clock
-    filepath, Component = os.path.split(filepath)
-
-    import re
-    if re.search(r'(\d+)', Component):
-      CompClass, CompID = filter(None, re.split(r'(\d+)', Component))
-    else:
-      CompClass, CompID = Component, None
-    
-    # One directory above is the CompClass (e.g. in /PCIeRetimer/Retimer0/, CompClass is PCIeRetimer)
-    CompClass = os.path.split(filepath)[1]
-    return ParamClass, CompClass, CompID
   
   @staticmethod
   def parse_bootid(filepath):

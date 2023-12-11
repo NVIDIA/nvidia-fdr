@@ -67,35 +67,48 @@ class InfluxBatchingCallback(object):
 
     def retry(self, conf: (str, str, str), data: str, exception: InfluxDBError):
         """Retryable error."""
+        pass
         print(f"Retryable error occurs for batch: {conf}, data: {data} retry: {exception}")
 
 '''
 Child class for holding a single data entry/message in line-protocol format for InfluxDB
 '''
 class InfluxDBCatalogEntry(CatalogEntry):
-  def __init__(self, filepath):
-    super().__init__(filepath)
+  def __init__(self, filepath, ParamIDClassDict = None, ParamIDNameDict= None):
+    super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
+    self.ParamIDClassDict = ParamIDClassDict
     self.tablename = self.FindTablename()
+    
+  def UpdateTableName(self, param_class):
+    if "_" in self.tablename:
+      field_list = self.tablename.split('_')
+      self.tablename = '_'.join([field_list[0], param_class, field_list[-1]])
 
-  def AddMessage(self, proto_msg):
+  def AddMessage(self, proto_msg, is_event_type = False):
+    if is_event_type:
+      return
+      
     match self.msg_type:
       case PROTO_MSG_TYPE.fdr_sample:
         #values = {'ParamValue': None} # Need to do it as sometimes the 'ParamValue' is missing in the logs
-        field_key = self.GetParamNameFromID(proto_msg.ParamID)
+        field_key = self.ParamIDClassDict[str(proto_msg.ParamID)]
+      
         if field_key is None:
           logging.error(f'Skipping ParamID {proto_msg.ParamID} in {self.tablename} as parameter name is undefined.')
           return
         values = CatalogEntry.get_message_values(proto_msg, ['ParamValue'])
-        point_data = influxdb_client.Point(self.tablename).tag('BootId', self.bootid).field(field_key, values['ParamValue']).time(proto_msg.TimeStamp, write_precision=WritePrecision.S)
+        self.UpdateTableName(field_key)
+        point_data = influxdb_client.Point(self.tablename).tag('BootId', self.bootid).field(field_key, str(values['ParamValue'])).time(proto_msg.TimeStamp, write_precision=WritePrecision.S)
         self.messages.append(point_data)
       
       case PROTO_MSG_TYPE.fdr_stat:
         # Temporary change: Using 0 as the protobuf didn't serialize default values. Need to figure out a solution.
         #values = {'Min': 0, 'Max': 0, 'Avg': 0} # Should be None by default. The values won't show up in database
-        field_key = self.GetParamNameFromID(proto_msg.ParamID)
+        field_key = self.ParamIDClassDict[str(proto_msg.ParamID)]
         if field_key is None:
           logging.error(f'Skipping {proto_msg.ParamID} in {self.tablename} as parameter name is undefined.')
           return
+        self.UpdateTableName(field_key)
         values = CatalogEntry.get_message_values(proto_msg, ['FromTime','ToTime', 'Min', 'Max', 'Avg'])
         point_data = influxdb_client.Point(self.tablename)\
                                     .tag('agg-type', 'Min')\
@@ -131,6 +144,9 @@ class InfluxDBCatalogEntry(CatalogEntry):
       case PROTO_MSG_TYPE.fdr_compactor_bookkeep:
         pass
       
+      case PROTO_MSG_TYPE.fdr_boot_event:
+        pass
+
       case _:
         print("Proto msg format didn't match")
 
@@ -146,7 +162,7 @@ class InfluxDBCatalogEntry(CatalogEntry):
     return paramValue
   
   def GetMessageDict(self, message):
-    if self.msg_type == PROTO_MSG_TYPE.fdr_params:
+    if self.msg_type == PROTO_MSG_TYPE.fdr_params or self.msg_type == PROTO_MSG_TYPE.fdr_boot_event:
       return protobuf_json_format.MessageToDict(message)
     return message._fields
   

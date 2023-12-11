@@ -131,7 +131,7 @@ def main(arglist=None):
 
     # Step-3: Create catalog of decoded binary logs
     MyCatalog = Catalog(vars(args), log_root_dir)
-
+    print("creating catalog done---")
     print("\n---------- Writing decoded FDR logs in {} ----------".format(args.decode_format))
     # Step-4: Write the logs in intended format
     MyCatalog.WriteAllEntries()
@@ -140,7 +140,7 @@ def main(arglist=None):
     print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
     print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    #traceback.print_exc()
+    traceback.print_exc()
     status_code = 1
 
   # Step-5: Clean up
@@ -165,6 +165,8 @@ def CollectFdrDump(host_ip, username, password):
   print('Successfully logged in to host {}'.format(host_ip))
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}
+
+  
   url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
   print(f"\nTriggering FDR dump....")
   print(f"Redfish API: {url} {body}")

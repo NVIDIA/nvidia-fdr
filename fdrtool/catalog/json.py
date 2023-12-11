@@ -19,26 +19,35 @@ from catalog.catalog import CatalogEntry, PROTO_MSG_TYPE
 Child class for holding a single data entry/message in JSON format
 '''
 class JSONCatalogEntry(CatalogEntry):
-  def __init__(self, filepath, key_name=False):
-    super().__init__(filepath)
+  def __init__(self, filepath, key_name=False, ParamIDClassDict = None, ParamIDNameDict= None):
+    super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
     self.filepath = filepath
+
     self.primary_key_name = key_name
 
-  def AddMessage(self, proto_msg):
+  def AddMessage(self, proto_msg, is_event_type = False):
     proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg))
-    if self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params and self.msg_type != PROTO_MSG_TYPE.fdr_compactor_bookkeep:
+
+    if (not is_event_type) and self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params \
+      and self.msg_type != PROTO_MSG_TYPE.fdr_compactor_bookkeep and \
+        self.msg_type != PROTO_MSG_TYPE.fdr_event_details and \
+        self.msg_type != PROTO_MSG_TYPE.fdr_boot_event  :
       # Replace the ParamID with ParamName
-      paramName = self.GetParamNameFromMsg(proto_msg)
-      if paramName:
-        append_to_json = {"ParamName": paramName}
-        proto_msg_str.update(append_to_json)
-        del proto_msg_str["ParamID"]
-      else:
-        print(f"NOTE: Skipping the ParamName update in {self.filepath} as it couldn't be retrieved.")
+      if proto_msg_str["ParamID"] != "9999":
+        paramName = self.GetParamNameFromMsg(proto_msg)
+        if paramName:
+          append_to_json = {"ParamName": paramName}
+          proto_msg_str.update(append_to_json)
+          del proto_msg_str["ParamID"]
+        else:
+          print(f"NOTE: Skipping the ParamName update in {self.filepath} as it couldn't be retrieved.")
       
     # MessageToJson method converts the protobuf message into JSON format. However,
     # to make JSON logs consistent with the formatting in FDR, we're removing the '\n' between the key-values,
     # as well as all the spaces by doing a load and then dump.
+    #print("after decoding")
+    #print(proto_msg_str)
+    #raise RuntimeError
     json_str = json.dumps(proto_msg_str)
     json_str += '\n' # Add a new line to separate between messages
     self.messages.append(json_str)
