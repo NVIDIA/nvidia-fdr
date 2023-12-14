@@ -140,7 +140,7 @@ def main(arglist=None):
     print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
     print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    traceback.print_exc()
+    # traceback.print_exc()
     status_code = 1
 
   # Step-5: Clean up

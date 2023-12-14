@@ -92,7 +92,7 @@ class Catalog:
         message_dict = entry.GetMessageDict(message)
         version_number = message_dict.get('DataDirFormatVersion')
         if version_number != 2:
-          raise VersionMisMatch("Version of the fdr-dump is not matching with the FDRTool. Please use the latest image.")
+          raise VersionMisMatch("Version of the fdr-dump is not matching with the FDRTool.")
         else:
           logging.info("FDRTool using the %s version for decoding the FDR dump" % version_number)
         return

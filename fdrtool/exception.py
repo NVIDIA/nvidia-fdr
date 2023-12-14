@@ -11,3 +11,8 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
 class FileNotFound(Exception):
     def __init__(self, message):
         super().__init__(message)
+
+
+class VersionMisMatch(Exception):
+    def __init__(self, message):
+        super().__init__(message)
