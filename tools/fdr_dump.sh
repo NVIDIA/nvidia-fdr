@@ -30,12 +30,15 @@ function on_clean_action()
             -maxdepth 1 \
             -type d \
             ! -name 'Bookkeeper' \
+            ! -name 'dumps' \
             -exec rm -rf {} + && \
-        find $FDR_LOG_PATH \
+        find $FDR_LOG_PATH/Bookkeeper \
             -type f \
             ! -name 'BirthCertificate.tar' \
             -exec rm -rf {} +
     fi
+
+    echo "Cleaned up $ARG_DUMP_PATH"
 }
 
 
@@ -49,7 +52,6 @@ function initialize()
         exit 1
     fi
     echo "Created dest dir $ARG_DUMP_PATH"
-
 }
 
 function cleanup()
@@ -61,30 +63,14 @@ function cleanup()
 
 function main()
 {
-    local TEMP_DUMP_FILE="/tmp/.$F_NAME_TEMPLATE.tar.xz"
     local DEST_DUMP_FILE="$ARG_DUMP_PATH/$F_NAME_TEMPLATE.tar.xz"
 
-    # compress fdr dir to destination dir directly to save memory
-    tar -Jcf $TEMP_DUMP_FILE -C $(dirname "$FDR_LOG_PATH") \
-        $(basename "$FDR_LOG_PATH")
+    # tar fdr dir to destination directory to save memory
+    tar -cf $DEST_DUMP_FILE -C $(dirname "$FDR_LOG_PATH") \
+        --exclude dumps $(basename "$FDR_LOG_PATH")
 
     if [ $? -ne 0 ]; then
-        echo "Compression $FDR_LOG_PATH failed"
-
-        # remove the temp file if error occured
-        rm -rf $TEMP_DUMP_FILE
-
-        return 1
-    fi
-
-    # rename compressed archive
-    mv $TEMP_DUMP_FILE $DEST_DUMP_FILE
-    if [ $? -ne 0 ]; then
-        echo "Failed to move $TEMP_DUMP_FILE to $DEST_DUMP_FILE"
-
-        # remove both files if error occured
-        rm -rf $TEMP_DUMP_FILE
-        rm -rf $DEST_DUMP_FILE
+        echo "Faild to tar dir $FDR_LOG_PATH"
 
         return 1
     fi
