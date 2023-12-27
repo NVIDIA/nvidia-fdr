@@ -16,6 +16,7 @@
 #include "fdr_common.hpp"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 CommandResult_t exec(const char *cmd)
 {
@@ -46,6 +47,38 @@ CommandResult_t exec(const char *cmd)
 	exitcode = WEXITSTATUS(pclose(pipe));
 
 	return CommandResult_t{result, exitcode};
+}
+
+int copyFile(const std::string& source, const std::string& destination)
+{
+    try {
+        std::filesystem::copy_file(source, destination, std::filesystem::copy_options::overwrite_existing);
+        fdrlog::debug("File {} copied to {} successfully.", source, destination);
+        return FDR_SUCCESS;
+    } catch (const std::exception& e) {
+        fdrlog::warn("Error: copying File {} to {}; error: {}", source, destination, e.what());
+        return FDR_ERR_FILE_COPY_FAIL;
+    }
+}
+
+// FDR trying to autorecover the corrupt file, if any
+void BkupAndDeleteCorruptFile(const std::string& corruptFileName)
+{
+    // 1. take the backup of the corrupted file and
+    std::string currentTimeStr = std::to_string(std::time(nullptr));
+    std::string bkupCorruptedFileName = corruptFileName + "-corrupt-" + currentTimeStr;
+    if (copyFile(corruptFileName, bkupCorruptedFileName) != FDR_SUCCESS) {
+        fdrlog::warn("Taking backup failed: corrupted[{}] to [{}]", corruptFileName, bkupCorruptedFileName);
+    } else {
+        fdrlog::warn("Backedup: corrupted[{}] to [{}]", corruptFileName, bkupCorruptedFileName);
+    }
+
+    // 2. delete it, so that next time the appender will create a new file [without any corruption]
+    if (remove(corruptFileName.c_str()) == 0) {
+        fdrlog::warn("Deleted corrupt file: {}", corruptFileName);
+    } else {
+        fdrlog::warn("Falied to Delete corrupt file: {}", corruptFileName);
+    }
 }
 
 // convert the string to uint64_t
