@@ -13,6 +13,7 @@
 #include <sstream>
 #include "fdr_log.hpp"
 #include "fdr_store.hpp"
+#include "fdr_common.hpp"
 
 #include "fdr_logs_schema.pb.h"
 #include <google/protobuf/util/json_util.h>
@@ -88,7 +89,7 @@ void FDRStore::append(const google::protobuf::Message &data)
 }
 
 int FDRStore::readnext(google::protobuf::Message *datap){
-    // std::cout << "readnext:encodingtouse: " << encodingtouse << "; storagefilepath: " << storagefilepath << std::endl;
+    // fdrlog::warn("readnext:encodingtouse: {}; storagefilepath: {}", encodingtouse, storagefilepath);
     if (encodingtouse == ENCODING_CHOICE_JSON)
     {
         if (instream.is_open())
@@ -97,10 +98,10 @@ int FDRStore::readnext(google::protobuf::Message *datap){
             if (std::getline(instream, line))
             {
                 google::protobuf::util::JsonStringToMessage(line, datap);
-                return 1;
+                return FDR_SUCCESS_DATA_READ;
             }
         }
-        return 0;
+        return FDR_SUCCESS_DATA_READ_EOF;
     }
     else if(encodingtouse == ENCODING_CHOICE_BINARY)
     {
@@ -113,15 +114,16 @@ int FDRStore::readnext(google::protobuf::Message *datap){
             {
                 if (clean_eof)
                 {
-                    return 0; // clean end of file
+                    return FDR_SUCCESS_DATA_READ_EOF; // clean end of file
                 }
                 else
                 {
                     fdrlog::warn("Binary file seems corrupted");
-                    return 0; // Unexpected end of file
+                    BkupAndDeleteCorruptFile(storagefilepath);
+                    return FDR_ERR_DATA_READ_CORRUPT_EOF; // Unexpected end of file
                 }
             }
-            return 1; //Successfull read of a record and more left to read
+            return FDR_SUCCESS_DATA_READ; //Successfull read of a record and more left to read
         }
     }
     else{
@@ -130,7 +132,7 @@ int FDRStore::readnext(google::protobuf::Message *datap){
     // std::cout << "readnext: default: failure: return 0: encodingtouse: " << encodingtouse
     //           << "; storagefilepath: " << storagefilepath 
     //           << std::endl;
-    return 0;
+    return FDR_SUCCESS_DATA_READ_EOF;
 }
 
 

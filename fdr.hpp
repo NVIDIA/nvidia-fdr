@@ -90,7 +90,7 @@ private:
 	void CompactorBookKeeperAppendEntry(void);
 	void CompactorBookKeeperCleanEntries(void);
 	void CompactorRemoveSamplesLogfiles(std::string directoryTocompact);
-	std::string CompactorGetDirectoryToCompact(int numberOfDirToLook);
+	std::string CompactorGetDirectoryToCompact(int numberOfDirToLook, int& dirCounter);
 	void CompactorGetLeastAndFarTimestamp(const std::string directoryTocompact,
 								  uint64_t &leastWindowTimestamp,
 								  uint64_t &farWindowTimestamp);
@@ -100,9 +100,9 @@ private:
 
 	// all private functions related to Book Of Errors
 	void SetBookOfErrorsRecord(unsigned int paramID, std::string componentID,
-                               const char *value, time_t current_time, std::string bookOfErrorsFileName);
+                               const char *value, time_t current_time);
 
-	bool CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg, const std::string& logFile);
+	bool CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg);
 	void PrintRecListPollSubscribeMap(void);
 	void PollRecordTimerCBEngine(int fetchFreqSecKey);
 	void SubscribeStoreRecordTimerCBEngine(int storeFreqSec);

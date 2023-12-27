@@ -27,7 +27,11 @@ enum {
     FDR_ERR_GENFAILURE,
     FDR_ERR_PARTITION_SIZE_LESS,
     FDR_ERR_MAIN_WINDOW_NOT_EXPIRED,
-    FDR_ERR_SUB_WINDOW_NOT_EXPIRED
+    FDR_ERR_SUB_WINDOW_NOT_EXPIRED,
+    FDR_ERR_FILE_COPY_FAIL,
+    FDR_SUCCESS_DATA_READ,
+    FDR_SUCCESS_DATA_READ_EOF,
+    FDR_ERR_DATA_READ_CORRUPT_EOF
 };
 
 typedef struct CommandResult {
@@ -42,6 +46,8 @@ std::vector<std::string> split(std::string str, char delimter);
 
 void FindAndReplaceFirst(std::string &s, const std::string &search, const std::string &replace);
 void FindAndReplaceAll(std::string &s, const std::string &search, const std::string &replace);
+int copyFile(const std::string& source, const std::string& destination);
+void BkupAndDeleteCorruptFile(const std::string& corruptFileName);
 
 
 class LeakyBucket {
