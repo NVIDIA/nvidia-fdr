@@ -10,6 +10,7 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
 '''
 # Import standard library modules
 import json
+import re
 # Import third-party library modules
 import google.protobuf.json_format as protobuf_json_format
 # Import locally developed modules
@@ -27,6 +28,7 @@ class JSONCatalogEntry(CatalogEntry):
 
   def AddMessage(self, proto_msg, is_event_type = False):
     proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg))
+    
 
     if (not is_event_type) and self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params \
       and self.msg_type != PROTO_MSG_TYPE.fdr_compactor_bookkeep and \
@@ -34,23 +36,32 @@ class JSONCatalogEntry(CatalogEntry):
         self.msg_type != PROTO_MSG_TYPE.fdr_boot_event  :
       # Replace the ParamID with ParamName
       if proto_msg_str["ParamID"] != "9999":
-        paramName = self.GetParamNameFromMsg(proto_msg)
+
+   # Extracting The CompClass form the Filename 
+        parts = self.filepath.split('/')
+        if len(parts) > 4:
+            filename = parts[4].split('.')
+            CompClass= filename[0]
+
+        paramName = self.GetParamNameFromID(proto_msg,CompClass)
+        
+    #Appending the 'ParamName' to the JSON before writing it into the log files.
         if paramName:
           append_to_json = {"ParamName": paramName}
           proto_msg_str.update(append_to_json)
-          del proto_msg_str["ParamID"]
+          #del proto_msg_str["ParamID"]
         else:
-          print(f"NOTE: Skipping the ParamName update in {self.filepath} as it couldn't be retrieved.")
+          #Exception for the files if not present in self.filepath (./fdr_logs/fdr/BootCount~)
+          print(f"Warning : Skipping the ParamName update for file {self.filepath} Not it self.filepath")
       
     # MessageToJson method converts the protobuf message into JSON format. However,
     # to make JSON logs consistent with the formatting in FDR, we're removing the '\n' between the key-values,
     # as well as all the spaces by doing a load and then dump.
-    #print("after decoding")
-    #print(proto_msg_str)
-    #raise RuntimeError
+    
     json_str = json.dumps(proto_msg_str)
     json_str += '\n' # Add a new line to separate between messages
     self.messages.append(json_str)
+
 
   def GetParamValue(self, message, paramId=None, paramName=None):
     paramValue = None
@@ -68,7 +79,7 @@ class JSONCatalogEntry(CatalogEntry):
   def WriteEntry(self, **kwargs):
     with open(self.filepath, 'w') as fd:
       fd.writelines(self.messages)
-
+  
   def __repr__(self): 
     return "Logs for {}:\n{}\n".format(self.filepath, self.messages)
 
