@@ -53,6 +53,8 @@ def main(arglist=None):
   argget.add_argument('-u', '--username', type=str, help='Username for Authentication')
   argget.add_argument('-p', '--password', type=str, help='Password for Authentication')
 
+  argget.add_argument('-e', '--environment', type=str, help='Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)', default="UNK")
+
   # decode option
   group_decode_format = argget.add_mutually_exclusive_group(required=True)
   group_decode_format.add_argument("--json", default=False, action="store_const", const = DECODE_FORMAT.JSON,  help="Decode the binary protobuf logs to JSON and store them locally.", dest = 'decode_format')
@@ -97,6 +99,11 @@ def main(arglist=None):
     logging.error('--append should be provided only while decoding to sqlite.')
     arg_error = True
   
+  if args.environment not in ["FIE", "FAC", "UNK"]:
+    logging.error('Invalid environment provided')
+    args.environment = "UNK"
+  
+
   if arg_error:
     argget.print_help()
     return 1
@@ -111,7 +118,9 @@ def main(arglist=None):
     binary_log_tar_file = ''
     if not args.use_local:
       print("\n----------- Collecting FDR dump from host {} -----------".format(args.ip))
-      binary_log_tar_file = CollectFdrDump(args.ip, args.username, args.password)
+      # Store the downloaded fdr dumps in ./tmp/
+      os.makedirs("./tmp/", exist_ok=True)
+      binary_log_tar_file = CollectFdrDump(args.ip, args.username, args.password, args.environment)
       #binary_log_tar_file = CollectFdrDump_DEMO(args.ip, args.username, args.password)
     else: # Retrieve the zip file from local machine
       binary_log_tar_file = args.local_file
@@ -120,6 +129,7 @@ def main(arglist=None):
     print("\n--------------------- Decoding FDR dump -----------------------")
     print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
     # Remove existing logs directory to avoid issues with overlapping of logs in different formats
+     
     log_root_dir = './fdr_logs/'
     if os.path.exists(log_root_dir):
       shutil.rmtree(log_root_dir)
@@ -153,7 +163,8 @@ def main(arglist=None):
 
   return status_code
 
-def CollectFdrDump(host_ip, username, password):
+
+def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
   from datetime import datetime
   start_time = datetime.now()
   
@@ -164,10 +175,13 @@ def CollectFdrDump(host_ip, username, password):
   REDFISH_OBJ.login(auth="basic")
   print('Successfully logged in to host {}'.format(host_ip))
   # Trigger the FDR dump first.
-  body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}
-
-  
+  body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}  
   url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
+  url_serial_number = "/redfish/v1/Chassis/HGX_BMC_0"
+  
+  response = REDFISH_OBJ.get(url_serial_number)
+  serial_number = response.dict.get('SerialNumber')
+
   print(f"\nTriggering FDR dump....")
   print(f"Redfish API: {url} {body}")
   response = REDFISH_OBJ.post(url, body=body)
@@ -201,7 +215,8 @@ def CollectFdrDump(host_ip, username, password):
   if entry_location is None:
     raise Exception("FDR dump path could not be found in the response! Response received:\n{}.".format(task))
   dump_timestamp = datetime.now()
-  binary_log_tar_file = f'fdr_dump_{dump_timestamp}_{task_id}.tar.xz'
+  # binary_log_tar_file = f'fdr_dump_{dump_timestamp}_{task_id}.tar.xz'
+  binary_log_tar_file = f'./tmp/HMC_{env_tag}_SN{serial_number}_{dump_timestamp.strftime("%m%d%Y_%H%M%S")}.tar.xz'
   url = f"{entry_location}/attachment"
   print(f"\nDownloading FDR dump {binary_log_tar_file}....")
   print(f"Redfish API: {url}")

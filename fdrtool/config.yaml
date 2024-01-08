@@ -1,20 +1,20 @@
 # host info
 use_local: False
-local_file: ../../binary-logs.tar.gz
+local_file: /path/to/fdr-dump.tar.xz
 
 
-ip: http://127.0.0.1:2080 # host IP
+ip: http://127.0.0.1:18889 # host IP
 username: root
 password: 0penBmc
 
 # decode option
 # Note: Only one of the following options can be set as True at a time.
-json: False
+json: True
 influx: False
 sqlite: False
 
 # json option
-key_name: False
+key_name: True
 
 # influx option
 influx_url: http://afsanac-dev-01.nvidia.com:8086/ # temporary for testing. Will be pushed to AWS later.
@@ -25,4 +25,7 @@ influx_token: 2WOusrtvMnW2ueufRaGunC6k-onEa5f1fBdkViEhTT-8-StXz9v68aDA-V-VqksCrj
 append: False
 
 # binary file format
-length_delimited: False
+length_delimited: True
+
+# Location/environment of the machine: Field(FIE), Factory(FAC), Default is Unknown(UNK)
+environment: FAC
