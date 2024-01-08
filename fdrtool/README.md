@@ -41,14 +41,14 @@ The confuration file template is provided as *[config.yaml](https://gitlab-maste
 | --influx_token | String | Token for authenticating to InfluxDB Host |
 | --append, -a | Boolean | default=False. Set to True if we want to append the logs to existing database. If this flag is not provided, any existing database with same name will be deleted first. |
 | --length_delimited, -ld | Boolean | default=False. Set to True if we want to decode length-delimited binary. If this flag is not provided, the decoding will be performed for zero-delimited COBS-R binary. <br /><br /> *Note: This is used for dev/test only. This option will be removed in the future before release.*|
-
+| --environment, -e | String | defaule=UNK. Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)|
 
 # Run
 Assuming the fdr application runs locally in HMC, the logs are also saved in HMC. 
 
 Ideally, we would like to retrieve the logs using Redfish API. However, the fdrtool can be run in any machine while 
 the API calls to HMC can be made only from BMC. To resolve this issue, we can use port forwarding to redirect the HMC port
-to the local machine. To use Redfish API to retrieve the logs, from the local machine, open port 18888 using following command.
+to the local machine. To use Redfish API to retrieve the logs, from the local machine, open port 18888 using following command on your local machine.
 Note that 192.168.31.1 is HMC's default IP address. Please make sure that port forwarding is enabled in BMC.
 ```bash
 ssh -fNT -L 18888:192.168.31.1:80 <HOSTBMC_USERNAME>@<HOSTBMC_IP> -p 22
@@ -66,7 +66,7 @@ values which override defaults.
 
 ### Option 1: Retrieve FDR dump using Redfish API
 We'll need to provide the host ip address, username and password while running fdrtool. For example, if we're using port-forwarding
-as mentioned above, we'll be providing HMC's IP address and authentication information as following.
+as mentioned above, we'll be providing HMC's IP address and authentication information as following. The dump will be stored in the `./tmp/` directory. File format will be `HMC_UNK_SN<serial_number>_MMDDYYYY_HHMMSS.tar.xz`
 ```bash
 ./fdrtool --ip http://127.0.0.1:18888 -u root -p 0penBmc --json -ld
 ```
