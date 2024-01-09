@@ -42,7 +42,8 @@ Replace /path/to/your/ssh-private-key with the actual path, and attach_container
 6 . **Activate Virtual Environment and Use FDRTool**
 
 Inside the container, run:
-``` bash source env_fdr/bin/activate
+``` bash 
+source env_fdr/bin/activate
 ```
 
 
