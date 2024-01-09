@@ -243,13 +243,6 @@ class Catalog:
         if message_CompClass not in self.ParamIDNameDict:
             self.ParamIDNameDict[message_CompClass] = {}
         self.ParamIDNameDict[message_CompClass][message_ParamID] = message_dict.get('ParamName')
-
-
-        file_path = '/home/shivamc/dictionary_data.json'
-
-# Save the dictionary to a file
-        with open(file_path, 'w') as file:
-          json.dump(self.ParamIDNameDict, file)
         
         parameter = {}
         for key in ["ParamName", "DataType", "Units", "Notes"]:
