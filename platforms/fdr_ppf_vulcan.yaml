@@ -1,5 +1,5 @@
 #----------------------------------------------------------------------------------
-#  Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+#  Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 
 #  NVIDIA CORPORATION and its licensors retain all intellectual property
 #  and proprietary rights in and to this software, related documentation
@@ -1413,6 +1413,7 @@ GPU: &gpu
         - ID: ERR-ABSENT
           <<: *gpu-error-defaults
           ParamID: 144
+          DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -3011,7 +3012,7 @@ GPU: &gpu
         - ID: PGOOD
           <<: *gpu-status-defaults
           ParamID: 311
-          DataType: Uint64
+          DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -4856,24 +4857,24 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "DataCRCCount"
 
-        - ID: NVLINK-ERR-TRAINING[30]
+        - ID: NVLINK-ERR-CTR-DATA-CRC[30]
           <<: *nvswitch-error-defaults
           ParamID: 198
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_30"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "TrainingError"
+            Property: "DataCRCCount"
 
 
-        - ID: NVLINK-ERR-TRAINING[31]
+        - ID: NVLINK-ERR-CTR-DATA-CRC[31]
           <<: *nvswitch-error-defaults
           ParamID: 199
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_31"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "TrainingError"
+            Property: "DataCRCCount"
 
 
         - ID: NVLINK-ERR-RUNTIME[0]
@@ -5164,10 +5165,298 @@ NVSwitch: &nvswitch
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "RuntimeError"
 
+        - ID: NVLINK-ERR-TRAINING[0]
+          <<: *nvswitch-error-defaults
+          ParamID: 232
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[1]
+          <<: *nvswitch-error-defaults
+          ParamID: 233
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_1"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[2]
+          <<: *nvswitch-error-defaults
+          ParamID: 234
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_2"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[3]
+          <<: *nvswitch-error-defaults
+          ParamID: 235
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_3"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[4]
+          <<: *nvswitch-error-defaults
+          ParamID: 236
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_4"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[5]
+          <<: *nvswitch-error-defaults
+          ParamID: 237
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_5"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[6]
+          <<: *nvswitch-error-defaults
+          ParamID: 238
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_6"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[7]
+          <<: *nvswitch-error-defaults
+          ParamID: 239
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_7"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[8]
+          <<: *nvswitch-error-defaults
+          ParamID: 240
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_8"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[9]
+          <<: *nvswitch-error-defaults
+          ParamID: 241
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_9"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[10]
+          <<: *nvswitch-error-defaults
+          ParamID: 242
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_10"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[11]
+          <<: *nvswitch-error-defaults
+          ParamID: 243
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_11"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[12]
+          <<: *nvswitch-error-defaults
+          ParamID: 244
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_12"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[13]
+          <<: *nvswitch-error-defaults
+          ParamID: 245
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_13"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[14]
+          <<: *nvswitch-error-defaults
+          ParamID: 246
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_14"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[15]
+          <<: *nvswitch-error-defaults
+          ParamID: 247
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_15"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[16]
+          <<: *nvswitch-error-defaults
+          ParamID: 248
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_16"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[17]
+          <<: *nvswitch-error-defaults
+          ParamID: 249
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_17"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[18]
+          <<: *nvswitch-error-defaults
+          ParamID: 250
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_18"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[19]
+          <<: *nvswitch-error-defaults
+          ParamID: 251
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_19"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[20]
+          <<: *nvswitch-error-defaults
+          ParamID: 252
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_20"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[21]
+          <<: *nvswitch-error-defaults
+          ParamID: 253
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_21"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[22]
+          <<: *nvswitch-error-defaults
+          ParamID: 254
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_22"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[23]
+          <<: *nvswitch-error-defaults
+          ParamID: 255
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_23"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[24]
+          <<: *nvswitch-error-defaults
+          ParamID: 256
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_24"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[25]
+          <<: *nvswitch-error-defaults
+          ParamID: 257
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_25"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[26]
+          <<: *nvswitch-error-defaults
+          ParamID: 258
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_26"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[27]
+          <<: *nvswitch-error-defaults
+          ParamID: 259
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_27"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[28]
+          <<: *nvswitch-error-defaults
+          ParamID: 260
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_28"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[29]
+          <<: *nvswitch-error-defaults
+          ParamID: 261
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_29"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[30]
+          <<: *nvswitch-error-defaults
+          ParamID: 262
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_30"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
+        - ID: NVLINK-ERR-TRAINING[31]
+          <<: *nvswitch-error-defaults
+          ParamID: 263
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_31"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TrainingError"
+
 
         - ID: ECC-ERR-CTR-CE
           <<: *nvswitch-error-defaults
-          ParamID: 232
+          ParamID: 264
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5176,7 +5465,7 @@ NVSwitch: &nvswitch
 
         - ID: ECC-ERR-CTR-UE
           <<: *nvswitch-error-defaults
-          ParamID: 233
+          ParamID: 265
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5185,7 +5474,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-L0-TO-RECOVERY
           <<: *nvswitch-error-defaults
-          ParamID: 234
+          ParamID: 266
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5194,34 +5483,34 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-NAK-RECVD
           <<: *nvswitch-error-defaults
-          ParamID: 235
+          ParamID: 267
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "NAKReceivedCount"
+            Property: "NAKReceivedCount" 
 
         - ID: PCI-ERR-CTR-NAK-SENT
           <<: *nvswitch-error-defaults
-          ParamID: 236
+          ParamID: 268
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "NAKSentCount"
+            Property: "NAKSentCount" 
 
         - ID: PCI-ERR-CTR-NON-FATAL
           <<: *nvswitch-error-defaults
-          ParamID: 237
+          ParamID: 269
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
-            Property: "nonfeCount"
+            Property: "nonfeCount" 
       
         - ID: PCI-ERR-CTR-REPLAY
           <<: *nvswitch-error-defaults
-          ParamID: 238
+          ParamID: 270
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5230,7 +5519,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
           <<: *nvswitch-error-defaults
-          ParamID: 239
+          ParamID: 271
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5239,7 +5528,7 @@ NVSwitch: &nvswitch
 
         - ID: PCI-ERR-CTR-UNSUPP-REQ
           <<: *nvswitch-error-defaults
-          ParamID: 240
+          ParamID: 272
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5250,7 +5539,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &nvswitch-inventory-defaults
           ID: GUID
-          ParamID: 241
+          ParamID: 273
           DataType: string
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
@@ -5259,13 +5548,13 @@ NVSwitch: &nvswitch
           StorePolicy: OnChange
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_0"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.Common.UUID"
             Property: "UUID"
 
         - ID: VERSION
           <<: *nvswitch-inventory-defaults
-          ParamID: 242
+          ParamID: 274
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -5275,7 +5564,7 @@ NVSwitch: &nvswitch
 
         - ID: DEV-ID
           <<: *nvswitch-inventory-defaults
-          ParamID: 243
+          ParamID: 275
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
@@ -5284,7 +5573,7 @@ NVSwitch: &nvswitch
 
         - ID: UUID
           <<: *nvswitch-inventory-defaults
-          ParamID: 244
+          ParamID: 276
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
@@ -5296,7 +5585,7 @@ NVSwitch: &nvswitch
       InfoList:
         - &nvswitch-status-defaults
           ID: NVLINK-STATUS-V1[0]
-          ParamID: 245
+          ParamID: 277
           DataType: string
           FetchFreqSecs: 3600
           StoreFreqSecs: 3600
@@ -5307,881 +5596,593 @@ NVSwitch: &nvswitch
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkStatus"  
 
         - ID: NVLINK-STATUS-V1[1]
-          <<: *nvswitch-status-defaults
-          ParamID: 246
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_1"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[2]
-          <<: *nvswitch-status-defaults
-          ParamID: 247
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_2"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[3]
-          <<: *nvswitch-status-defaults
-          ParamID: 248
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_3"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[4]
-          <<: *nvswitch-status-defaults
-          ParamID: 249
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_4"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[5]
-          <<: *nvswitch-status-defaults
-          ParamID: 250
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_5"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[6]
-          <<: *nvswitch-status-defaults
-          ParamID: 251
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_6"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[7]
-          <<: *nvswitch-status-defaults
-          ParamID: 252
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_7"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[8]
-          <<: *nvswitch-status-defaults
-          ParamID: 253
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_8"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[9]
-          <<: *nvswitch-status-defaults
-          ParamID: 254
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_9"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[10]
-          <<: *nvswitch-status-defaults
-          ParamID: 255
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_10"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[11]
-          <<: *nvswitch-status-defaults
-          ParamID: 256
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_11"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[12]
-          <<: *nvswitch-status-defaults
-          ParamID: 257
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_12"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[13]
-          <<: *nvswitch-status-defaults
-          ParamID: 258
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_13"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[14]
-          <<: *nvswitch-status-defaults
-          ParamID: 259
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_14"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[15]
-          <<: *nvswitch-status-defaults
-          ParamID: 260
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_15"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[16]
-          <<: *nvswitch-status-defaults
-          ParamID: 261
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_16"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[17]
-          <<: *nvswitch-status-defaults
-          ParamID: 262
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_17"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[18]
-          <<: *nvswitch-status-defaults
-          ParamID: 263
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_18"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[19]
-          <<: *nvswitch-status-defaults
-          ParamID: 264
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_19"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[20]
-          <<: *nvswitch-status-defaults
-          ParamID: 265
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_20"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[21]
-          <<: *nvswitch-status-defaults
-          ParamID: 266
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_21"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[22]
-          <<: *nvswitch-status-defaults
-          ParamID: 267
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_22"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[23]
-          <<: *nvswitch-status-defaults
-          ParamID: 268
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_23"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V1[24]
-          <<: *nvswitch-status-defaults
-          ParamID: 269
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_24"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[25]
-          <<: *nvswitch-status-defaults
-          ParamID: 270
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_25"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[26]
-          <<: *nvswitch-status-defaults
-          ParamID: 271
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_26"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[27]
-          <<: *nvswitch-status-defaults
-          ParamID: 272
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_27"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[28]
-          <<: *nvswitch-status-defaults
-          ParamID: 273
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_28"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[29]
-          <<: *nvswitch-status-defaults
-          ParamID: 274
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_29"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[30]
-          <<: *nvswitch-status-defaults
-          ParamID: 275
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_30"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-        - ID: NVLINK-STATUS-V1[31]
-          <<: *nvswitch-status-defaults
-          ParamID: 276
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_31"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
-
-
-        - ID: NVLINK-STATUS-V2[0]
-          <<: *nvswitch-status-defaults
-          ParamID: 277
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
-
-        - ID: NVLINK-STATUS-V2[1]
           <<: *nvswitch-status-defaults
           ParamID: 278
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_1"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[2]
+
+        - ID: NVLINK-STATUS-V1[2]
           <<: *nvswitch-status-defaults
           ParamID: 279
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_2"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[3]
+
+        - ID: NVLINK-STATUS-V1[3]
           <<: *nvswitch-status-defaults
           ParamID: 280
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_3"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[4]
+
+        - ID: NVLINK-STATUS-V1[4]
           <<: *nvswitch-status-defaults
           ParamID: 281
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_4"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[5]
+        - ID: NVLINK-STATUS-V1[5]
           <<: *nvswitch-status-defaults
           ParamID: 282
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_5"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[6]
+
+        - ID: NVLINK-STATUS-V1[6]
           <<: *nvswitch-status-defaults
           ParamID: 283
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_6"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[7]
+
+        - ID: NVLINK-STATUS-V1[7]
           <<: *nvswitch-status-defaults
           ParamID: 284
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_7"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[8]
+
+        - ID: NVLINK-STATUS-V1[8]
           <<: *nvswitch-status-defaults
           ParamID: 285
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_8"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[9]
+        - ID: NVLINK-STATUS-V1[9]
           <<: *nvswitch-status-defaults
           ParamID: 286
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_9"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[10]
+
+        - ID: NVLINK-STATUS-V1[10]
           <<: *nvswitch-status-defaults
           ParamID: 287
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_10"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[11]
+
+        - ID: NVLINK-STATUS-V1[11]
           <<: *nvswitch-status-defaults
           ParamID: 288
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_11"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[12]
+
+        - ID: NVLINK-STATUS-V1[12]
           <<: *nvswitch-status-defaults
           ParamID: 289
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_12"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[13]
+        - ID: NVLINK-STATUS-V1[13]
           <<: *nvswitch-status-defaults
           ParamID: 290
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_13"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[14]
+
+        - ID: NVLINK-STATUS-V1[14]
           <<: *nvswitch-status-defaults
           ParamID: 291
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_14"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[15]
+
+        - ID: NVLINK-STATUS-V1[15]
           <<: *nvswitch-status-defaults
           ParamID: 292
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_15"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[16]
+
+        - ID: NVLINK-STATUS-V1[16]
           <<: *nvswitch-status-defaults
           ParamID: 293
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_16"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[17]
+        - ID: NVLINK-STATUS-V1[17]
           <<: *nvswitch-status-defaults
           ParamID: 294
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_17"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[18]
+
+        - ID: NVLINK-STATUS-V1[18]
           <<: *nvswitch-status-defaults
           ParamID: 295
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_18"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[19]
+
+        - ID: NVLINK-STATUS-V1[19]
           <<: *nvswitch-status-defaults
           ParamID: 296
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_19"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[20]
+
+        - ID: NVLINK-STATUS-V1[20]
           <<: *nvswitch-status-defaults
           ParamID: 297
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_20"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[21]
+        - ID: NVLINK-STATUS-V1[21]
           <<: *nvswitch-status-defaults
           ParamID: 298
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_21"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[22]
+
+        - ID: NVLINK-STATUS-V1[22]
           <<: *nvswitch-status-defaults
           ParamID: 299
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_22"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[23]
+
+        - ID: NVLINK-STATUS-V1[23]
           <<: *nvswitch-status-defaults
           ParamID: 300
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_23"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[24]
+
+        - ID: NVLINK-STATUS-V1[24]
           <<: *nvswitch-status-defaults
           ParamID: 301
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_24"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[25]
+        - ID: NVLINK-STATUS-V1[25]
           <<: *nvswitch-status-defaults
           ParamID: 302
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_25"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[26]
+        - ID: NVLINK-STATUS-V1[26]
           <<: *nvswitch-status-defaults
           ParamID: 303
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_26"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[27]
+        - ID: NVLINK-STATUS-V1[27]
           <<: *nvswitch-status-defaults
           ParamID: 304
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_27"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[28]
+        - ID: NVLINK-STATUS-V1[28]
           <<: *nvswitch-status-defaults
           ParamID: 305
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_28"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[29]
+        - ID: NVLINK-STATUS-V1[29]
           <<: *nvswitch-status-defaults
           ParamID: 306
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_29"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[30]
+        - ID: NVLINK-STATUS-V1[30]
           <<: *nvswitch-status-defaults
           ParamID: 307
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_30"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: NVLINK-STATUS-V2[31]
+        - ID: NVLINK-STATUS-V1[31]
           <<: *nvswitch-status-defaults
           ParamID: 308
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_31"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkState"
+            Property: "LinkStatus"  
 
-        - ID: LINK-STATUS[0]
+
+        - ID: NVLINK-STATUS-V2[0]
           <<: *nvswitch-status-defaults
           ParamID: 309
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[1]
+        - ID: NVLINK-STATUS-V2[1]
           <<: *nvswitch-status-defaults
           ParamID: 310
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_1"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[2]
+        - ID: NVLINK-STATUS-V2[2]
           <<: *nvswitch-status-defaults
           ParamID: 311
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_2"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[3]
+        - ID: NVLINK-STATUS-V2[3]
           <<: *nvswitch-status-defaults
           ParamID: 312
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_3"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[4]
+        - ID: NVLINK-STATUS-V2[4]
           <<: *nvswitch-status-defaults
           ParamID: 313
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_4"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[5]
+        - ID: NVLINK-STATUS-V2[5]
           <<: *nvswitch-status-defaults
           ParamID: 314
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_5"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[6]
+        - ID: NVLINK-STATUS-V2[6]
           <<: *nvswitch-status-defaults
           ParamID: 315
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_6"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[7]
+        - ID: NVLINK-STATUS-V2[7]
           <<: *nvswitch-status-defaults
           ParamID: 316
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_7"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[8]
+        - ID: NVLINK-STATUS-V2[8]
           <<: *nvswitch-status-defaults
           ParamID: 317
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_8"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[9]
+        - ID: NVLINK-STATUS-V2[9]
           <<: *nvswitch-status-defaults
           ParamID: 318
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_9"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[10]
+        - ID: NVLINK-STATUS-V2[10]
           <<: *nvswitch-status-defaults
           ParamID: 319
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_10"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[11]
+        - ID: NVLINK-STATUS-V2[11]
           <<: *nvswitch-status-defaults
           ParamID: 320
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_11"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[12]
+        - ID: NVLINK-STATUS-V2[12]
           <<: *nvswitch-status-defaults
           ParamID: 321
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_12"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[13]
+        - ID: NVLINK-STATUS-V2[13]
           <<: *nvswitch-status-defaults
           ParamID: 322
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_13"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[14]
+        - ID: NVLINK-STATUS-V2[14]
           <<: *nvswitch-status-defaults
           ParamID: 323
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_14"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[15]
+        - ID: NVLINK-STATUS-V2[15]
           <<: *nvswitch-status-defaults
           ParamID: 324
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_15"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[16]
+        - ID: NVLINK-STATUS-V2[16]
           <<: *nvswitch-status-defaults
           ParamID: 325
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_16"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[17]
+        - ID: NVLINK-STATUS-V2[17]
           <<: *nvswitch-status-defaults
           ParamID: 326
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_17"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[18]
+        - ID: NVLINK-STATUS-V2[18]
           <<: *nvswitch-status-defaults
           ParamID: 327
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_18"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[19]
+        - ID: NVLINK-STATUS-V2[19]
           <<: *nvswitch-status-defaults
           ParamID: 328
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_19"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[20]
+        - ID: NVLINK-STATUS-V2[20]
           <<: *nvswitch-status-defaults
           ParamID: 329
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_20"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[21]
+        - ID: NVLINK-STATUS-V2[21]
           <<: *nvswitch-status-defaults
           ParamID: 330
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_21"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[22]
+        - ID: NVLINK-STATUS-V2[22]
           <<: *nvswitch-status-defaults
           ParamID: 331
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_22"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[23]
+        - ID: NVLINK-STATUS-V2[23]
           <<: *nvswitch-status-defaults
           ParamID: 332
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_23"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[24]
+        - ID: NVLINK-STATUS-V2[24]
           <<: *nvswitch-status-defaults
           ParamID: 333
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_24"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[25]
+        - ID: NVLINK-STATUS-V2[25]
           <<: *nvswitch-status-defaults
           ParamID: 334
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_25"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[26]
+        - ID: NVLINK-STATUS-V2[26]
           <<: *nvswitch-status-defaults
           ParamID: 335
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_26"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[27]
+        - ID: NVLINK-STATUS-V2[27]
           <<: *nvswitch-status-defaults
           ParamID: 336
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_27"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[28]
+        - ID: NVLINK-STATUS-V2[28]
           <<: *nvswitch-status-defaults
           ParamID: 337
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_28"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[29]
+        - ID: NVLINK-STATUS-V2[29]
           <<: *nvswitch-status-defaults
           ParamID: 338
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_29"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[30]
+        - ID: NVLINK-STATUS-V2[30]
           <<: *nvswitch-status-defaults
           ParamID: 339
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_30"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
-        - ID: LINK-STATUS[31]
+        - ID: NVLINK-STATUS-V2[31]
           <<: *nvswitch-status-defaults
           ParamID: 340
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_31"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "LinkStatus"
+            Property: "LinkState"  
 
         - ID: HEALTH
           <<: *nvswitch-status-defaults
@@ -7888,7 +7889,7 @@ HMC: &hmc
             Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
             Property: "SerialNumber"
       
-        - ID: PRDCT-SERIAL[2]
+        - ID: PRDCT-SERIAL[1]
           <<: *hmc-inventory-defaults
           ParamID: 13
           DbusParams:
@@ -7897,7 +7898,7 @@ HMC: &hmc
             Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
             Property: "SerialNumber"
 
-        - ID: PRDCT-SERIAL[3]
+        - ID: PRDCT-SERIAL[2]
           <<: *hmc-inventory-defaults
           ParamID: 14
           DbusParams:
@@ -8029,7 +8030,7 @@ FPGA: &fpga
           FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_PCIeRetimer_$fpgaid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_FPGA_$fpgaid"
             Interface: "xyz.openbmc_project.State.Decorator.Health"
             Property: "Health"
 
@@ -8088,8 +8089,8 @@ Baseboard: &baseboard
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
-            Interface: "xyz.openbmc_project.Inventory.Item.Chassis"
-            Property: "Type"         
+            Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
+            Property: "PartNumber"
 
         - ID: CHAS-SERIAL
           <<: *baseboard-inventory-defaults
@@ -8289,7 +8290,7 @@ Baseboard: &baseboard
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_PCIeRetimer_$baseboardid"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid"
             Interface: "xyz.openbmc_project.State.Decorator.Health"
             Property: "Health"
 
