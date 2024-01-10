@@ -1,5 +1,5 @@
 # Use the official Debian image as the base image
-FROM debian:latest
+FROM debian:12.4
 
 # Set the working directory
 WORKDIR /app

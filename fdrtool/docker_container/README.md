@@ -29,7 +29,7 @@ cd nvidia-fdr/fdrtool/docker_container
 5. **Build and Run Docker Container**
 
 
-```
+```bash
 bashsudo docker build --build-arg SSH_PRIVATE_KEY="$(cat /path/to/your/ssh-private-key)" -t attach_container_name_here .
 ```
 
