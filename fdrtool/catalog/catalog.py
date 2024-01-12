@@ -239,7 +239,11 @@ class Catalog:
         if not ParamDescription[message_CompClass].get(message_ParamClass):
           ParamDescription[message_CompClass][message_ParamClass] = {}
         self.ParamIDClassDict[message_ParamID] = message_ParamClass
-        self.ParamIDNameDict[message_ParamID] = message_dict.get('ParamName')
+
+        if message_CompClass not in self.ParamIDNameDict:
+            self.ParamIDNameDict[message_CompClass] = {}
+        self.ParamIDNameDict[message_CompClass][message_ParamID] = message_dict.get('ParamName')
+        
         parameter = {}
         for key in ["ParamName", "DataType", "Units", "Notes"]:
           parameter[key] = message_dict.get(key)
@@ -322,12 +326,13 @@ class CatalogEntry:
       is_event_type = False
       if self.is_other_file:
         proto_msg_temp = json.loads(protobuf_json_format.MessageToJson(proto_msg))
+
         if "ParamID" not in proto_msg_temp.keys():
           proto_msg = getattr(fdr_schema, PROTO_MSG_TYPE.fdr_event.name)()
           proto_msg.ParseFromString(msg_buf)
+          print(proto_msg)
           is_event_type = True
-
-      #print(proto_msg)
+      
       # At this point, proto_msg is of type protobuf message...
       # For example, either fdr_logs_schema_pb2.fdr_sample and fdr_logs_schema_pb2.fdr_stats
       self.AddMessage(proto_msg, is_event_type)
@@ -370,17 +375,22 @@ class CatalogEntry:
 
   # If compClass and paramClass are not provided, this method will use the predefined values
   # which were parsed from the filepath
-  def GetParamNameFromID(self, paramID, compClass=None, paramClass=None):
-    if paramID in self.ParamIDNameDict.keys():
-      return self.ParamIDNameDict[paramID]
-    else:
-      print(f"WARNING: {paramID} {type(paramID)}not found in PDT.")
-      return None
+
+  def GetParamNameFromID(self, proto_msg, compClass ):
+    paramID=proto_msg.ParamID
+    try:
+      if compClass in self.ParamIDNameDict:
+          return self.ParamIDNameDict[str(compClass)][str(paramID)]
+    except Exception as e:
+      return(e)
+
   
-  def GetParamNameFromMsg(self, proto_msg):
+  def GetParamNameFromMsg(self, proto_msg , compClass):
     match self.msg_type:
       case PROTO_MSG_TYPE.fdr_sample | PROTO_MSG_TYPE.fdr_stat | PROTO_MSG_TYPE.fdr_book_of_errors:
-        return self.GetParamNameFromID(str(proto_msg.ParamID))
+        #return self.GetParamNameFromID(str(proto_msg.ParamID),str(proto_msg.CompClass))
+        print(str(proto_msg))
+        return self.GetParamNameFromID(str(proto_msg.ParamID),str(compClass))
       case _:
         return None      
   

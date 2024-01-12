@@ -16,7 +16,8 @@ clean:
 	rm -r fdr_logs_db
 
 protoc_middleman: fdr_logs_schema.proto
-	protoc --proto_path=$(PROTO_DIR) --python_out=. $(PROTO_DIR)/fdr_logs_schema.proto
+	#protoc --proto_path=$(PROTO_DIR) --python_out=. $(PROTO_DIR)/fdr_logs_schema.proto
+	protoc --proto_path=.. --python_out=. --experimental_allow_proto3_optional ../fdr_logs_schema.proto
 	@touch protoc_middleman
 
 fdrtool: fdrtool.py protoc_middleman
