@@ -9,11 +9,15 @@ VPATH= $(PROTO_DIR)
 fdrtool: fdrtool.py
 
 clean:
-	rm -f fdrtool
-	rm -f protoc_middleman fdr_logs_schema_pb2.py
-	rm -f *.pyc
-	rm -r fdr_logs
-	rm -r fdr_logs_db
+	@echo "Cleaning up..."
+	rm -f fdrtool/fdrtool
+	rm -f fdrtool/protoc_middleman fdr_logs_schema_pb2.py
+	rm -f fdrtool/*.pyc
+	rm -r fdrtool/fdr_logs
+	rm -r fdrtool/fdr_logs_db
+	rm -rf dist build my_project.egg-info
+	rm -rf fdrtool/__pycache__
+
 
 protoc_middleman: fdr_logs_schema.proto
 	#protoc --proto_path=$(PROTO_DIR) --python_out=. $(PROTO_DIR)/fdr_logs_schema.proto
@@ -25,3 +29,11 @@ fdrtool: fdrtool.py protoc_middleman
 	@echo '#! /bin/sh' > fdrtool
 	@echo './fdrtool.py "$$@"' >> fdrtool
 	@chmod +x fdrtool
+
+install: all
+	@echo "Building fdrtool..."
+	python3 setup.py sdist
+	python3 setup.py bdist_wheel
+	@cd dist
+
+.PHONY: all clean install
