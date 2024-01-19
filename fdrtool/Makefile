@@ -10,13 +10,13 @@ fdrtool: fdrtool.py
 
 clean:
 	@echo "Cleaning up..."
-	rm -f fdrtool/fdrtool
-	rm -f fdrtool/protoc_middleman fdr_logs_schema_pb2.py
-	rm -f fdrtool/*.pyc
-	rm -r fdrtool/fdr_logs
-	rm -r fdrtool/fdr_logs_db
-	rm -rf dist build my_project.egg-info
-	rm -rf fdrtool/__pycache__
+	rm -f fdrtool
+	rm -f protoc_middleman fdr_logs_schema_pb2.py
+	rm -f *.pyc
+	rm -r fdr_logs
+	rm -r fdr_logs_db
+	rm -rf dist build fdrtool.egg-info
+	rm -rf __pycache__
 
 
 protoc_middleman: fdr_logs_schema.proto
