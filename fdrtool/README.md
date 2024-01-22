@@ -49,6 +49,25 @@ $: cd /fdrtool && make install
 ```
 you can find executable in /dist directory.
 
+#### Copy to/from docker container
+##### Step 1 : find you containerID 
+```bash
+sudo docker ps -a
+```
+#### Step 2 : docker copy
+
+From local to container
+```bash
+docker cp /path/to/local/file CONTAINER_ID:/path/in/container
+```
+From container to local
+```bash
+docker cp CONTAINER_ID:/path/in/container /path/on/local/machine
+```
+#### Access Docker container
+```bash
+docker exec -it CONTAINER_ID /bin/bash
+```
 
 # Usage
 ## Arguments
