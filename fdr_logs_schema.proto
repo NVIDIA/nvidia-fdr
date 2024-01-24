@@ -67,6 +67,6 @@ message fdr_event_details {
 message fdr_boot_event {
   uint64 EventTimeStamp = 1; // Time at which FDR booted
   string BootId = 2;   // number of times HMC booted. Even though its a counter, data type is string purposefuly. 
-  string UpTimeOfHMC = 3;    // uptime of HMC [output of uptime -s]
+  string UpTime = 3;    // uptime of HMC [output of uptime -s]
   uint32 DataDirFormatVersion = 4;  // data/directory structure layout format followed in FDR
 }

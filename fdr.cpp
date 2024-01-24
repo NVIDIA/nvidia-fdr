@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+ Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 
  NVIDIA CORPORATION and its licensors retain all intellectual property
  and proprietary rights in and to this software, related documentation
@@ -742,7 +742,7 @@ void FlightDataRecorder_c::UpdateBootEventLog(void)
     std::time_t current_time = std::time(nullptr);
 	fdr_boot_event_data.set_eventtimestamp(current_time);
 	fdr_boot_event_data.set_bootid(bootCounter);
- 	fdr_boot_event_data.set_uptimeofhmc(get_procuptime());
+ 	fdr_boot_event_data.set_uptime(get_procuptime());
 	fdr_boot_event_data.set_datadirformatversion(currentDataFormatVersion);
 	bootEventWriter->append(fdr_boot_event_data);
 
