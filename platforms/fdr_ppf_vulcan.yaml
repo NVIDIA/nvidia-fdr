@@ -73,11 +73,11 @@ GPU: &gpu
           FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
             Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
             Property: "Manufacturer"
 
-        - ID: BRD-PART-NUM
+        - ID: PART-NUM
           <<: *gpu-inventory-defaults
           ParamID: 1
           DbusParams: 
@@ -91,7 +91,7 @@ GPU: &gpu
           ParamID: 2
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
             Interface: "xyz.openbmc_project.Inventory.Decorator.Asset"
             Property: "SerialNumber"
 

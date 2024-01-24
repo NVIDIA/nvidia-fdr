@@ -36,7 +36,7 @@ FDR_TABLE_SCHEMA = {
                               "NumSamples": "INTEGER", "Min": "INTEGER", "Max": "INTEGER", "Avg": "INTEGER"},\
                     "BookOfErrors": {"BootId":"INTEGER","DeviceType":"TEXT","DeviceInstance":"TEXT","ErrorType":"TEXT","ErrorOccurTimeStamp":"INTEGER","ParamID":"INTEGER"},\
                     "BookKeeper": {"CompactDirectory":"TEXT","compactStatus":"TEXT"},\
-                    "BootEvent" : {"EventTimeStamp":"INTEGER", "HMCBootCount":"TEXT", "UpTimeOfHMC":"TEXT" , "CurrentDate":"TEXT", "DataDirFormatVersion":"INTEGER"},
+                    "BootEvent" : {"EventTimeStamp":"INTEGER", "HMCBootCount":"TEXT", "UpTime":"TEXT" , "CurrentDate":"TEXT", "DataDirFormatVersion":"INTEGER"},
                     "EventDetails" : {"EventTimeStamp":"INTEGER", "EventName":"TEXT", "EventDeviceName":"TEXT" , "EventMessage":"TEXT", "EventOriginOfCondition":"TEXT", "EventAdditionalInfo":"TEXT"}
                     }
 
