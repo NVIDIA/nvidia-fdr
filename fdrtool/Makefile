@@ -17,6 +17,7 @@ clean:
 	rm -r fdr_logs_db
 	rm -rf dist build fdrtool.egg-info
 	rm -rf __pycache__
+	rm -f warning.txt
 
 
 protoc_middleman: fdr_logs_schema.proto

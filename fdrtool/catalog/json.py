@@ -52,7 +52,10 @@ class JSONCatalogEntry(CatalogEntry):
           #del proto_msg_str["ParamID"]
         else:
           #Exception for the files if not present in self.filepath (./fdr_logs/fdr/BootCount~)
-          print(f"Warning : Skipping the ParamName update for file {self.filepath} Not it self.filepath")
+          warning_file="warning.txt"
+          with open(warning_file, "a") as file:
+              file.write(str("Skipping the ParamName update for file {self.filepath} Not it self.filepath") + "\n")
+          #print(f"Warning : Skipping the ParamName update for file {self.filepath} Not it self.filepath")
       
     # MessageToJson method converts the protobuf message into JSON format. However,
     # to make JSON logs consistent with the formatting in FDR, we're removing the '\n' between the key-values,

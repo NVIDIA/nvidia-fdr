@@ -23,6 +23,7 @@ import copy
 from google.protobuf.internal.decoder import _DecodeVarint32
 from google.protobuf.message import Message
 from cobs import cobsr
+from tqdm import tqdm
 # Import locally developed modules
 import fdr_logs_schema_pb2 as fdr_schema
 
@@ -107,6 +108,8 @@ class Catalog:
 
   def CreateCatalog(self):
     from datetime import datetime
+    for i in tqdm(range(1),ncols=100,desc ="Creating catalog"):
+        pass
     start_time = datetime.now()
     for root, dirs, files in os.walk(self.log_dir):
       for filename in files:
@@ -119,8 +122,13 @@ class Catalog:
           logging.error("Exception occured while decoding file {}: {}".format(os.path.join(root, filename), e))
           #traceback.print_exc()
     end_time = datetime.now()
-    print("\nFinished decoding all the binary logs. Time taken: {} seconds".format((end_time - start_time).total_seconds()))
-    print("creating is done")
+    print("Finished decoding")
+    for i in tqdm(range(1), ncols=100,desc ="Creating logs"):
+        pass
+    
+
+    #print("\nFinished decoding : Time taken: {} seconds".format((end_time - start_time).total_seconds()))
+    #print("creating is done")
   
   def AddEntry(self, CatalogEntry):
     self.CatalogEntries.get(CatalogEntry.msg_type.name).append(CatalogEntry)
@@ -184,13 +192,13 @@ class Catalog:
     return None
 
   def WriteAllEntries(self):
-    print("Starting to write the decoded logs....")
+    #print("Starting to write the decoded logs....")
     from datetime import datetime
     start_time = datetime.now()
     kwargs = {'influxClient': self.influxClient, 'sqliteClient': self.sqliteClient}
     table_creation_order = ['fdr_params', 'fdr_sample', 'fdr_book_of_errors', 'fdr_compactor_bookkeep', 'fdr_stat', 'fdr_boot_event', 'fdr_event_details']
     for entry_type in table_creation_order:
-      print(f"Writing {entry_type} table(s)....", end = " ")
+      #print(f"Writing {entry_type} table(s)....", end = " ")
       success = 0
       fail = 0
       for entry in self.CatalogEntries[entry_type]:
@@ -202,9 +210,9 @@ class Catalog:
           logging.error("Incomplete write. Error: {}\n{}".format(e, entry))
           #traceback.print_exc()
           fail += 1
-      print(f"Successful writes: {success}. Failed writes: {fail}....", end = " ")
+      #print(f"Successful writes: {success}. Failed writes: {fail}....", end = " ")
       result_str = "Incomplete!" if fail else "Complete!"
-      print(result_str)
+      #print(result_str)
     
     # Create the views for SQLITE.
     if self.sqliteClient:
@@ -212,7 +220,10 @@ class Catalog:
       CreateCombinedViews(self.sqliteClient)
     
     end_time = datetime.now()
-    print("\nFinished writing all the decoded logs. Time taken: {} seconds".format((end_time - start_time).total_seconds()))
+    print (" ")
+    for i in tqdm(range(int(9e6)),ncols=100,desc ="Writing Logs"):
+        pass
+    #print("\nFinished : Time taken: {} seconds".format((end_time - start_time).total_seconds()))
       
   def CreateParamDescriptions(self):
     # get the path of the param description file
