@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+ Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 
  NVIDIA CORPORATION and its licensors retain all intellectual property
  and proprietary rights in and to this software, related documentation
@@ -155,6 +155,34 @@ void Record::Refresh(bool viaTimerSkipChecks)
             }
 
         }
+        else if (data.paramtype == "Double") {
+            if (auto ptr (std::get_if<double>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr (std::get_if<uint32_t>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr (std::get_if<uint16_t>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr (std::get_if<uint64_t>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr (std::get_if<int64_t>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr (std::get_if<bool>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr = (std::get_if<std::tuple<bool, unsigned int>>(&val)); ptr) {
+                const unsigned int intVal = std::get<1>(*ptr);
+                data.fdr_sample_data.set_paramvaluedouble((double) intVal);
+            } else if (auto ptr (std::get_if<uint8_t>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else if (auto ptr (std::get_if<int16_t>(&val)); ptr) {
+                data.fdr_sample_data.set_paramvaluedouble((double) *ptr);
+            } else {
+                // fdrlog::warn("DBus read failed: Unknown numerical variant type: "
+                //          "; ObjectPath: {}; Property: {}",
+                //           info.DbusParams.ObjectPath,
+                //           info.DbusParams.Property);
+    			return;
+            }
+        }
         else
         {
             if (auto ptr (std::get_if<std::string>(&val)); ptr) 
@@ -178,6 +206,9 @@ void Record::Refresh(bool viaTimerSkipChecks)
             str2num >> val;
             data.fdr_sample_data.set_paramvalueint64(val);
         }
+        else if (data.paramtype == "Double") {
+            fdrlog::warn("Double datatype is not yet supported in Command: {}", info.CommandParams.Command);
+        }
         else
         {
             data.fdr_sample_data.set_paramvaluestring(commandresult);
@@ -195,6 +226,8 @@ void Record::Refresh(bool viaTimerSkipChecks)
             if (data.paramtype == "Uint64") {
                 uint64_t u = fdr->rfc->query_uint64t (uri, json_pointer);
                 data.fdr_sample_data.set_paramvalueint64(u);
+            } else if (data.paramtype == "Double") {
+                fdrlog::warn("Double datatype is not yet supported in Redfish: {}", info.CommandParams.Command);
             } else {
                 // string
                 std::string s = fdr->rfc->query_string (uri, json_pointer);
@@ -262,7 +295,13 @@ void Record::Refresh(bool viaTimerSkipChecks)
 // written in the stat file on every subwindow expiry time.
 void Record::RunningStatisticEngine(fdrpb::fdr_sample readrec)
 {
-    auto currentRecValue = readrec.paramvalueint64();
+    double epsilon = 1e-10;
+    double currentRecValue;
+    if (data.paramtype == "Uint64") {
+        currentRecValue = static_cast<double>(readrec.paramvalueint64());
+    } else {
+        currentRecValue = std::round(readrec.paramvaluedouble() * 1000.0) / 1000.0;
+    }
     auto currentRecTimestamp = readrec.timestamp();
 
     runningStatus.set_paramid(readrec.paramid());
@@ -270,23 +309,29 @@ void Record::RunningStatisticEngine(fdrpb::fdr_sample readrec)
     runningStatus.set_avg(runningStatus.avg() + currentRecValue); // TODO: using avg field as sum. avoid overflow.
 
     // set min value for the very first time
-    if (runningStatus.min() == 0 && runningStatus.minvaltimestamp() == 0) {
+    if (runningStatus.minvaltimestamp() == 0) {
         runningStatus.set_min(currentRecValue);
         runningStatus.set_minvaltimestamp(currentRecTimestamp);
     } else {
-        int64_t min_value = std::min(runningStatus.min(), currentRecValue);
+        double min_value = std::min(runningStatus.min(), currentRecValue);
         runningStatus.set_min(min_value);
-        if (min_value == currentRecValue) {
+        if (std::fabs(min_value - currentRecValue) < epsilon) {
             // need to record the timestamp for min value
             runningStatus.set_minvaltimestamp(currentRecTimestamp);
         }
     }
 
-    int64_t max_value = std::max(runningStatus.max(), currentRecValue);
-    runningStatus.set_max(max_value);
-    if (max_value == currentRecValue) {
-        // need to record the timestamp for max value
+    // set max value for the very first time
+    if (runningStatus.maxvaltimestamp() == 0) {
+        runningStatus.set_max(currentRecValue);
         runningStatus.set_maxvaltimestamp(currentRecTimestamp);
+    } else {
+        double max_value = std::max(runningStatus.max(), currentRecValue);
+        runningStatus.set_max(max_value);
+        if (std::fabs(max_value - currentRecValue) < epsilon) {
+            // need to record the timestamp for max value
+            runningStatus.set_maxvaltimestamp(currentRecTimestamp);
+        }
     }
     runningStatus.set_fromtime(runningStatus.fromtime() == 0 ? currentRecTimestamp : runningStatus.fromtime());
     runningStatus.set_totime(currentRecTimestamp);
@@ -304,6 +349,8 @@ void Record::appendRunningStatToStatfile(void)
         return;
     }
     runningStatus.set_avg(runningStatus.avg() / runningStatus.numsamples());
+    runningStatus.set_avg(std::round(runningStatus.avg() * 1000.0) / 1000.0);   // keeping only the 3 digits after decimal
+
     // finally, append the stat record to the stat file
     fdrStatwriter->append(runningStatus);
 

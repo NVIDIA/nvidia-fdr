@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 '''
-Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2024, NVIDIA CORPORATION. All rights reserved.
 NVIDIA CORPORATION and its licensors retain all intellectual property
 and proprietary rights in and to this software, related documentation
 and any modifications thereto. Any use, reproduction, disclosure or
@@ -27,7 +27,7 @@ class JSONCatalogEntry(CatalogEntry):
     self.primary_key_name = key_name
 
   def AddMessage(self, proto_msg, is_event_type = False):
-    proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg))
+    proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg, including_default_value_fields=True))
     
 
     if (not is_event_type) and self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params \
