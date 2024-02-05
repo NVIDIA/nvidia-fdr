@@ -9,6 +9,9 @@ distribution of this software and related documentation without an express
 license agreement from NVIDIA CORPORATION is strictly prohibited.
 '''
 # Import standard library modules
+
+
+
 import sys
 import logging
 import argparse
@@ -19,149 +22,157 @@ import shutil
 import os
 # Import third-party library modules
 import redfish
+from datetime import datetime
 # Import locally developed modules
 from catalog.catalog import DECODE_FORMAT, Catalog
+from tqdm import tqdm
 
 tool_version = '1.0.0'
 
-'''
-Main method
-'''
-def main(arglist=None):
-  """Main command
-
-  Args:
-    argslist ([type], optional): List of arguments in the form of argv. Defaults to None.
-  """ 
-
-  from datetime import datetime
-  start_time = datetime.now()
-
-  argget = configargparse.ArgParser(prog='nvidia-fdrtool',\
-                                  description='FDR tool to decode fdr logs received from HMC, version {}'.format(tool_version))
-
-  # Arguements:
-  argget.add_argument('-c', '--config_file', required=False, is_config_file=True, help='Config file path')
+def dumpCollection(args):
+    #print("**********************Nvidia fdrtool**********************")
+    #print("Selected option: {}".format("Use local tarball." if args.use_local else "Retrieve logs from HMC."))
+    # Basic execution flow
+    # Step-1: Redfish API call to get the zip file of fdr logs from HMC.
+    MyCatalog = None
+    try:
+        binary_log_tar_file = ''
+        if not args.use_local:
+            #print("\n----------- Collecting FDR dump from host {} -----------".format(args.ip))
+            # Store the downloaded fdr dumps in ./tmp/
+            os.makedirs("./tmp/", exist_ok=True)
+            binary_log_tar_file = CollectFdrDump(args.ip, args.username, args.password, args.environment)
+            #binary_log_tar_file = CollectFdrDump_DEMO(args.ip, args.username, args.password)
+            
+        else:# Retrieve the zip file from local machine
+            for i in tqdm(range(int(9e6)),ncols=100,desc ="Dump collection"):
+                pass
+            return args.local_file
     
-  # host info
-  # Redfish or local file for decoding (for development/test purpose)
-  argget.add_argument('-ul', '--use_local', default=False, action='store_true', help='Option to use local tar archive of binary logs if Redfish API for FDR dump is not available.')
-  
-  argget.add_argument('-l', '--local_file', type=str, help='Local tar archive of binary logs if Redfish API for FDR dump is not available.')
-  
-  argget.add_argument('-i', '--ip', type=str, help='Address of host, using http or https (example: https://123.45.6.7:8000)')
-  argget.add_argument('-u', '--username', type=str, help='Username for Authentication')
-  argget.add_argument('-p', '--password', type=str, help='Password for Authentication')
+    except Exception as e:
+        print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+        logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
+        
 
-  argget.add_argument('-e', '--environment', type=str, help='Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)', default="UNK")
-
-  # decode option
-  group_decode_format = argget.add_mutually_exclusive_group(required=True)
-  group_decode_format.add_argument("--json", default=False, action="store_const", const = DECODE_FORMAT.JSON,  help="Decode the binary protobuf logs to JSON and store them locally.", dest = 'decode_format')
-  group_decode_format.add_argument("--influx", default=False, action="store_const", const = DECODE_FORMAT.INFLUX, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to InfluxDB server.", dest = 'decode_format')
-  group_decode_format.add_argument("--sqlite", default=False, action="store_const", const = DECODE_FORMAT.SQLITE, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to local SQLite database.", dest = 'decode_format')
-
-  # json info
-  argget.add_argument('-kn', '--key_name', default=False, action='store_true', help='Option to replace the ParamIDs with ParamName in the decoded logs.')
-    
-  # influxDB info
-  argget.add_argument("--influx_url", type=str, help="InfluxDB Host URL")
-  argget.add_argument("--influx_org", type=str, help="InfluxDB Host Orginization")
-  argget.add_argument("--influx_token", type=str, help="Token for authenticating to InfluxDB Host")
-  
-  # sqlite info
-  argget.add_argument('-a', '--append', default=False, action='store_true', help='Option to append the logs to existing database. If this flag is not provided, any existing database with same name will be deleted first.')
-  
-  # binary file format (for development purpose to support both length and zero delimited binary)
-  argget.add_argument('-ld', '--length_delimited', default=False, action='store_true', help='Option to support decoding of length-delimited binary. If this flag is not provided, the decoding will be performed for zero-delimited COBS-R binary.')
-  
-  # Parse the arguments
-  args = argget.parse_args()
-  
-  arg_error = False
-  if not args.use_local and (not args.ip or not args.username or not args.password):
-    logging.error('Missing host information.')
-    arg_error = True
-    
-  if args.use_local and not args.local_file:
-    logging.error('Missing local logs file information.')
-    arg_error = True
-    
-  if args.key_name and args.decode_format != DECODE_FORMAT.JSON:
-    logging.error('--key_name should be provided only while decoding to json.')
-    arg_error = True
-  
-  if args.decode_format == DECODE_FORMAT.INFLUX and (not args.influx_url or not args.influx_token or not args.influx_org):
-    logging.error('Missing InfluxDB information.')
-    arg_error = True
-  
-  if args.append and args.decode_format != DECODE_FORMAT.SQLITE:
-    logging.error('--append should be provided only while decoding to sqlite.')
-    arg_error = True
-  
-  if args.environment not in ["FIE", "FAC", "UNK"]:
-    logging.error('Invalid environment provided')
-    args.environment = "UNK"
-  
-
-  if arg_error:
-    argget.print_help()
-    return 1
-
-  print("**********************Nvidia fdrtool**********************")
-  print("Selected option: {}".format("Use local tarball." if args.use_local else "Retrieve logs from HMC."))
-  # Basic execution flow
-  # Step-1: Redfish API call to get the zip file of fdr logs from HMC.
-  MyCatalog = None
-  status_code = 0
-  try:
-    binary_log_tar_file = ''
-    if not args.use_local:
-      print("\n----------- Collecting FDR dump from host {} -----------".format(args.ip))
-      # Store the downloaded fdr dumps in ./tmp/
-      os.makedirs("./tmp/", exist_ok=True)
-      binary_log_tar_file = CollectFdrDump(args.ip, args.username, args.password, args.environment)
-      #binary_log_tar_file = CollectFdrDump_DEMO(args.ip, args.username, args.password)
-    else: # Retrieve the zip file from local machine
-      binary_log_tar_file = args.local_file
-
-    
-    print("\n--------------------- Decoding FDR dump -----------------------")
-    print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
+def decodingDump(binary_log_tar_file):
+    #print("\n--------------------- Decoding FDR dump -----------------------")
+    #print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
     # Remove existing logs directory to avoid issues with overlapping of logs in different formats
      
     log_root_dir = './fdr_logs/'
     if os.path.exists(log_root_dir):
       shutil.rmtree(log_root_dir)
     # Step-2: Unzip the .tar file
+    print ("unzip the logs")
     binary_log = tarfile.open(binary_log_tar_file)
     binary_log.extractall(log_root_dir) # This will create a directory if it's not present already.
     binary_log.close()
-    print('Successfully unzipped the tar archive of binary logs into {}.'.format(log_root_dir))
+    for i in tqdm(range(int(9e6)),ncols=100,desc ="Decoding dump"):
+        pass
+    #print('Successfully unzipped the tar archive of binary logs into {}.'.format(log_root_dir))
+    
+    return log_root_dir
+    
+    
+    
+def main(arglist=None):
+   start_time = datetime.now()
+   status_code = 0
+   argget = configargparse.ArgParser(prog='nvidia-fdrtool',\
+                                  description='FDR tool to decode fdr logs received from HMC, version {}'.format(tool_version))
+   # Arguements:
+   argget.add_argument('-c', '--config_file', required=False, is_config_file=True, help='Config file path')
+   
+   # host info
+   # Redfish or local file for decoding (for development/test purpose)
+   argget.add_argument('-ul', '--use_local', default=False, action='store_true', help='Option to use local tar archive of binary logs if Redfish API for FDR dump is not available.')
+   argget.add_argument('-l', '--local_file', type=str, help='Local tar archive of binary logs if Redfish API for FDR dump is not available.')
+   
+   argget.add_argument('-i', '--ip', type=str, help='Address of host, using http or https (example: https://123.45.6.7:8000)')
+   argget.add_argument('-u', '--username', type=str, help='Username for Authentication')
+   argget.add_argument('-p', '--password', type=str, help='Password for Authentication')
+   argget.add_argument('-e', '--environment', type=str, help='Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)', default="UNK")
 
-    # Step-3: Create catalog of decoded binary logs
-    MyCatalog = Catalog(vars(args), log_root_dir)
-    print("creating catalog done---")
-    print("\n---------- Writing decoded FDR logs in {} ----------".format(args.decode_format))
-    # Step-4: Write the logs in intended format
-    MyCatalog.WriteAllEntries()
+   # decode option
+   group_decode_format = argget.add_mutually_exclusive_group(required=True)
+   group_decode_format.add_argument("--json", default=False, action="store_const", const = DECODE_FORMAT.JSON,  help="Decode the binary protobuf logs to JSON and store them locally.", dest = 'decode_format')
+   group_decode_format.add_argument("--influx", default=False, action="store_const", const = DECODE_FORMAT.INFLUX, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to InfluxDB server.", dest = 'decode_format')
+   group_decode_format.add_argument("--sqlite", default=False, action="store_const", const = DECODE_FORMAT.SQLITE, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to local SQLite database.", dest = 'decode_format')
 
-  except Exception as e:
-    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
-    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+  # json info
+   argget.add_argument('-kn', '--key_name', default=False, action='store_true', help='Option to replace the ParamIDs with ParamName in the decoded logs.')
+    
+   # influxDB info
+   argget.add_argument("--influx_url", type=str, help="InfluxDB Host URL")
+   argget.add_argument("--influx_org", type=str, help="InfluxDB Host Orginization")
+   argget.add_argument("--influx_token", type=str, help="Token for authenticating to InfluxDB Host")
+  
+  # sqlite info
+   argget.add_argument('-a', '--append', default=False, action='store_true', help='Option to append the logs to existing database. If this flag is not provided, any existing database with same name will be deleted first.')
+  
+  # binary file format (for development purpose to support both length and zero delimited binary)
+   argget.add_argument('-ld', '--length_delimited', default=False, action='store_true', help='Option to support decoding of length-delimited binary. If this flag is not provided, the decoding will be performed for zero-delimited COBS-R binary.')
+  
+  # Parse the arguments
+   args = argget.parse_args()
+   arg_error = False
+   if not args.use_local and (not args.ip or not args.username or not args.password):
+    logging.error('Missing host information.')
+    arg_error = True
+    
+   if args.use_local and not args.local_file:
+    logging.error('Missing local logs file information.')
+    arg_error = True
+    
+   if args.key_name and args.decode_format != DECODE_FORMAT.JSON:
+    logging.error('--key_name should be provided only while decoding to json.')
+    arg_error = True
+  
+   if args.decode_format == DECODE_FORMAT.INFLUX and (not args.influx_url or not args.influx_token or not args.influx_org):
+    logging.error('Missing InfluxDB information.')
+    arg_error = True
+    
+   if args.append and args.decode_format != DECODE_FORMAT.SQLITE:
+    logging.error('--append should be provided only while decoding to sqlite.')
+    arg_error = True
+  
+   if args.environment not in ["FIE", "FAC", "UNK"]:
+    logging.error('Invalid environment provided')
+    args.environment = "UNK"
+  
+
+   if arg_error:
+    argget.print_help()
+    return 1
+   # Step-1: Redfish API call to get the zip file of fdr logs from HMC.
+   binary_log_tar_file = dumpCollection(args)
+
+   # Step-2: Unzip the .tar file
+   log_root_dir =  decodingDump(binary_log_tar_file)
+
+   # Step-3: Create catalog of decoded binary logs
+   MyCatalog = Catalog(vars(args), log_root_dir)
+
+   #print("\n---------- Writing decoded FDR logs in {} ----------".format(args.decode_format))
+   # Step-4: Write the logs in intended format
+   MyCatalog.WriteAllEntries()
+
+#except Exception as e:
+#    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+#    logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
+#    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
     # traceback.print_exc()
-    status_code = 1
+#    status_code = 1
 
-  # Step-5: Clean up
-  if MyCatalog:
+# Step-5: Clean up
+   if MyCatalog:
     MyCatalog.Close()
 
-  end_time = datetime.now()
-  print('\n***********End of fdrtool. Time taken: {} seconds.***********'\
+   end_time = datetime.now()
+   print('\nTotal time taken: {} seconds.'\
           .format((end_time - start_time).total_seconds()))
 
-  return status_code
+   return status_code
 
 
 def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
@@ -286,3 +297,4 @@ def CollectFdrDump_DEMO(host_ip, username, password):
 if __name__ == '__main__':
     status_code = main()
     sys.exit(status_code)
+
