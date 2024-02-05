@@ -482,7 +482,8 @@ void FlightDataRecorder_c::CreateRecords(void)
 				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".sensors.dat", fdrStoreObj);
 				} else {
 					// create the FDRStore[samples storage file for non Sensor.* infogroups like Inventory,
-					// Config, Error, Status] here itself and use the same FDRStore pointer for all the
+					// Config, Error, Status, Units-MaxAllowedValue and even the AML events also if any] 
+					// here itself and use the same FDRStore pointer for all the
 					// records for all the non Sensor.* infogroups
 				    CreateSamplesWriter(profile, section.ID, component.ID, infogroup.ID, ".others.dat", fdrStoreObj);
 				}

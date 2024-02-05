@@ -7,17 +7,18 @@ message fdr_sample {
   oneof ParamValue {     // Value of this sample
     string ParamValueString = 2; // Applicable when InfoType==string
     int64 ParamValueInt64 = 3;   // Applicable when InfoType==Uint64
+    double ParamValueDouble = 4;   // Applicable when InfoType==Double
   }
-  optional uint64 ParamID = 4; // Unique parameter ID (Used to identify parameter name)
+  optional uint64 ParamID = 5; // Unique parameter ID (Used to identify parameter name)
 }
 
 message fdr_stat {
   uint64 FromTime = 1;   // Start of time period within which samples lie
   uint64 ToTime = 2;     // End of time period within which samples lie
   int64 NumSamples = 3; // Number of samples this stat took into consideration
-  int64 Min = 4;        // Minimum value seen across all samples
-  int64 Max = 5;        // Maximum value seen across all samples
-  int64 Avg = 6;        // Average values for the sample set
+  double Min = 4;        // Minimum value seen across all samples
+  double Max = 5;        // Maximum value seen across all samples
+  double Avg = 6;        // Average values for the sample set
   uint64 MinValTimeStamp = 7; // Time at which MINIMUM value occured during this samples
   uint64 MaxValTimeStamp = 8; // Time at which MAXIMUM value occured during this samples
   optional uint64 ParamID = 9; // Unique parameter ID (Used to identify parameter name)

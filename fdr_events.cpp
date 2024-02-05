@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+ Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 
  NVIDIA CORPORATION and its licensors retain all intellectual property
  and proprietary rights in and to this software, related documentation
@@ -13,6 +13,7 @@
 #include "fdr.hpp"
 #include "property_variant.hpp"
 #include "fdr_events.hpp"
+#include "fdr_log.hpp"
 
 /** @brief Helper to fetch device id from device name */
 std::string getDeviceId(const std::string& deviceName)
@@ -134,7 +135,7 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         std::get_if<std::vector<std::string>>(&eventData.second);
                     if (msgStringsPtr == nullptr)
                     {
-                        std::cout << "Got empty event AdditionalData info" << std::endl;
+                        fdrlog::warn("Got empty event AdditionalData info");
                         return;
                     }
                     // Fetch device name and error message details
@@ -218,6 +219,12 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
 
                         // Add entry for event details log to Error.dat
                         auto filePath = eventFDRStoreObj->getStoreFilePath();
+                        // remove the prefix "/var/emmc/fdr/" from the filePath as this prefix is
+                        // valid only within the HMC. But on FDR dump, this is invalid.
+                        size_t SubstrIndex = filePath.find("BootCount");
+                        if (SubstrIndex != std::string::npos) {
+                            filePath = filePath.substr(SubstrIndex);
+                        }
                         // Create protobuf message
                         fdr_event_data.set_eventtimestamp(eventTimestamp);
                         fdr_event_data.set_eventname(errorMessage);
@@ -233,7 +240,7 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                     }
                     else
                     {
-                        std::cout << "Event store got unknown device: " << fdrDeviceName << std::endl;
+                        fdrlog::error("Event store got unknown device: {}; deviceName: {}", fdrDeviceName, deviceName);
                     }
                     break; // Skip processing other elements
                 }
@@ -259,7 +266,7 @@ void EventSignalHandler::registerEventsSignal()
 		}
         catch (const std::exception& e)
         {
-            std::cout << "Caught exception on event message read:" << e.what() << std::endl;
+            fdrlog::error("Caught exception on event message read: {}", e.what());
 		}
     };
 
