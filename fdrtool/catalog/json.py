@@ -56,7 +56,11 @@ class JSONCatalogEntry(CatalogEntry):
           with open(warning_file, "a") as file:
               file.write(str("Skipping the ParamName update for file {self.filepath} Not it self.filepath") + "\n")
           #print(f"Warning : Skipping the ParamName update for file {self.filepath} Not it self.filepath")
-      
+    
+
+    proto_msg_str = {key: str(value) if not isinstance(value, str) else value for key, value in proto_msg_str.items()}
+
+
     # MessageToJson method converts the protobuf message into JSON format. However,
     # to make JSON logs consistent with the formatting in FDR, we're removing the '\n' between the key-values,
     # as well as all the spaces by doing a load and then dump.
