@@ -3091,6 +3091,7 @@ GPU: &gpu
         - ID: UTIL-MEM
           <<: *gpu-sensorperf-defaults
           ParamID: 321
+          DataType: Double
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -4353,7 +4354,7 @@ NVSwitch: &nvswitch
         - ID: BANDWIDTH-MAX
           <<: *nvswitch-config-defaults
           ParamID: 3
-          DataType: Double
+          DataType: Uint64
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -10382,6 +10383,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: DOWNLINK-SPEED
           <<: *retimertopology-sensorperf-defaults
           ParamID: 1
+          DataType: Double
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
@@ -10391,6 +10393,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: UPLINK-WIDTH
           <<: *retimertopology-sensorperf-defaults
           ParamID: 2
+          DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
@@ -10400,6 +10403,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: UPLINK-SPEED
           <<: *retimertopology-sensorperf-defaults
           ParamID: 3
+          DataType: Double
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
@@ -11025,7 +11029,7 @@ HMC: &hmc
           FetchMethod: DBUS
           StorePolicy: EveryFetch
           FetchType: Poll
-          DataType: Uint64
+          DataType: Double
           DbusParams:
             Service: "xyz.openbmc_project.HwmonTempSensor"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_BMC_0_Temp_0"
@@ -11395,7 +11399,7 @@ Baseboard: &baseboard
           FetchFreqSecs: 2  
           FetchMethod: DBUS
           FetchType: Poll
-          DataType: Uint64
+          DataType: Double
           StoreFreqSecs: 2
           StorePolicy: EveryFetch
           DbusParams:
@@ -11459,7 +11463,7 @@ Baseboard: &baseboard
           FetchFreqSecs: 10  
           FetchMethod: DBUS
           FetchType: Poll
-          DataType: Uint64
+          DataType: Double
           StoreFreqSecs: 10
           StorePolicy: EveryFetch
           DbusParams:
