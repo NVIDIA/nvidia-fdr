@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+ Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 
  NVIDIA CORPORATION and its licensors retain all intellectual property
  and proprietary rights in and to this software, related documentation
@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 		auto rc = sd_bus_default_system(&fdrBus);
 		if (rc < 0)
 		{
-			fdrlog::error("Exiting, Failed to connect to system bus");
+			fdrlog::error("Exiting, Failed to connect to system bus: rc: {}", rc);
 			return EXIT_FAILURE;
 		}
 		auto io = std::make_shared<boost::asio::io_context>();

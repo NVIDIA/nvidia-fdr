@@ -557,6 +557,18 @@ void FlightDataRecorder_c::CreateRecords(void)
 	}
 }
 
+void FlightDataRecorder_c::MakeBirthCertificateDeleteSafe(void) {
+	std::string commandStr = "chattr +i " + birthCertFilePath;
+	fdrlog::debug("MakeBirthCertificateDeleteSafe: command: {}", commandStr);
+	CommandResult_t cmdResult = exec(commandStr.c_str());
+	if (cmdResult.cmdExitstatus != FDR_SUCCESS)
+	{
+		fdrlog::warn("MakeBirthCertificateDeleteSafe: command Failed: {}, cmdExitstatus: {}", 
+			commandStr, cmdResult.cmdExitstatus);
+	}
+	fdrlog::debug("MakeBirthCertificateDeleteSafe: Successfull Birth certificate: {}", birthCertFilePath);
+}
+
 // This method will creates a snapshot of all Inventory.dat, config.dat and Versions.dat
 // of all the inventory only for the very first time when fdr booted
 void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
@@ -570,27 +582,30 @@ void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 		std::string fdrDumpPath = profile.GeneralConfig.LogsBasePath;
 		std::string commandStr = "find " + fdrDumpPath + " | grep -e .others.dat -e Bookkeeper | xargs tar -cJf " + birthCertFilePath;
 
-		// std::cout << "tarCmd: " << commandStr << std::endl;
+		// fdrlog::debug("CollectAndArchieveBirthCertificate: tarCmd: {}, commandStr);
 		CommandResult_t cmdResult = exec(commandStr.c_str());
 		if (cmdResult.cmdExitstatus != FDR_SUCCESS)
 		{
-			fdrlog::warn ("tarCmd command Failed: {}", commandStr);
+			fdrlog::warn("tarCmd command Failed: {}, cmdExitstatus: {}", commandStr, cmdResult.cmdExitstatus);
 		}
-		fdrlog::debug("Successfully created Birth certificate: {}", birthCertFilePath);
+		fdrlog::debug("CollectAndArchieveBirthCertificate: Successfully created Birth certificate: {}", birthCertFilePath);
 	}
 	else
 	{
-		// std::cout << "exist: " << birthCertFilePath << "..so no need to create Birthcertificate again!!" << std::endl;
+		fdrlog::debug("CollectAndArchieveBirthCertificate: exist: {}..so no need to create Birthcertificate again!!", birthCertFilePath);
 	}
 
-	// 3. after creating the birth certificate, remove only the "BootEvent" records.
-	//    This records needs to be executed only once when FDR comes up. This records 
+	// 3. make the Birthcertificate tar file delete safe
+	MakeBirthCertificateDeleteSafe();
+
+	// 4. after creating the birth certificate, remove only the "BootEvent" records.
+	//    These records needs to be executed only once when FDR comes up. This records 
 	//    need not be executed during the FDR runtime.
-	// std::cout << "Before bootevent deleting----------------------------------" << std::endl;
-	// std::cout << "size of RecList:" << RecList.size() << std::endl;
+	// fdrlog::debug("Before bootevent deleting----------------------------------");
+	// fdrlog::debug("size of RecList: {}", RecList.size());
 	DeleteSpecificRecords("AfterBootDelete");
-	// std::cout << "after bootevent deleting-----------------------------------" << std::endl;
-	// std::cout << "size of RecList:" << RecList.size() << std::endl;
+	// fdrlog::debug("after bootevent deleting-----------------------------------");
+	// fdrlog::debug("size of RecList: {}", RecList.size());
 }
 
 // This method operate on a map of record list which will used both fetching[refresh] and storing[store]
