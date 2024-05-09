@@ -126,6 +126,7 @@ public:
 							 const std::string& fileTimestamp);
 	void CreateRecords(void);
 	void CollectAndArchieveBirthCertificate(void);
+	void MakeBirthCertificateDeleteSafe(void);
 	void RefreshAndStore(bool viaTimerSkipChecks, const std::vector<Record *>& recordListToRefresh);
 	void RefreshAndStore(bool viaTimerSkipChecks);
 	void StoreSubscribeRecords(const std::vector<Record *>& recordListToStore);

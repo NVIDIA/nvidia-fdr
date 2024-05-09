@@ -344,6 +344,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 28
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
@@ -354,6 +355,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 29
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
@@ -364,6 +366,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 30
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
@@ -374,6 +377,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 31
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3"
@@ -384,6 +388,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 32
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4"
@@ -394,6 +399,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 33
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5"
@@ -404,6 +410,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 34
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6"
@@ -414,6 +421,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 35
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7"
@@ -424,6 +432,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 36
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8"
@@ -434,6 +443,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 37
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9"
@@ -444,6 +454,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 38
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10"
@@ -454,6 +465,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 39
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11"
@@ -464,6 +476,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 40
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12"
@@ -474,6 +487,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 41
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13"
@@ -484,6 +498,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 42
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14"
@@ -494,6 +509,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 43
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15"
@@ -504,6 +520,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 44
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16"
@@ -514,6 +531,7 @@ GPU: &gpu
           <<: *gpu-config-defaults
           ParamID: 45
           DataType: Double
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17"
@@ -523,6 +541,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[0]
           <<: *gpu-config-defaults
           ParamID: 46
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
@@ -532,6 +551,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[1]
           <<: *gpu-config-defaults
           ParamID: 47
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
@@ -541,6 +561,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[2]
           <<: *gpu-config-defaults
           ParamID: 48
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
@@ -550,6 +571,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[3]
           <<: *gpu-config-defaults
           ParamID: 49
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3"
@@ -559,6 +581,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[4]
           <<: *gpu-config-defaults
           ParamID: 50
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4"
@@ -568,6 +591,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[5]
           <<: *gpu-config-defaults
           ParamID: 51
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5"
@@ -577,6 +601,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[6]
           <<: *gpu-config-defaults
           ParamID: 52
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6"
@@ -586,6 +611,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[7]
           <<: *gpu-config-defaults
           ParamID: 53
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7"
@@ -595,6 +621,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[8]
           <<: *gpu-config-defaults
           ParamID: 54
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8"
@@ -604,6 +631,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[9]
           <<: *gpu-config-defaults
           ParamID: 55
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9"
@@ -613,6 +641,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[10]
           <<: *gpu-config-defaults
           ParamID: 56
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10"
@@ -622,6 +651,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[11]
           <<: *gpu-config-defaults
           ParamID: 57
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11"
@@ -631,6 +661,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[12]
           <<: *gpu-config-defaults
           ParamID: 58
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12"
@@ -640,6 +671,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[13]
           <<: *gpu-config-defaults
           ParamID: 59
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13"
@@ -649,6 +681,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[14]
           <<: *gpu-config-defaults
           ParamID: 60
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14"
@@ -658,6 +691,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[15]
           <<: *gpu-config-defaults
           ParamID: 61
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15"
@@ -667,6 +701,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[16]
           <<: *gpu-config-defaults
           ParamID: 62
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16"
@@ -676,6 +711,7 @@ GPU: &gpu
         - ID: NVLINK-PROTOCOL[17]
           <<: *gpu-config-defaults
           ParamID: 63
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17"
@@ -685,6 +721,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[0]
           <<: *gpu-config-defaults
           ParamID: 64
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
@@ -694,6 +731,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[1]
           <<: *gpu-config-defaults
           ParamID: 65
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
@@ -703,6 +741,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[2]
           <<: *gpu-config-defaults
           ParamID: 66
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
@@ -712,6 +751,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[3]
           <<: *gpu-config-defaults
           ParamID: 67
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3"
@@ -721,6 +761,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[4]
           <<: *gpu-config-defaults
           ParamID: 68
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4"
@@ -730,6 +771,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[5]
           <<: *gpu-config-defaults
           ParamID: 69
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5"
@@ -739,6 +781,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[6]
           <<: *gpu-config-defaults
           ParamID: 70
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6"
@@ -748,6 +791,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[7]
           <<: *gpu-config-defaults
           ParamID: 71
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7"
@@ -757,6 +801,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[8]
           <<: *gpu-config-defaults
           ParamID: 72
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8"
@@ -766,6 +811,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[9]
           <<: *gpu-config-defaults
           ParamID: 73
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9"
@@ -775,6 +821,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[10]
           <<: *gpu-config-defaults
           ParamID: 74
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10"
@@ -784,6 +831,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[11]
           <<: *gpu-config-defaults
           ParamID: 75
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11"
@@ -793,6 +841,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[12]
           <<: *gpu-config-defaults
           ParamID: 76
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12"
@@ -802,6 +851,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[13]
           <<: *gpu-config-defaults
           ParamID: 77
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13"
@@ -811,6 +861,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[14]
           <<: *gpu-config-defaults
           ParamID: 78
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14"
@@ -820,6 +871,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[15]
           <<: *gpu-config-defaults
           ParamID: 79
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15"
@@ -829,6 +881,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[16]
           <<: *gpu-config-defaults
           ParamID: 80
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16"
@@ -838,6 +891,7 @@ GPU: &gpu
         - ID: NVLINK-TYPE[17]
           <<: *gpu-config-defaults
           ParamID: 81
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17"
@@ -927,6 +981,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[0]
           <<: *gpu-config-defaults
           ParamID: 90
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
@@ -936,6 +991,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[1]
           <<: *gpu-config-defaults
           ParamID: 91
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
@@ -945,6 +1001,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[2]
           <<: *gpu-config-defaults
           ParamID: 92
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
@@ -954,6 +1011,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[3]
           <<: *gpu-config-defaults
           ParamID: 93
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3"
@@ -963,6 +1021,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[4]
           <<: *gpu-config-defaults
           ParamID: 94
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4"
@@ -972,6 +1031,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[5]
           <<: *gpu-config-defaults
           ParamID: 95
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5"
@@ -981,6 +1041,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[6]
           <<: *gpu-config-defaults
           ParamID: 96
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6"
@@ -990,6 +1051,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[7]
           <<: *gpu-config-defaults
           ParamID: 97
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7"
@@ -999,6 +1061,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[8]
           <<: *gpu-config-defaults
           ParamID: 98
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8"
@@ -1008,6 +1071,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[9]
           <<: *gpu-config-defaults
           ParamID: 99
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9"
@@ -1017,6 +1081,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[10]
           <<: *gpu-config-defaults
           ParamID: 100
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10"
@@ -1026,6 +1091,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[11]
           <<: *gpu-config-defaults
           ParamID: 101
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11"
@@ -1035,6 +1101,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[12]
           <<: *gpu-config-defaults
           ParamID: 102
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12"
@@ -1044,6 +1111,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[13]
           <<: *gpu-config-defaults
           ParamID: 103
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13"
@@ -1053,6 +1121,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[14]
           <<: *gpu-config-defaults
           ParamID: 104
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14"
@@ -1062,6 +1131,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[15]
           <<: *gpu-config-defaults
           ParamID: 105
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15"
@@ -1071,6 +1141,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[16]
           <<: *gpu-config-defaults
           ParamID: 106
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16"
@@ -1080,6 +1151,7 @@ GPU: &gpu
         - ID: NVLINK-LINKSTATE[17]
           <<: *gpu-config-defaults
           ParamID: 107
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17"
@@ -1092,7 +1164,7 @@ GPU: &gpu
           ID: NVLINK-ERR-CTR-REPLAY[0]
           FetchMethod: DBUS
           StorePolicy: OnChange
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 108
           FetchFreqSecs: 30
           StoreFreqSecs: 30
@@ -1756,6 +1828,7 @@ GPU: &gpu
         - ID: ECC-ERR-CTR-CE
           <<: *gpu-error-defaults
           ParamID: 180
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -1765,6 +1838,7 @@ GPU: &gpu
         - ID: ECC-ERR-CTR-UCE
           <<: *gpu-error-defaults
           ParamID: 181
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -1774,6 +1848,7 @@ GPU: &gpu
         - ID: ROW-REMAPPED-CTR-UE
           <<: *gpu-error-defaults
           ParamID: 182
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -1783,6 +1858,7 @@ GPU: &gpu
         - ID: ROW-REMAPPED-CTR-CE
           <<: *gpu-error-defaults
           ParamID: 183
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -1792,6 +1868,7 @@ GPU: &gpu
         - ID: ROW-REMAP-FAILED
           <<: *gpu-error-defaults
           ParamID: 184
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -1801,6 +1878,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-CORR
           <<: *gpu-error-defaults
           ParamID: 185
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -1810,6 +1888,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-FATAL
           <<: *gpu-error-defaults
           ParamID: 186
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -1819,6 +1898,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-L0-TO-RECOVERY
           <<: *gpu-error-defaults
           ParamID: 187
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -1828,6 +1908,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-NAK-RECVD
           <<: *gpu-error-defaults
           ParamID: 188
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -1837,6 +1918,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-NAK-SENT
           <<: *gpu-error-defaults
           ParamID: 189
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -1846,6 +1928,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-NON-FATAL
           <<: *gpu-error-defaults
           ParamID: 190
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -1855,6 +1938,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
           <<: *gpu-error-defaults
           ParamID: 191
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -2188,6 +2272,7 @@ GPU: &gpu
         - ID: ECC-ERR-CTR-CE-CACHE
           <<: *gpu-error-defaults
           ParamID: 228
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -2197,6 +2282,7 @@ GPU: &gpu
         - ID: ECC-ERR-CTR-UE-CACHE
           <<: *gpu-error-defaults
           ParamID: 229
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -2207,6 +2293,7 @@ GPU: &gpu
         - ID: ECC-ERR-CTR-SBE
           <<: *gpu-error-defaults
           ParamID: 230
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -2216,6 +2303,7 @@ GPU: &gpu
         - ID: ECC-ERR-CTR-DBE
           <<: *gpu-error-defaults
           ParamID: 231
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -2225,6 +2313,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-REPLAY
           <<: *gpu-error-defaults
           ParamID: 232
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -2234,6 +2323,7 @@ GPU: &gpu
         - ID: ERR-ABSENT
           <<: *gpu-error-defaults
           ParamID: 233
+          FetchType: Subscribe
           DataType: string
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -2244,6 +2334,7 @@ GPU: &gpu
         - ID: PCI-ERR-CTR-UNSUPP-REQ
           <<: *gpu-error-defaults
           ParamID: 234
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -2261,7 +2352,7 @@ GPU: &gpu
           FetchFreqSecs: 30
           StorePolicy: OnChange
           StoreFreqSecs: 30
-          FetchType: Subscribe
+          FetchType: Poll
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -2424,10 +2515,10 @@ GPU: &gpu
         - &gpu-sensorperf-defaults
           ID: NVLINK-THROUGHPUT-TX[0]
           ParamID: 248
-          FetchFreqSecs: 10
-          StoreFreqSecs: 10
+          FetchFreqSecs: 30
+          StoreFreqSecs: 30
           StorePolicy: OnChange
-          FetchType: Subscribe
+          FetchType: Poll
           FetchMethod: DBUS 
           DataType: Uint64
           DbusParams: 
@@ -3082,6 +3173,7 @@ GPU: &gpu
           <<: *gpu-sensorperf-defaults
           ParamID: 320
           DataType: Double
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -3091,6 +3183,7 @@ GPU: &gpu
         - ID: UTIL-MEM
           <<: *gpu-sensorperf-defaults
           ParamID: 321
+          FetchType: Subscribe
           DataType: Double
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -3101,6 +3194,7 @@ GPU: &gpu
         - ID: PCI-LINK-WIDTH-CURR
           <<: *gpu-sensorperf-defaults
           ParamID: 322
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
@@ -3294,7 +3388,7 @@ GPU: &gpu
         - &gpu-status-defaults
           ID: NVLINK-STATUS[0]
           ParamID: 341
-          FetchType: Subscribe
+          FetchType: Poll
           StoreFreqSecs: 600
           DataType: string
           FetchMethod: DBUS  
@@ -3464,6 +3558,7 @@ GPU: &gpu
           <<: *gpu-status-defaults
           ParamID: 359
           DataType: Uint64
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -3833,6 +3928,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[0]
           <<: *gpu-status-defaults
           ParamID: 396
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
@@ -3842,6 +3938,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[1]
           <<: *gpu-status-defaults
           ParamID: 397
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
@@ -3851,6 +3948,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[2]
           <<: *gpu-status-defaults
           ParamID: 398
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
@@ -3860,6 +3958,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[3]
           <<: *gpu-status-defaults
           ParamID: 399
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3"
@@ -3869,6 +3968,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[4]
           <<: *gpu-status-defaults
           ParamID: 400
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4"
@@ -3878,6 +3978,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[5]
           <<: *gpu-status-defaults
           ParamID: 401
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5"
@@ -3887,6 +3988,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[6]
           <<: *gpu-status-defaults
           ParamID: 402
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6"
@@ -3896,6 +3998,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[7]
           <<: *gpu-status-defaults
           ParamID: 403
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7"
@@ -3905,6 +4008,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[8]
           <<: *gpu-status-defaults
           ParamID: 404
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8"
@@ -3914,6 +4018,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[9]
           <<: *gpu-status-defaults
           ParamID: 405
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9"
@@ -3923,6 +4028,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[10]
           <<: *gpu-status-defaults
           ParamID: 406
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10"
@@ -3932,6 +4038,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[11]
           <<: *gpu-status-defaults
           ParamID: 407
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11"
@@ -3941,6 +4048,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[12]
           <<: *gpu-status-defaults
           ParamID: 408
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12"
@@ -3950,6 +4058,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[13]
           <<: *gpu-status-defaults
           ParamID: 409
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13"
@@ -3959,6 +4068,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[14]
           <<: *gpu-status-defaults
           ParamID: 410
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14"
@@ -3968,6 +4078,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[15]
           <<: *gpu-status-defaults
           ParamID: 411
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15"
@@ -3977,6 +4088,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[16]
           <<: *gpu-status-defaults
           ParamID: 412
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16"
@@ -3986,6 +4098,7 @@ GPU: &gpu
         - ID: NVLINK-CURR-POWER-STATE[17]
           <<: *gpu-status-defaults
           ParamID: 413
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17"
@@ -3995,6 +4108,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[0]
           <<: *gpu-status-defaults
           ParamID: 414
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0"
@@ -4004,6 +4118,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[1]
           <<: *gpu-status-defaults
           ParamID: 415
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1"
@@ -4013,6 +4128,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[2]
           <<: *gpu-status-defaults
           ParamID: 416
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2"
@@ -4022,6 +4138,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[3]
           <<: *gpu-status-defaults
           ParamID: 417
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3"
@@ -4031,6 +4148,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[4]
           <<: *gpu-status-defaults
           ParamID: 418
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4"
@@ -4040,6 +4158,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[5]
           <<: *gpu-status-defaults
           ParamID: 419
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5"
@@ -4049,6 +4168,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[6]
           <<: *gpu-status-defaults
           ParamID: 420
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6"
@@ -4058,6 +4178,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[7]
           <<: *gpu-status-defaults
           ParamID: 421
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7"
@@ -4067,6 +4188,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[8]
           <<: *gpu-status-defaults
           ParamID: 422
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8"
@@ -4076,6 +4198,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[9]
           <<: *gpu-status-defaults
           ParamID: 423
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9"
@@ -4085,6 +4208,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[10]
           <<: *gpu-status-defaults
           ParamID: 424
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10"
@@ -4094,6 +4218,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[11]
           <<: *gpu-status-defaults
           ParamID: 425
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11"
@@ -4103,6 +4228,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[12]
           <<: *gpu-status-defaults
           ParamID: 426
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12"
@@ -4111,6 +4237,7 @@ GPU: &gpu
 
         - ID: NVLINK-HEALTH[13]
           <<: *gpu-status-defaults
+          FetchType: Subscribe
           ParamID: 427
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -4120,6 +4247,7 @@ GPU: &gpu
 
         - ID: NVLINK-HEALTH[14]
           <<: *gpu-status-defaults
+          FetchType: Subscribe
           ParamID: 428
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -4129,6 +4257,7 @@ GPU: &gpu
 
         - ID: NVLINK-HEALTH[15]
           <<: *gpu-status-defaults
+          FetchType: Subscribe
           ParamID: 429
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -4139,6 +4268,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[16]
           <<: *gpu-status-defaults
           ParamID: 430
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16"
@@ -4148,6 +4278,7 @@ GPU: &gpu
         - ID: NVLINK-HEALTH[17]
           <<: *gpu-status-defaults
           ParamID: 431
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17"
@@ -4158,6 +4289,7 @@ GPU: &gpu
           <<: *gpu-status-defaults
           ParamID: 432
           DataType: Uint64          
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_0"
@@ -4167,6 +4299,7 @@ GPU: &gpu
         - ID: PCI-LINK-SPEED-CURR
           <<: *gpu-status-defaults
           ParamID: 433
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
@@ -4176,6 +4309,7 @@ GPU: &gpu
         - ID: PCI-LINK-SPEED-MAX
           <<: *gpu-status-defaults
           ParamID: 434
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid"
@@ -4186,6 +4320,7 @@ GPU: &gpu
           <<: *gpu-status-defaults
           ParamID: 435
           DataType: Uint64
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -4196,6 +4331,7 @@ GPU: &gpu
           <<: *gpu-status-defaults
           ParamID: 436
           DataType: Uint64
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -4206,6 +4342,7 @@ GPU: &gpu
           <<: *gpu-status-defaults
           ParamID: 437
           DataType: string
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -4216,6 +4353,7 @@ GPU: &gpu
           <<: *gpu-status-defaults
           ParamID: 438
           DataType: string
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid"
@@ -4231,7 +4369,7 @@ GPU: &gpu
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 439
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -4323,7 +4461,7 @@ NVSwitch: &nvswitch
           FetchMethod: DBUS
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -4335,6 +4473,7 @@ NVSwitch: &nvswitch
           <<: *nvswitch-config-defaults
           ParamID: 1
           DataType: Double
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_0" 
@@ -4345,6 +4484,7 @@ NVSwitch: &nvswitch
           <<: *nvswitch-config-defaults
           ParamID: 2
           DataType: Double
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_0"
@@ -4354,6 +4494,7 @@ NVSwitch: &nvswitch
         - ID: BANDWIDTH-MAX
           <<: *nvswitch-config-defaults
           ParamID: 3
+          FetchType: Subscribe
           DataType: Uint64
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -4375,6 +4516,7 @@ NVSwitch: &nvswitch
           <<: *nvswitch-config-defaults
           ParamID: 5
           DataType: Uint64
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid" 
@@ -4384,6 +4526,7 @@ NVSwitch: &nvswitch
         - ID: INFOROM-VER
           <<: *nvswitch-config-defaults
           ParamID: 6
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/HGX_InfoROM_NVSwitch_$nvswitchid"
@@ -4393,6 +4536,7 @@ NVSwitch: &nvswitch
         - ID: DRVR-VER
           <<: *nvswitch-config-defaults
           ParamID: 7
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid"
@@ -4690,6 +4834,7 @@ NVSwitch: &nvswitch
         - ID: NVLINKFABRIC-TYPE
           <<: *nvswitch-config-defaults
           ParamID: 40
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0"
@@ -4987,6 +5132,7 @@ NVSwitch: &nvswitch
         - ID: FW-REV
           <<: *nvswitch-config-defaults
           ParamID: 73
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -6244,13 +6390,23 @@ NVSwitch: &nvswitch
     - ID: Error
       InfoList:
         - &nvswitch-error-defaults
-          ID: PCI-ERR-CTR-CORR
-          ParamID: 202
+          ID: NVLINK-ERR-CTR-REPLAY[0]
+          ParamID: 204
           DataType: Uint64
           FetchFreqSecs: 30
           StoreFreqSecs: 30
           FetchMethod: DBUS
           StorePolicy: OnChange
+          FetchType: Poll
+          DbusParams: 
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "ReplayErrorsCount"
+
+        - ID: PCI-ERR-CTR-CORR
+          <<: *nvswitch-error-defaults
+          ParamID: 202
           FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -6261,20 +6417,12 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-FATAL
           <<: *nvswitch-error-defaults
           ParamID: 203
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.PCIe.PCIeECC"
             Property: "feCount"
-
-        - ID: NVLINK-ERR-CTR-REPLAY[0]
-          <<: *nvswitch-error-defaults
-          ParamID: 204
-          DbusParams: 
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "ReplayErrorsCount"
 
         - ID: NVLINK-ERR-CTR-REPLAY[1]
           <<: *nvswitch-error-defaults
@@ -8025,6 +8173,7 @@ NVSwitch: &nvswitch
         - ID: ECC-ERR-CTR-CE
           <<: *nvswitch-error-defaults
           ParamID: 397
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8034,6 +8183,7 @@ NVSwitch: &nvswitch
         - ID: ECC-ERR-CTR-UE
           <<: *nvswitch-error-defaults
           ParamID: 398
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8043,6 +8193,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-L0-TO-RECOVERY
           <<: *nvswitch-error-defaults
           ParamID: 399
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8052,6 +8203,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-NAK-RECVD
           <<: *nvswitch-error-defaults
           ParamID: 400
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8061,6 +8213,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-NAK-SENT
           <<: *nvswitch-error-defaults
           ParamID: 401
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8070,6 +8223,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-NON-FATAL
           <<: *nvswitch-error-defaults
           ParamID: 402
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8079,6 +8233,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-REPLAY
           <<: *nvswitch-error-defaults
           ParamID: 403
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8088,6 +8243,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
           <<: *nvswitch-error-defaults
           ParamID: 404
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8097,6 +8253,7 @@ NVSwitch: &nvswitch
         - ID: PCI-ERR-CTR-UNSUPP-REQ
           <<: *nvswitch-error-defaults
           ParamID: 405
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
@@ -8169,7 +8326,7 @@ NVSwitch: &nvswitch
           StoreFreqSecs: 3600
           FetchMethod: DBUS
           StorePolicy: OnChange
-          FetchType: Subscribe
+          FetchType: Poll
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
@@ -8765,6 +8922,7 @@ NVSwitch: &nvswitch
         - ID: HEALTH
           <<: *nvswitch-status-defaults
           ParamID: 475
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
@@ -8774,6 +8932,7 @@ NVSwitch: &nvswitch
         - ID: HEALTH-ROLLUP
           <<: *nvswitch-status-defaults
           ParamID: 476
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid"
@@ -8783,6 +8942,7 @@ NVSwitch: &nvswitch
         - ID: NVLINKFABRIC-HEALTH
           <<: *nvswitch-status-defaults
           ParamID: 477
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0"
@@ -8792,6 +8952,7 @@ NVSwitch: &nvswitch
         - ID: PCI-LINK-SPEED-CURR
           <<: *nvswitch-status-defaults
           ParamID: 478
+          FetchType: Subscribe
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -8802,6 +8963,7 @@ NVSwitch: &nvswitch
         - ID: PCI-LINK-SPEED-MAX
           <<: *nvswitch-status-defaults
           ParamID: 479
+          FetchType: Subscribe
           DataType: string
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
@@ -8812,28 +8974,29 @@ NVSwitch: &nvswitch
     - ID: Sensor.Perf
       InfoList:
         - &nvswitch-sensorperf-defaults
-          ID: NVLINK-BANDWIDTH
-          ParamID: 480
+          ID: NVLINK-THROUGHPUT-TX[0]
+          ParamID: 481
           DataType: Uint64
-          FetchFreqSecs: 10
-          StoreFreqSecs: 10
+          FetchFreqSecs: 30
+          StoreFreqSecs: 30
           FetchMethod: DBUS
           StorePolicy: OnChange
+          FetchType: Poll
+          DbusParams:
+            Service: "xyz.openbmc_project.GpuMgr"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
+            Interface: "xyz.openbmc_project.Inventory.Item.Port"
+            Property: "TXNoProtocolBytes"
+
+        - ID: NVLINK-BANDWIDTH
+          <<: *nvswitch-sensorperf-defaults
+          ParamID: 480
           FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid"
             Interface: "xyz.openbmc_project.Inventory.Item.Switch"
             Property: "CurrentBandwidth"
-
-        - ID: NVLINK-THROUGHPUT-TX[0]
-          <<: *nvswitch-sensorperf-defaults
-          ParamID: 481
-          DbusParams:
-            Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_0/Switches/NVSwitch_$nvswitchid/Ports/NVLink_0"
-            Interface: "xyz.openbmc_project.Inventory.Item.Port"
-            Property: "TXNoProtocolBytes"
 
         - ID: NVLINK-THROUGHPUT-TX[1]
           <<: *nvswitch-sensorperf-defaults
@@ -9982,6 +10145,7 @@ NVSwitch: &nvswitch
         - ID: PCI-LINK-WIDTH-CURR
           <<: *nvswitch-sensorperf-defaults
           ParamID: 609
+          FetchType: Subscribe
           DbusParams:
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid/PCIeDevices/NVSwitch_$nvswitchid"
@@ -10338,7 +10502,7 @@ NVSwitch: &nvswitch
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 643
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -10368,10 +10532,10 @@ PCIeRetimerTopology: &retimertopology
         - &retimertopology-sensorperf-defaults
           ID: DOWNLINK-WIDTH
           ParamID: 0
-          FetchFreqSecs: 10
-          StoreFreqSecs: 10
+          FetchFreqSecs: 30
+          StoreFreqSecs: 30
           StorePolicy: OnChange
-          FetchType: Subscribe
+          FetchType: Poll
           FetchMethod: DBUS 
           DataType: Uint64
           DbusParams: 
@@ -10396,7 +10560,7 @@ PCIeRetimerTopology: &retimertopology
           DataType: Uint64
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/UP_0"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "ActiveWidth"
 
@@ -10406,7 +10570,7 @@ PCIeRetimerTopology: &retimertopology
           DataType: Double
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
-            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
+            ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/UP_0"
             Interface: "xyz.openbmc_project.Inventory.Item.Port"
             Property: "CurrentSpeed"
 
@@ -10417,7 +10581,7 @@ PCIeRetimerTopology: &retimertopology
         - &retimertopology-status-defaults
           ID: DOWNLINK-PROTOCOL
           ParamID: 4
-          FetchType: Subscribe
+          FetchType: Poll
           StoreFreqSecs: 600
           DataType: string
           FetchMethod: DBUS  
@@ -10442,6 +10606,7 @@ PCIeRetimerTopology: &retimertopology
           <<: *retimertopology-status-defaults
           ParamID: 6
           DataType: Uint64
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
@@ -10451,6 +10616,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: DOWNLINK-CURR-POWER-STATE
           <<: *retimertopology-status-defaults
           ParamID: 7
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
@@ -10460,6 +10626,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: DOWNLINK-HEALTH
           <<: *retimertopology-status-defaults
           ParamID: 8
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/DOWN_0"
@@ -10488,6 +10655,7 @@ PCIeRetimerTopology: &retimertopology
           <<: *retimertopology-status-defaults
           ParamID: 11
           DataType: Uint64
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/UP_0"
@@ -10497,6 +10665,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: UPLINK-CURR-POWER-STATE
           <<: *retimertopology-status-defaults
           ParamID: 12
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/UP_0"
@@ -10506,6 +10675,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: UPLINK-HEALTH
           <<: *retimertopology-status-defaults
           ParamID: 13
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0/Ports/UP_0"
@@ -10515,6 +10685,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: HEALTH
           <<: *retimertopology-status-defaults
           ParamID: 14
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid"
@@ -10524,6 +10695,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: SWITCH-HEALTH
           <<: *retimertopology-status-defaults
           ParamID: 15
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0"
@@ -10533,6 +10705,7 @@ PCIeRetimerTopology: &retimertopology
         - ID: SWITCH-STATE
           <<: *retimertopology-status-defaults
           ParamID: 16
+          FetchType: Subscribe
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
             ObjectPath: "/xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimertopologyid/Switches/PCIeRetimer_0"
@@ -10828,7 +11001,7 @@ PCIeRetimer: &retimer
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 3
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -11046,7 +11219,7 @@ HMC: &hmc
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 18
           DbusParams: 
             Service: "xyz.openbmc_project.HwmonTempSensor"
@@ -11167,7 +11340,7 @@ FPGA: &fpga
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 5
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -11538,7 +11711,7 @@ Baseboard: &baseboard
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 31
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -11751,7 +11924,7 @@ HSC: &hsc
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 2
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"
@@ -11855,7 +12028,7 @@ PCIeSwitch: &pcieswitch
           FetchFreqSecs: 3600
           StorePolicy: OnChange
           StoreFreqSecs: 3600
-          FetchType: Subscribe
+          FetchType: Poll
           ParamID: 3
           DbusParams: 
             Service: "xyz.openbmc_project.GpuMgr"

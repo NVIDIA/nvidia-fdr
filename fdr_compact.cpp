@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2023, NVIDIA CORPORATION.  All rights reserved.
+ Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
 
  NVIDIA CORPORATION and its licensors retain all intellectual property
  and proprietary rights in and to this software, related documentation
@@ -78,12 +78,16 @@ bool FlightDataRecorder_c::CompactorCheckBookOfErrors(const std::string director
 	}
 
 	// for debugging
+	// fdrlog::debug("---------------------------------------------------------------------------------------------------");
+	int counter = 0;
 	for (auto &errorRecord : errorList) {
-		fdrlog::debug("----erroroccurtimestamp: {}; starthifitimestamp: {}; stophifitimestamp: {}; BootId: {}; "
+		fdrlog::debug("CompactorCheckBookOfErrors: errorlist[{}]: erroroccurtimestamp: {}; starthifitimestamp: {}; stophifitimestamp: {}; BootId: {}; "
 					 "ParamID: {}; DeviceInstance: {}; ErrorType: ; givenBootId: {}",
-					errorRecord.erroroccurtimestamp(), errorRecord.starthifitimestamp(), errorRecord.stophifitimestamp(),
+					counter, errorRecord.erroroccurtimestamp(), errorRecord.starthifitimestamp(), errorRecord.stophifitimestamp(),
 				  	errorRecord.bootid(), errorRecord.paramid(), errorRecord.deviceinstance(), errorRecord.errortype(), givenBootId);
+		counter++;
 	}
+	// fdrlog::debug("---------------------------------------------------------------------------------------------------");
 	return errorList.size()? true: false;
 }
 
@@ -265,8 +269,9 @@ void FlightDataRecorder_c::CompactorGetLeastAndFarTimestamp(const std::string di
 		fdrlog::debug("CompactorGetLeastAndFarTimestamp: directory timestamp: {}", splittedList[3]);
 		leastWindowTimestamp = std::strtoull(splittedList[3].c_str(), &endPtr, 10);
 		if (*endPtr == '\0') {
-			// std::cout << "Converted value: " << leastWindowTimestamp << std::endl;
 			farWindowTimestamp = leastWindowTimestamp + profile.GeneralConfig.CompactionWindowSecs;
+			fdrlog::debug("CompactorGetLeastAndFarTimestamp: Converted leastWindowTimestamp: {}, farWindowTimestamp: {}",
+				leastWindowTimestamp, farWindowTimestamp);
 		} else {
 			fdrlog::warn("CompactorGetLeastAndFarTimestamp: Error converting string: {}", splittedList[3]);
 		}
@@ -292,27 +297,40 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 			std::string sourceLogfile = entry.path();
 			std::string destHighFidelityLogile = entry.path();
 			FindAndReplaceAll(destHighFidelityLogile, ".sensors.dat", ".sensors.hifi.dat");
+			fdrlog::debug("CompactorCreateHighFidelityFiles: sourceLogfile: {}, destHighFidelityLogile: {}", sourceLogfile, destHighFidelityLogile);
 
-			// collect the high fidelity logs for every instance of its components and
-			// write it immdiately and clear the variable
-			std::vector<fdrpb::fdr_sample> hifiRecords;
+			// before appending to the destination file, remove it exists. There could be a situation
+			// where the previous FDR instance would have got crashed when writing HIFI logs to this file and
+			// would have restarted; and in this new FDR instance, again it may be same content to the same file
+			// and again it may get crash; if this crash loops, then destination file is reaching huge size in MBs.
+			if (remove(destHighFidelityLogile.c_str()) == 0) {
+				fdrlog::warn("CompactorCreateHighFidelityFiles: Deleted older destination file: {}", destHighFidelityLogile);
+			} else {
+				fdrlog::warn("CompactorCreateHighFidelityFiles: Falied to Delete older destination file: {}", destHighFidelityLogile);
+			}
+
+			// 2. this loop will write the collected data into their respective directories
+			FDRStore fdrHifiWriter(destHighFidelityLogile, profile.GeneralConfig.LogsFormat, STORE_WRITER);
 
 			// 1. read every record from the *.sensors.dat file
 	        int fileReadRetVal;
 			fdrpb::fdr_sample readrec;
 			FDRStore fdrLogSamplesReader(sourceLogfile, profile.GeneralConfig.LogsFormat, STORE_READER);
 			// 1. loop through the file
+			int counter = 0;
 			while ((fileReadRetVal = fdrLogSamplesReader.readnext(&readrec)) == FDR_SUCCESS_DATA_READ) {
 				// loop through the errorList and find if this record is falling in any of the hifi range
+				fdrlog::debug("CompactorCreateHighFidelityFiles: 3. counter:{}, errorList.size(): {}",
+					counter, errorList.size());
+				counter++;
 				for (auto &errorRecord : errorList) {
-					// std::cout << "erroroccurtimestamp: " << errorRecord.erroroccurtimestamp()
-					// 		  << "; starthifitimestamp: " << errorRecord.starthifitimestamp()
-					// 		  << "; stophifitimestamp: " << errorRecord.stophifitimestamp()
-					// 		  << "; readrec.timestamp: " << readrec.timestamp()
-					// 		  << std::endl;
+					fdrlog::debug("CompactorCreateHighFidelityFiles: 3. erroroccurtimestamp: {}, starthifitimestamp: {}, "
+								 "stophifitimestamp: {}, readrec.timestamp: {}",
+								 errorRecord.erroroccurtimestamp(), errorRecord.starthifitimestamp(),
+								 errorRecord.stophifitimestamp(), readrec.timestamp());
 					if (CheckIsInRange(errorRecord.starthifitimestamp(), errorRecord.stophifitimestamp(), readrec.timestamp())) {
 						// if the current log is in range of any of the error list, then this log needs to be collected for hifi log.
-						hifiRecords.push_back(readrec);
+						fdrHifiWriter.append(readrec);
 						break;
 					}
 				}
@@ -323,12 +341,6 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(const std::string di
 				return;
 			}
 
-			// 2. this loop will write the collected data into their respective directories
-			FDRStore fdrHifiWriter(destHighFidelityLogile, profile.GeneralConfig.LogsFormat, STORE_WRITER);
-			// loop through the hifiRecords and put them into the hifi log file
-			for (auto &hifiRecord : hifiRecords) {
-				fdrHifiWriter.append(hifiRecord);
-			}
         }
     }
 }
@@ -620,19 +632,19 @@ void FlightDataRecorder_c::CompactorEngine(std::string directoryTocompact)
 
     // 1. get the from and to timestamp range
     CompactorGetLeastAndFarTimestamp(directoryTocompact, leastWindowTimestamp, farWindowTimestamp);
-    fdrlog::debug("------------leastWindowTimestamp: {}; farWindowTimestamp: {}",
+    fdrlog::debug("CompactorEngine: leastWindowTimestamp: {}; farWindowTimestamp: {}",
 		leastWindowTimestamp, farWindowTimestamp);
 
     // 2. use leastWindowTimestamp, farWindowTimestamp and look through the bookOfErrors.dat file for
     //    any errors or events reported between these timestamps.
     std::vector<fdrpb::fdr_book_of_errors> errorList;
     if (CompactorCheckBookOfErrors(directoryTocompact, leastWindowTimestamp, farWindowTimestamp, errorList)) {
-        fdrlog::warn ("Error found on directoryTocompact: {}",  directoryTocompact);
+        fdrlog::warn ("CompactorEngine: Error found on directoryTocompact: {}",  directoryTocompact);
         // 2.1. in one stretch collect the high fidelity data if needed, and collect for all the
         //      sensor types on all the devices[and its instances]
         CompactorCreateHighFidelityFiles(directoryTocompact, errorList);
     } else {
-		fdrlog::debug("No Error found on directoryTocompact: {}", directoryTocompact);
+		fdrlog::debug("CompactorEngine: No Error found on directoryTocompact: {}", directoryTocompact);
     }
 
     // 3. after collecting and updating the high fidelity data, delete the .dat file
