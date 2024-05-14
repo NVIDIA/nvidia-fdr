@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 '''
-Copyright (c) 2023, NVIDIA CORPORATION. All rights reserved.
+Copyright (c) 2023-2024, NVIDIA CORPORATION. All rights reserved.
 NVIDIA CORPORATION and its licensors retain all intellectual property
 and proprietary rights in and to this software, related documentation
 and any modifications thereto. Any use, reproduction, disclosure or
@@ -72,6 +72,19 @@ def decodingDump(binary_log_tar_file):
     #print('Successfully unzipped the tar archive of binary logs into {}.'.format(log_root_dir))
     
     return log_root_dir
+
+
+def decodeBirthCertificate(file_location):
+    BirthCertificate_logs = './fdr_logs/birthcertificate'
+    if os.path.exists(BirthCertificate_logs):
+      shutil.rmtree(BirthCertificate_logs)
+    binary_log = tarfile.open(file_location)
+    binary_log.extractall(BirthCertificate_logs)
+    binary_log.close()
+    for i in tqdm(range(int(9e6)),ncols=100,desc ="Decoding BirthCertificate dump"):
+        pass
+    return BirthCertificate_logs
+
     
     
     
@@ -86,7 +99,9 @@ def main(arglist=None):
    # host info
    # Redfish or local file for decoding (for development/test purpose)
    argget.add_argument('-ul', '--use_local', default=False, action='store_true', help='Option to use local tar archive of binary logs if Redfish API for FDR dump is not available.')
+   argget.add_argument('-bc', '--birth_certificate', default=False, action='store_true', help='Option to decode BirthCertificate.tar')
    argget.add_argument('-l', '--local_file', type=str, help='Local tar archive of binary logs if Redfish API for FDR dump is not available.')
+   
    
    argget.add_argument('-i', '--ip', type=str, help='Address of host, using http or https (example: https://123.45.6.7:8000)')
    argget.add_argument('-u', '--username', type=str, help='Username for Authentication')
@@ -144,6 +159,8 @@ def main(arglist=None):
    if arg_error:
     argget.print_help()
     return 1
+   
+
    # Step-1: Redfish API call to get the zip file of fdr logs from HMC.
    binary_log_tar_file = dumpCollection(args)
 
@@ -153,24 +170,30 @@ def main(arglist=None):
    # Step-3: Create catalog of decoded binary logs
    MyCatalog = Catalog(vars(args), log_root_dir)
 
-   #print("\n---------- Writing decoded FDR logs in {} ----------".format(args.decode_format))
    # Step-4: Write the logs in intended format
    MyCatalog.WriteAllEntries()
 
-#except Exception as e:
-#    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-#    logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
-#    print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-    # traceback.print_exc()
-#    status_code = 1
 
-# Step-5: Clean up
+
+  # Additional option to decode the Birthcertificate.
+   if args.birth_certificate:
+     tar_file='BirthCertificate.tar'
+     os.system('cp ./fdr_logs/fdr/Bookkeeper/BirthCertificate.tar .')
+     log_root_dir = decodeBirthCertificate(tar_file)
+     MyCatalog = Catalog(vars(args), log_root_dir)
+     MyCatalog.WriteAllEntries()
+
+   else:
+     print("Warning : To Decode Birthcertificate.tar use option -bc ")
+
+  # Step-5: Clean up
    if MyCatalog:
     MyCatalog.Close()
 
    end_time = datetime.now()
    print('\nTotal time taken: {} seconds.'\
           .format((end_time - start_time).total_seconds()))
+   
 
    return status_code
 
