@@ -187,7 +187,7 @@ def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
   print('Successfully logged in to host {}'.format(host_ip))
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}  
-  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR/Actions/LogService.CollectDiagnosticData/"
   url_serial_number = "/redfish/v1/Chassis/HGX_BMC_0"
   
   response = REDFISH_OBJ.get(url_serial_number)
@@ -254,7 +254,8 @@ def CollectFdrDump_DEMO(host_ip, username, password):
   print('Successfully logged in to host {}'.format(host_ip))
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}
-  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
+  #url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Actions/LogService.CollectDiagnosticData/"
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR/Actions/LogService.CollectDiagnosticData/"
   print(f"\nTriggering FDR dump....")
   print(f"Redfish API: {url} {body}")
   #response = REDFISH_OBJ.post(url, body=body)
@@ -276,7 +277,7 @@ def CollectFdrDump_DEMO(host_ip, username, password):
   
   # Collect dump after TaskState becomes "Completed"
   entry_id = 11
-  entry_location=f'/redfish/v1/Systems/HGX_Baseboard_0/LogServices/Dump/Entries/{entry_id}/attachment'
+  entry_location=f'/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR/Entries/{entry_id}/attachment'
   dump_timestamp = datetime.now()
   binary_log_tar_file = f'fdr_dump_{task_id}.tar.xz'
   url = f"{entry_location}/attachment"
