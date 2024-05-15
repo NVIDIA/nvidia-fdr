@@ -422,7 +422,19 @@ class CatalogEntry:
           return self.ParamIDNameDict[str(compClass)][str(paramID)]
     except Exception as e:
       return(e)
-
+  
+  # Traverse ParamDescription dict and return ParamClass. 
+  def GetParamClassFromName(self, ParamName):
+    stack = [(ParamDescription, [])]
+    while stack:
+        current_dict, path = stack.pop()
+        for key, value in current_dict.items():
+            current_path = path + [key]
+            if value == ParamName:
+                return current_path[1]
+            elif isinstance(value, dict):
+                stack.append((value, current_path))
+                
   
   def GetParamNameFromMsg(self, proto_msg , compClass):
     match self.msg_type:

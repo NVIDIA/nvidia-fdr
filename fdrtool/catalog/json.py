@@ -43,10 +43,20 @@ class JSONCatalogEntry(CatalogEntry):
             CompClass= filename[0]
 
         paramName = self.GetParamNameFromID(proto_msg,CompClass)
+        paramClass = self.GetParamClassFromName(paramName)
         
     #Appending the 'ParamName' to the JSON before writing it into the log files.
         if paramName:
           append_to_json = {"ParamName": paramName}
+          proto_msg_str.update(append_to_json)
+
+        if paramClass:
+          append_to_json = {"ParamClass": paramClass}
+          proto_msg_str.update(append_to_json)
+
+        
+        if CompClass:
+          append_to_json = {"CompClass":CompClass}
           proto_msg_str.update(append_to_json)
           #del proto_msg_str["ParamID"]
         else:
@@ -63,7 +73,6 @@ class JSONCatalogEntry(CatalogEntry):
     # MessageToJson method converts the protobuf message into JSON format. However,
     # to make JSON logs consistent with the formatting in FDR, we're removing the '\n' between the key-values,
     # as well as all the spaces by doing a load and then dump.
-    
     json_str = json.dumps(proto_msg_str)
     json_str += '\n' # Add a new line to separate between messages
     self.messages.append(json_str)
@@ -96,4 +105,5 @@ class JSONCatalogEntry(CatalogEntry):
   
   def __repr__(self): 
     return "Logs for {}:\n{}\n".format(self.filepath, self.messages)
+
 
