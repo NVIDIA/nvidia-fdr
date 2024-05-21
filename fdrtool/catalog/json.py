@@ -11,6 +11,7 @@ license agreement from NVIDIA CORPORATION is strictly prohibited.
 # Import standard library modules
 import json
 import re
+import os
 # Import third-party library modules
 import google.protobuf.json_format as protobuf_json_format
 # Import locally developed modules
@@ -23,13 +24,11 @@ class JSONCatalogEntry(CatalogEntry):
   def __init__(self, filepath, key_name=False, ParamIDClassDict = None, ParamIDNameDict= None):
     super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
     self.filepath = filepath
-
     self.primary_key_name = key_name
 
   def AddMessage(self, proto_msg, is_event_type = False):
     proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg, including_default_value_fields=True))
     
-
     if (not is_event_type) and self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params \
       and self.msg_type != PROTO_MSG_TYPE.fdr_compactor_bookkeep and \
         self.msg_type != PROTO_MSG_TYPE.fdr_event_details and \
@@ -64,6 +63,14 @@ class JSONCatalogEntry(CatalogEntry):
     json_str = json.dumps(proto_msg_str)
     json_str += '\n' # Add a new line to separate between messages
     self.messages.append(json_str)
+    
+
+    data = json.loads(json_str)
+    if data.get("ParamID") == "12":
+        with open("brd_serial", 'w') as file:
+            file.write(data.get("ParamValueString"))
+
+    return
 
 
   def GetParamValue(self, message, paramId=None, paramName=None):

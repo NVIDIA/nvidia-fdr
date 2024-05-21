@@ -19,11 +19,13 @@ import traceback
 from enum import Enum
 from exception import FileNotFound
 import copy
+
 # Import third-party library modules
 from google.protobuf.internal.decoder import _DecodeVarint32
 from google.protobuf.message import Message
 from cobs import cobsr
 from tqdm import tqdm
+
 # Import locally developed modules
 import fdr_logs_schema_pb2 as fdr_schema
 
@@ -162,27 +164,53 @@ class Catalog:
     return
 
 
+  def JsonFromBinary(self,file_path):
+    
+    logging.debug('Decoding the file %s' % file_path)
+
+    with open(file_path, 'rb') as fd:
+      buf = fd.read()
+    
+    self.decode_format == DECODE_FORMAT.JSON
+    from .json import JSONCatalogEntry
+    entry = JSONCatalogEntry(file_path, self.json_key_name, self.ParamIDClassDict, self.ParamIDNameDict)
+    
+    if self.length_delimited_binary:
+      json_out=entry.decode_length_delimited_binary(buf)
+    else: # default
+      json_out=entry.decode_zero_delimited_binary(buf)
+    self.decode_format == DECODE_FORMAT.INFLUX
+    return 
+
+
   def GetCatalogName(self):
     Param_ID = self.GetSerialNumber()
     if(Param_ID == None):
       print("Param ID of the BaseBoard Serial Number is None; considering xxx as a Baseboard serial number")
 
     for root, dirs, files in os.walk(self.log_dir):
-      for filename in files:
-        if filename.startswith('Baseboard.'):
-          file_extension = ('.').join(filename.split('.')[-2:])
-          if (file_extension == 'others.dat'):
-            self.decode_binary_file(os.path.join(root, filename))
+        found_filename = False  # Flag to indicate if a suitable filename is found
+        for filename in files:
+            file_extension = os.path.splitext(filename)[1]
+            if (file_extension != '.dat') or filename.endswith(param_description_filename) or filename.endswith(Boot_event_filename):
+                continue
 
-    for entry in self.CatalogEntries[PROTO_MSG_TYPE.fdr_sample.name]:
-      for message in entry.messages:
-        message_dict = entry.GetMessageDict(message)
-        message_ParamID = message_dict.get("ParamID")
-        if(message_ParamID == Param_ID) :
-          if "ParamValueString" in message_dict.keys():
-            return message_dict.get("ParamValueString")
-          elif "ParamValue" in message_dict.keys():
-            return message_dict.get("ParamValue")
+            if filename.startswith('HMC.') and filename.endswith('.others.dat'):
+                try:
+                    file_path = os.path.join(root, filename)
+                    os.system("cp "+file_path+" .")
+                    found_filename = True  # Set the flag to indicate filename is found
+                    break  # Break out of the loop once a suitable filename is found
+
+                except Exception as e:
+                    logging.error("Exception occurred while decoding file {}: {}".format(os.path.join(root, filename), e))
+                    break
+        if found_filename:
+            brd_serial = self.JsonFromBinary(filename)
+            with open("brd_serial", 'r') as file:
+                lines = file.readlines() 
+            return lines[0]
+
     return "xyz"
 
   def GetSerialNumber(self):
@@ -338,16 +366,16 @@ class CatalogEntry:
       if self.is_other_file:
         proto_msg_temp = json.loads(protobuf_json_format.MessageToJson(proto_msg))
 
+
         if "ParamID" not in proto_msg_temp.keys():
           proto_msg = getattr(fdr_schema, PROTO_MSG_TYPE.fdr_event.name)()
           proto_msg.ParseFromString(msg_buf)
-          print(proto_msg)
           is_event_type = True
       
       # At this point, proto_msg is of type protobuf message...
       # For example, either fdr_logs_schema_pb2.fdr_sample and fdr_logs_schema_pb2.fdr_stats
-      self.AddMessage(proto_msg, is_event_type)
-    return
+      brd_serial=self.AddMessage(proto_msg, is_event_type)
+    return brd_serial
   
   def decode_zero_delimited_binary(self, buf):
     # Since each log file can have multiple messages, we need to separate the messages from each other
@@ -371,8 +399,8 @@ class CatalogEntry:
 
       # At this point, proto_msg is of type protobuf message...
       # For example, either fdr_logs_schema_pb2.fdr_sample and fdr_logs_schema_pb2.fdr_stats
-      self.AddMessage(proto_msg, is_event_type)
-    return
+      json_buf=self.AddMessage(proto_msg, is_event_type)
+    return json_buf
 
   def GetBrdSerial(self):
     brd_serial = None
