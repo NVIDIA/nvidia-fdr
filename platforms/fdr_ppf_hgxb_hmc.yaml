@@ -1,0 +1,2735 @@
+#----------------------------------------------------------------------------------
+#  Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+
+#  NVIDIA CORPORATION and its licensors retain all intellectual property
+#  and proprietary rights in and to this software, related documentation
+#  and any modifications thereto.  Any use, reproduction, disclosure or
+#  distribution of this software and related documentation without an express
+#  license agreement from NVIDIA CORPORATION is strictly prohibited.
+
+# This file contains the parameters which FDR monitors, samples and
+# writes into the specified target directory either periodically or as per
+# the mentioned policy. 
+
+# NOTE: 
+# This file is not customer editable unless under the supervision of NVIDIA.
+#
+
+FingerPrint:
+  Checks:
+    - grep -q -i openbmc-phosphor /etc/os-release
+    - grep -q -i hgxb /etc/os-release
+
+GeneralConfig:
+  LogsFormat: BINARY
+  LogsBasePath: &LogsBasePath
+    - /var/emmc/fdr/
+  PartitionThresoldCheckMB: 1536
+  CompactionWindowSecs: 86400
+  CompactionSubWindowSecs: 1800
+  HiFiDataPreserveTimeSecs: 300
+  DefaultCompactionSensors:
+    RecordRetentionPolicy: Recreate
+    CompactionMethod: Average
+  Events:
+    ObjectPath: /xyz/openbmc_project/logging
+    Interface: org.freedesktop.DBus.ObjectManager
+    Member: InterfacesAdded
+  Threshold: 300
+  Checks:
+    - ID: CheckDumpDirMount
+      CommandParams:
+        Command: df $logbasepath | grep '/dev/mmcblk'
+      Params:
+        name: logbasepath
+        value:
+          - *LogsBasePath
+      CommandRetryPolicy: No
+      ExitOnFailure: Yes
+    - ID: CheckHmcWaitReady
+      CommandParams:
+        Command:
+          busctl get-property xyz.openbmc_project.GpuMgr /xyz/openbmc_project/inventory/system/HGX_BMC_0
+          xyz.openbmc_project.State.Decorator.OperationalStatus State | grep -i -q xyz.openbmc_project.State.Decorator.OperationalStatus.StateType.Enabled
+      CommandRetryPolicy: Yes
+      ExitOnFailure: No
+
+
+GPU: &gpu
+  Params:
+    - name: gpuid
+      value: 1
+  InfoGroups:
+    - ID: Config
+      InfoList:
+        - &gpu-config-defaults
+          ID: DRVR-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/inventory_software/HGX_Driver_GPU_SXM_$gpuid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 3600
+          StorePolicy: OnChang
+
+        - ID: ENFORCED-CLK-LIMIT-MAX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: SpeedConfig
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: FW-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: FW-WP-MODE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Settings
+            ObjectPath: /xyz/openbmc_project/software/HGX_FW_GPU_SXM_$gpuid
+            Property: WriteProtected
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: INFOROM-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/software/HGX_InfoROM_GPU_SXM_$gpuid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: PWR-LIMIT-REQUESTED
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Control.Power.Cap
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: PowerCap
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 5
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: PWR-LIMIT-ENFORCED            
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Control.Power.Cap
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: DefaultPowerCap
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 6
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: ECC-MODE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Memory.MemoryECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ECCModeEnabled
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 7
+          StoreFreqSecs: 10
+          StorePolicy: OnChang
+
+        - ID: CLK-LOCKED-STATE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: SpeedConfig
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 8
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+
+    - ID: Error
+      InfoList:
+        - &gpu-error-defaults
+          ID: CLK-EVENT-REASON
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.ProcessorPerformance
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ThrottleReason
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 9
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: ECC-ERR-CTR-CE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Memory.MemoryECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: ceCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 10
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: ECC-ERR-CTR-UCE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Memory.MemoryECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: ueCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 11
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: ROW-REMAPPED-CTR-UE
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.MemoryRowRemapping
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: ueRowRemappingCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 12
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: ROW-REMAPPED-CTR-CE
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.MemoryRowRemapping
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: ceRowRemappingCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 13
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: ROW-REMAP-FAILED
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.MemoryRowRemapping
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: RowRemappingFailureState
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 14
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: PCI-ERR-CTR-CORR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ceCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 15
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-ERR-CTR-FATAL
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: feCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 16
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: PCI-ERR-CTR-L0-TO-RECOVERY
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: L0ToRecoveryCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 17
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: PCI-ERR-CTR-NAK-RECVD
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: NAKReceivedCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 18
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-ERR-CTR-NAK-SENT
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: NAKSentCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 19
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-ERR-CTR-NON-FATAL
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: nonfeCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 20
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-ERR-CTR-REPLAY-ROLLOVER
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ReplayRolloverCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 21
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: ECC-ERR-CTR-CE-CACHE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Memory.MemoryECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ceCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 22
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: ECC-ERR-CTR-UE-CACHE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Memory.MemoryECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ueCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 23
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-ERR-CTR-REPLAY
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.PCIe.PCIeECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: ReplayCount
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 24
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Inventory
+      InfoList:
+        - ID: VENDOR
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: Manufacturer
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 25
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: SERIAL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$gpuid
+            Property: SerialNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 26
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PART-NUM
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$gpuid/Assembly$gpuid
+            Property: PartNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 27
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: GPU-GUID
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Common.UUID
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: UUID
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 28
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: PCI-DEV-ID
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.PCIeDevice
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid
+            Property: Function0DeviceId
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 29
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: HW-REV
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Revision
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 30
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MODEL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: Model
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 31
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: PCI-VENDOR-ID
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.PCIeDevice
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid
+            Property: Function0VendorId
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 32
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: BUILD-DATE
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/Assembly1
+            Property: BuildDate
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 33
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Clock
+      InfoList:
+        - &gpu-sensorclock-defaults
+          ID: CURR-CLK-GFX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: OperatingSpeed
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS 
+          FetchType: Poll
+          ParamID: 34
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: CURR-CLK-MEM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Dimm
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: MemoryConfiguredSpeedInMhz
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 35
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+    
+    - ID: Sensor.Other
+      InfoList:
+        - &gpu-sensorother-defaults
+          ID: UTIL-SM-TIME-TOTAL
+          DataType: ISO 8601
+          DbusParams:
+            Interface: xyz.openbmc_project.State.ProcessorPerformance
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: AccumulatedSMUtilizationDuration
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 36
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UTIL-CTXT-TIME-TOTAL
+          DataType: ISO 8601
+          DbusParams:
+            Interface: xyz.openbmc_project.State.ProcessorPerformance
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: AccumulatedGPUContextUtilizationDuration
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 37
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Perf
+      InfoList:
+        - ID: NVLINK-THROUGHPUT-TX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: TXNoProtocolBytes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 38
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: NVLINK-THROUGHPUT-RX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: RXNoProtocolBytes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 39
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-TX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: TXBytes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 40
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: NVLINK-THROUGHPUT-WITH-OVERHEAD-RX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: RXBytes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 41
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UTIL-SM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: Utilization
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 42
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UTIL-MEM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Dimm
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: Utilization
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 43
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UTIL-PCIE-TX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.State.ProcessorPerformance
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: PCIeTXBytes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 44
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UTIL-PCIE-RX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.State.ProcessorPerformance
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: PCIeRXBytes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 45
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: PCI-LINK-WIDTH-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.PCIeDevice
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid
+            Property: LanesInUse
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 46
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: NVLINK-BANDWIDTH
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: CurrentSpeed
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 47
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Power
+      InfoList:
+        - ID: CTR-ENERGY
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/energy/HGX_GPU_SXM_$gpuid_Energy_$gpuid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 48
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PWR-MEM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/power/HGX_GPU_SXM_$gpuid_DRAM_$gpuid_Power_$gpuid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 49
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PWR-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/power/HGX_GPU_SXM_$gpuid_Power_$gpuid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 50
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:
+        - ID: TEMP-TLIMIT      
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Threshold.Warning
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_TEMP_$gpuid
+            Property: WarningLow
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 51
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: TEMP-GB-GPU
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_TEMP_$gpuid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 52
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: TEMP-MEM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_DRAM_$gpuid_Temp_$gpuid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 53
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Voltage
+      InfoList:      
+        - ID: VOLTAGE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/voltage/HGX_GPU_SXM_$gpuid_Voltage_$gpuid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 54
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Specs
+      InfoList:
+        - ID: MEM-TYPE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Dimm
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: MemoryType
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 55
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+          
+        - ID: MIN-PROG-CLK-GFX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: MinSpeed
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 56
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MIN-PROG-CLK-MEM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Dimm
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: AllowedSpeedsMT
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 57
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MAX-PROG-CLK-GFX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Cpu.OperatingConfig
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: MaxSpeed
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 58
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PWR-TGP
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Control.Power.Cap
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU0
+            Property: SetPoint
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 59
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MAX-PROG-CLK-MEM
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Dimm
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: AllowedSpeedsMT
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 60
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-LINK-SPEED-MAX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.PCIeDevice
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid
+            Property: MaxPCIeType
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 61
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PWR-LIMIT-MIN
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.Edpp
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: AllowableMin
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 62
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PWR-LIMIT-MAX
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.Edpp
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: AllowableMax
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 63
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MEM-TEMP-THRESH-MAX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Threshold.Critical
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SXM_$gpuid_DRAM_$gpuid_Temp_$gpuid
+            Property: CriticalHigh
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 64
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-LINK-WIDTH-MAX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.PCIeDevice
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid
+            Property: MaxLanes
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 65
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: ECC-SCHEME
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Dimm
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: ECC
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 66
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Status
+      InfoList:       
+        - ID: NVLINK-STATUS
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: LinkStatus
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 67
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: NVLINK-SUBLINK-WIDTH-RX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: RXWidth
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 68
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: NVLINK-SUBLINK-WIDTH-TX
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_$gpuid
+            Property: TXWidth
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 69
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: ECC-MODE-PENDING
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Memory.MemoryECC
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: PendingECCState
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 70
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: ROW-REMAP-PENDING
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.MemoryRowRemapping
+            ObjectPath: /xyz/openbmc_project/inventory/system/memory/GPU_SXM_$gpuid_DRAM_$gpuid
+            Property: RowRemappingPendingState
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 71
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PCI-LINK-SPEED-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.PCIeDevice
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SXM_$gpuid/PCIeDevices/GPU_SXM_$gpuid
+            Property: PCIeType
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 72
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MIG-MODE-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.MigMode
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: MIGModeEnabled
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 73
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: MIG-MODE-PENDING
+          DataType: Integer
+          DbusParams:
+            Interface: com.nvidia.MigMode
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: PendingMIGState
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 74
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PGOOD
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.OperationalStatus
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: State
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 75
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 76
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+
+
+NVSwitch: &nvswitch
+  Params:
+    - name: switchid
+      values: 1
+  InfoGroups:
+    - ID: Config
+      InfoList:
+        - ID: FW-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: TEMP-THRESH-SHUTDOWN
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Threshold.HardShutdown
+            ObjectPath: v
+            Property: HardShutdownHigh
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: FW-WP-MODE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Settings
+            ObjectPath: /xyz/openbmc_project/software/HGX_FW_NVSwitch_$nvswitchid
+            Property: WriteProtected
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: TYPE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_$nvswitchid/Switches/NVSwitch_$nvswitchid/Ports/NVLink_$nvswitchid
+            Property: Type
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: PROTOCOL
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_$nvswitchid/Switches/NVSwitch_$nvswitchid/Ports/NVLink_$nvswitchid
+            Property: Protocol
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: ENABLED
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_$nvswitchid/Switches/NVSwitch_$nvswitchid/Ports/NVLink_$nvswitchid
+            Property: LinkState
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 5
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Inventory
+      InfoList:
+        - ID: GUID   
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Common.UUID
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid
+            Property: UUID
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 6
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: VERSION
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Switch
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_NVLinkFabric_$nvswitchid/Switches/NVSwitch_$nvswitchid
+            Property: Type
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 7
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+    
+    - ID: Sensor.Thermal
+      InfoList:      
+        - ID: TEMP-CURR-[1]
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_$nvswitchid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 8
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: TEMP-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_$nvswitchid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 9
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+    
+    - ID: Specs
+      InfoList: 
+        - ID: TEMP-THRESH-ALERT
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Threshold.Critical
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_NVSwitch_$nvswitchid_TEMP_$nvswitchid
+            Property: CriticalHigh
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 10
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Status
+      InfoList:       
+
+        - ID: HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 11
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: HEALTH-ROLLUP
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_NVSwitch_$nvswitchid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 12
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+Baseboard: &baseboard
+  Params:
+    - name: baseboard
+      values: 0
+  InfoGroups:
+    - ID: Config
+      InfoList:
+        - &baseboard-config-defaults
+          ID: EEPROM-WP-STATUS
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Settings
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+            Property: WriteProtectedControl
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: TEMP-THRESH-ALERT
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Threshold.Critical
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_$baseboardid_PCB_$baseboardid_Temp_$baseboardid
+            Property: CriticalHigh
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+          
+    - ID: Error
+      InfoList:      
+
+        - ID: I2C1-INT-INFO-ARG80
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C1-INT-INFO-ARG81
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C1-INT-INFO-ARG82
+          DataType: Integer
+          DbusParams:
+            Interface: org.freedesktop.DBus.ObjectManager
+            ObjectPath: /xyz/openbmc_project/logging
+            Property: GetManagedObjects
+            Service: xyz.openbmc_project.Logging
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C1-INT-INFO-ARG83
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 5
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C1-INT-INFO-ARG85
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 6
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG80
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 7
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG81
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 8
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG82
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 9
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG83
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 10
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG84
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 11
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG85
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 12
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG87
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 13
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG88
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 14
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG89
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 15
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: I2C2-INT-INFO-ARG8A
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 16
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+    
+    - ID: Error
+      InfoList:
+        - ID: CHAS-TYPE
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Chassis
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+            Property: Type
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 17
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: CHAS-PART-NUM
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+            Property: PartNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 18
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: CHAS-SERIAL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+            Property: SerialNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 19
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: BRD-MFG-DATE
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0
+            Property: BuildDate
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 20
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: BRD-PRDCT-NAME
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0
+            Property: Model
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 21
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: BRD-SERIAL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0
+            Property: SerialNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 22
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: BRD-PART-NUM
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0
+            Property: PartNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 23
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PRDCT-NAME
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1
+            Property: Model
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 24
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PRDCT-PART-NUM
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1
+            Property: PartNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 25
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PRDCT-SERIAL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1
+            Property: SerialNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 26
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: VENDOR
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly0
+            Property: Manufacturer
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 27
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: HW-REV
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid/Assembly1
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 28
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Pressure
+      InfoList:
+        - ID: ALT-PRESSURE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/altitude/HGX_Chassis_$baseboardid_AltitudePressure_$baseboardid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 29
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:     
+
+        - ID: TEMP-PCB-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_$baseboardid_PCB_$baseboardid_Temp_$baseboardid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 30
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: TEMP-INLET-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_$baseboardid_Inlet_$baseboardid_Temp_$baseboardid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 31
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:
+
+
+        - ID: HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 32
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: WP-JMPR-PRESENCE
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Settings
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+            Property: WriteProtected
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 33
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+HMC: &hmc
+  Params:
+    - name: hmcid
+      value: 0
+  InfoGroups:
+
+    - ID: Config
+      InfoList:
+        - ID: FW-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/software/HGX_FW_BMC_$hmcid
+            Property: Version
+            Service: xyz.openbmc_project.Software.BMC.Inventory
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Config
+      InfoList:
+
+        - ID: BRD-MFG-DATE
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$hmcid/Assembly0
+            Property: BuildDate
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: BRD-SERIAL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$hmcid/Assembly0
+            Property: SerialNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PRDCT-NAME
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$hmcid/Assembly0
+            Property: Model
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PRDCT-PART-NUM
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$hmcid/Assembly0
+            Property: PartNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PRDCT-SERIAL
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$hmcid/Assembly0
+            Property: SerialNumber
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 5
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:      
+
+        - ID: TEMP-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_BMC_$hmcid_Temp_$hmcid
+            Property: Value
+            Service: xyz.openbmc_project.HwmonTempSensor
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 6
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Status
+      InfoList:
+
+        - ID: HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/bmc/HGX_BMC_0
+            Property: Health
+            Service: xyz.openbmc_project.EntityManager
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 7
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    
+FPGA: &fpga
+  Params:
+    - name: fpgaid
+      value: 0
+  InfoGroups:    
+    - ID: Config
+      InfoList:      
+
+        - ID: FW-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/FPGA_$fpgaid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Inventory
+      InfoList:      
+
+        - ID: VENDOR
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/FPGA_$fpgaid
+            Property: Manufacturer
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:      
+
+        - ID: TEMP-GB-FPGA
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_FPGA_$fpgaid_TEMP_$fpgaid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Specs
+      InfoList:
+
+        - ID: PROCESSOR-TYPE
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Accelerator
+            ObjectPath: /xyz/openbmc_project/inventory/system/processors/FPGA_$fpgaid
+            Property: Type
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Status
+      InfoList:      
+
+        - ID: HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_FPGA_$fpgaid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    
+PCIeSwitch: &pcieswitch
+  Params:
+    - name: pcieswitch
+      values: 0    
+  InfoGroups:  
+    - ID: Config
+      InfoList:       
+
+        - ID: FW-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/software/HGX_FW_PCIeSwitch_$fpgaid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:      
+
+        - ID: TEMP-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_PCIeSwitch_$pcieswitchid_TEMP_$pcieswitchid
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+
+    - ID: Config
+      InfoList:
+
+        - ID: FW-VER
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.Software.Version
+            ObjectPath: /xyz/openbmc_project/software/HGX_FW_PCIeRetimer_$pcieswitchid
+            Property: Version
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Speed
+      InfoList:      
+
+        - ID: UPLINK-WIDTH
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimer_$pcieswitchid/Switches/PCIeRetimer_$pcieswitchid/Ports/UP_$pcieswitchid
+            Property: ActiveWidth
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UPLINK-SPEED
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimer_$pcieswitchid/Switches/PCIeRetimer_$pcieswitchid/Ports/UP_$pcieswitchid
+            Property: CurrentSpeed
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: DOWNLINK-WIDTH
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimer_$pcieswitchid/Switches/PCIeRetimer_$pcieswitchid/Ports/DOWN_$pcieswitchid
+            Property: ActiveWidth
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: DOWNLINK-SPEED
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Inventory.Item.Port
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimer_$pcieswitchid/Switches/PCIeRetimer_$pcieswitchid/Ports/DOWN_$pcieswitchid
+            Property: CurrentSpeed
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+PCIeRetimer: &retimer
+  Params:
+    - name: retimerid
+      values: 1
+  InfoGroups:
+    - ID: Sensor.Thermal
+      InfoList:
+      
+        - ID: TEMP-CURR
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_PCIeRetimer_$retimerid_TEMP_0
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 5
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Status
+      InfoList:      
+
+        - ID: HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_PCIeRetimer_$retimerid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 6
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: UPLINK-HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimer_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/UP_$retimerid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 7
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: DOWNLINK-HEALTH
+          DataType: Text
+          DbusParams:
+            Interface: xyz.openbmc_project.State.Decorator.Health
+            ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimer_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/DOWN_$retimerid
+            Property: Health
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 8
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+
+HSC: &hsc
+  Params:
+    - name: hsc
+      values: 0
+  InfoGroups:
+    - ID: Error
+      InfoList:
+
+        - ID: HSC-FAULT-REG-ARG80
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: PassthroughFpga
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 0
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG81
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 1
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG82
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 2
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG83
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 3
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG84
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 4
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG85
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 5
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG86
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 6
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG87
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 7
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG88
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 8
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG89
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 9
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG8A
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 10
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+      
+        - ID: HSC-FAULT-REG-ARG8B
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.NSM.Server
+            ObjectPath: /xyz/openbmc_project/NSM
+            Property: DeviceGetData
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 3600
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 11
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Power
+      InfoList:      
+
+        - ID: PWR-GB-HSC
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/power/HGX_Chassis_0_HSC_$hscid_Power_0
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 12
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: PWR-GB-HSC-STBY
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/power/HGX_Chassis_0_StandbyHSC_$hscid_Power_0
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 13
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+    - ID: Sensor.Thermal
+      InfoList:
+
+        - ID: TEMP-GB-HSC
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_HSC_$hscid_Temp_0
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 14
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+        - ID: TEMP-GB-HSC-STBY
+          DataType: Integer
+          DbusParams:
+            Interface: xyz.openbmc_project.Sensor.Value
+            ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_StandbyHSC_$hscid_Temp_0
+            Property: Value
+            Service: xyz.openbmc_project.NSM
+          FetchFreqSecs: 10 
+          FetchMethod: DBUS
+          FetchType: Poll
+          ParamID: 15
+          StoreFreqSecs: 10
+          StorePolicy: OnChange
+
+
+
+
+Sections:
+  - ID: GPU
+    Components:
+      - ID: HGX_GPU_SXM_1
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 1 
+      - ID: HGX_GPU_SXM_2
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 2
+      - ID: HGX_GPU_SXM_3
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 3
+      - ID: HGX_GPU_SXM_4
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 4
+      - ID: HGX_GPU_SXM_5
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 5
+      - ID: HGX_GPU_SXM_6
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 6
+      - ID: HGX_GPU_SXM_7
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 7
+      - ID: HGX_GPU_SXM_8
+        <<: *gpu
+        Params:
+          - name: gpuid
+            value: 8
+
+  - ID: NVSwitch
+    Components:
+      - ID: HGX_NVSwitch_0
+        <<: *nvswitch
+        Params:
+          - name: nvswitchid
+            value: 0
+      - ID: HGX_NVSwitch_1
+        <<: *nvswitch
+        Params:
+          - name: nvswitchid
+            value: 1
+      - ID: HGX_NVSwitch_2
+        <<: *nvswitch
+        Params:
+          - name: nvswitchid
+            value: 2
+      - ID: HGX_NVSwitch_3
+        <<: *nvswitch
+        Params:
+          - name: nvswitchid
+            value: 3
+
+  - ID: Baseboard
+    Components:
+      - ID: HGX_Chassis_0
+        <<: *baseboard
+        Params: 
+          - name: baseboardid
+            value: 0
+  
+  - ID: FPGA
+    Components:
+      - ID: FPGA_0
+        <<: *fpga
+        Params:
+          - name: fpgaid
+            value: 0
+
+  - ID: PCIeSwitch
+    Components:
+      - ID: HGX_PCIeSwitch_0
+        <<: *pcieswitch
+        Params: 
+          - name: pcieswitchid
+            value: 0
+
+  - ID: PCIeRetimer
+    Components:
+      - ID: HGX_PCIeRetimer_0
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 0
+
+      - ID: HGX_PCIeRetimer_1
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 1
+
+      - ID: HGX_PCIeRetimer_2
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 2
+
+      - ID: HGX_PCIeRetimer_3
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 3
+
+      - ID: HGX_PCIeRetimer_4
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 4
+
+      - ID: HGX_PCIeRetimer_5
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 5
+
+      - ID: HGX_PCIeRetimer_6
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 6
+
+      - ID: HGX_PCIeRetimer_7
+        <<: *retimer
+        Params:
+          - name: retimerid
+            value: 7
+
+  - ID: HMC
+    Components:
+      - ID: HGX_BMC_0
+        <<: *hmc
+        Params: 
+          - name: hmcid
+            value: 0
+
+  - ID: HSC
+    Components:
+      - ID: HGX_Chassis_0_HSC_0
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 0
+
+      - ID: HGX_Chassis_0_HSC_1
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 1
+
+      - ID: HGX_Chassis_0_HSC_2
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 2
+
+      - ID: HGX_Chassis_0_HSC_3
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 3
+
+      - ID: HGX_Chassis_0_HSC_4
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 4
+
+      - ID: HGX_Chassis_0_HSC_5
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 5
+
+      - ID: HGX_Chassis_0_HSC_6
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 6
+
+      - ID: HGX_Chassis_0_HSC_7
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 7
+
+      - ID: HGX_Chassis_0_HSC_8
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 8
+
+      - ID: HGX_Chassis_0_HSC_9
+        <<: *hsc
+        Params: 
+          - name: hscid
+            value: 9       
