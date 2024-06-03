@@ -332,7 +332,7 @@ class CatalogEntry:
     tablename = None
     self.paramClass = ""
     if self.msg_type == PROTO_MSG_TYPE.fdr_stat or self.msg_type == PROTO_MSG_TYPE.fdr_sample:
-      tablename_prefix = 'PST' if self.msg_type == PROTO_MSG_TYPE.fdr_stat else 'PVT'
+      tablename_prefix = 'ST' if self.msg_type == PROTO_MSG_TYPE.fdr_stat else 'VT'
       tablename_suffix = '_{}'.format(self.compID) if self.compID else ''
       tablename = '{}_{}_{}{}'.format(tablename_prefix, self.paramClass, self.compClass, tablename_suffix)
     elif self.msg_type == PROTO_MSG_TYPE.fdr_params:
