@@ -43,7 +43,7 @@ def dumpCollection(args):
             os.makedirs("./tmp/", exist_ok=True)
             binary_log_tar_file = CollectFdrDump(args.ip, args.username, args.password, args.environment)
             #binary_log_tar_file = CollectFdrDump_DEMO(args.ip, args.username, args.password)
-            
+            return binary_log_tar_file 
         else:# Retrieve the zip file from local machine
             for i in tqdm(range(int(9e6)),ncols=100,desc ="Dump collection"):
                 pass
