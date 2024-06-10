@@ -25,6 +25,7 @@ class JSONCatalogEntry(CatalogEntry):
     super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
     self.filepath = filepath
     self.primary_key_name = key_name
+    
 
   def AddMessage(self, proto_msg, is_event_type = False):
     proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg, including_default_value_fields=True))
@@ -36,8 +37,9 @@ class JSONCatalogEntry(CatalogEntry):
       # Replace the ParamID with ParamName
       if proto_msg_str["ParamID"] != "9999":
 
-   # Extracting The CompClass form the Filename 
+        # Extracting The CompClass form the Filename 
         parts = self.filepath.split('/')
+        CompClass = None
         if len(parts) > 4:
             filename = parts[4].split('.')
             CompClass= filename[0]
@@ -45,16 +47,29 @@ class JSONCatalogEntry(CatalogEntry):
         paramName = self.GetParamNameFromID(proto_msg,CompClass)
         paramClass = self.GetParamClassFromName(paramName)
         
-    #Appending the 'ParamName' to the JSON before writing it into the log files.
+        #Appending the 'ParamName' to the JSON before writing it into the log files.
         if paramName:
           append_to_json = {"ParamName": paramName}
           proto_msg_str.update(append_to_json)
 
+        else:
+          #Exception for the files if not present in self.filepath (./fdr_logs/fdr/BootCount~)
+          warning_file="warning.txt"
+          with open(warning_file, "a") as file:
+              file.write(str("Skipping the -kn update for file {self.filepath} Not it self.filepath") + "\n")
+              
+        #Appending the 'paramClass' to the JSON before writing it into the log files.
         if paramClass:
           append_to_json = {"ParamClass": paramClass}
           proto_msg_str.update(append_to_json)
 
+        else:
+          #Exception for the files if not present in self.filepath (./fdr_logs/fdr/BootCount~)
+          warning_file="warning.txt"
+          with open(warning_file, "a") as file:
+              file.write(str("Skipping the -kn update for file {self.filepath} Not it self.filepath") + "\n")
         
+        #Appending the 'CompClass' to the JSON before writing it into the log files.
         if CompClass:
           append_to_json = {"CompClass":CompClass}
           proto_msg_str.update(append_to_json)
@@ -63,7 +78,7 @@ class JSONCatalogEntry(CatalogEntry):
           #Exception for the files if not present in self.filepath (./fdr_logs/fdr/BootCount~)
           warning_file="warning.txt"
           with open(warning_file, "a") as file:
-              file.write(str("Skipping the ParamName update for file {self.filepath} Not it self.filepath") + "\n")
+              file.write(str("Skipping the -kn update for file {self.filepath} Not it self.filepath") + "\n")
           #print(f"Warning : Skipping the ParamName update for file {self.filepath} Not it self.filepath")
     
 
@@ -81,7 +96,9 @@ class JSONCatalogEntry(CatalogEntry):
     data = json.loads(json_str)
     if data.get("ParamID") == "12":
         with open("brd_serial", 'w') as file:
-            file.write(data.get("ParamValueString"))
+            serial_number= data.get("ParamValueString")
+            if serial_number: 
+              file.write(serial_number)
 
     return
 
