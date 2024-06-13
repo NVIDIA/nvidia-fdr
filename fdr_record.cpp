@@ -46,6 +46,10 @@ Record::Record(Profile_t &profile, Section_t &section,
             FindAndReplaceAll(info.DbusParams.Interface, "$" + param.name, param.value);
             FindAndReplaceAll(info.DbusParams.Property, "$" + param.name, param.value);
         }
+        else if (info.FetchMethod == "Shmem")
+        {
+            FindAndReplaceAll(info.ShmemParams.Key, "$" + param.name, param.value);
+        }      
     }
 
     logsformat = profile.GeneralConfig.LogsFormat;
@@ -66,6 +70,38 @@ Record::~Record()
     //           << "; fdrLogReaderWriter.use_count: " << fdrLogReaderWriter.use_count()
     //           << std::endl;
     // Print();
+}
+
+void Record::RefreshValue(std::string value) {
+  std::time_t current_time = std::time(nullptr);
+  data.fdr_sample_data.set_timestamp(current_time);
+  data.paramtype = info.DataType;
+  data.fdr_sample_data.set_paramid(info.ParamID);
+  LastFetchedAt = current_time;
+
+//   fdrlog::warn("Grp record RefreshValue:{}-{}-{}-{}  Value:{}", component.Params[0].name, 
+//     component.Params[0].value, info.ID, info.ParamID, value);
+
+  try {
+    if (data.paramtype == "Uint64") {
+      data.fdr_sample_data.set_paramvalueint64((uint64_t)std::stoull(value));
+    } else if (data.paramtype == "Double") {
+      data.fdr_sample_data.set_paramvaluedouble((double)std::stod(value));
+    } else if (data.paramtype == "string") {
+      data.fdr_sample_data.set_paramvaluestring(value);
+    } else {
+      fdrlog::error("RefreshValue(): data.paramtype:{} not handled",
+                    data.paramtype);
+    }
+
+    if (infogroup.CompactionMethod == "Average") {
+        RunningStatisticEngine(data.fdr_sample_data);
+    }    
+  } catch (const std::exception &e) {
+    fdrlog::error("Exception in record RefreshValue:{} Value:{} exception:{}", info.ID, value, e.what());
+  } catch (...) {
+    fdrlog::error("RefreshValue(): unknown exception !!!");
+  }
 }
 
 void Record::Refresh(bool viaTimerSkipChecks)
@@ -371,6 +407,13 @@ void Record::appendRunningStatToStatfile(void)
 
 bool same_data_values(const fdr_sample_ext &left, const fdr_sample_ext &right)
 {
+    // Skip comparision for the first time. 
+    static bool firstTime = true;
+    if (firstTime) {
+        firstTime = false;
+        return firstTime;
+    }
+    
     if ((left.fdr_sample_data.paramid() != right.fdr_sample_data.paramid()) || (left.paramtype != right.paramtype))
         return false;
 
@@ -436,6 +479,9 @@ void Record::Store(void)
     //     fdrlog::debug("Store record for objectPath = {}, interface = {}, property = {}",
     //         info.DbusParams.ObjectPath, info.DbusParams.Interface, info.DbusParams.Property);
     // }
+
+    // fdrlog::warn("Grp record Store:{}-{}-{}-{}", component.Params[0].name,
+    //              component.Params[0].value, info.ID, info.ParamID);
 
     fdrLogReaderWriter->append(data.fdr_sample_data);
 

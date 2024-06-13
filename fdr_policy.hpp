@@ -76,6 +76,12 @@ struct DbusParams_t
 
 };
 
+struct ShmemParams_t
+{
+	std::string Key;
+	std::string Namespace;
+};
+
 struct RedfishParams_t
 {
 	std::string URI;
@@ -94,6 +100,7 @@ struct Info_t
 	CommandParams_t CommandParams; // If FetchMethod==Command
 	DbusParams_t DbusParams;	   // If FetchMethod==DBUS
 	RedfishParams_t RedfishParams; // If FetchMethod==Redfish
+	ShmemParams_t ShmemParams;     // If FetchMethod==Shmem
 	std::string DataType;		   // Data Type ()
 	InfoGroup_t *parent_infogroup; // Pointer to the infogroup this info belongs to
 	std::string FetchType;
@@ -313,7 +320,7 @@ namespace YAML
 			}
 			if (node["DevId"])
 			{
-				rhs.DevId = node["DevId"].as<std::uint64_t>();
+				rhs.DevId = node["DevId"].as<uint64_t>();
 			}
 			if (node["Opcode"])
 			{
@@ -328,6 +335,23 @@ namespace YAML
 				rhs.Arg2 = node["Arg2"].as<uint8_t>();
 			}
 
+			return true;
+		}
+	};
+
+	template <>
+	struct convert<ShmemParams_t>
+	{
+		static bool decode(const Node &node, ShmemParams_t &rhs)
+		{
+			if (node["Key"])
+			{
+				rhs.Key = node["Key"].as<std::string>();
+			}
+			if (node["Namespace"])
+			{
+				rhs.Namespace = node["Namespace"].as<std::string>();
+			}
 			return true;
 		}
 	};
@@ -390,7 +414,10 @@ namespace YAML
 			{
 				rhs.RedfishParams = node["RedfishParams"].as<RedfishParams_t>();
 			}
-
+			if (node["ShmemParams"])
+			{
+				rhs.ShmemParams = node["ShmemParams"].as<ShmemParams_t>();
+			}
 			return true;
 		}
 	};

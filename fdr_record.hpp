@@ -61,6 +61,7 @@ public:
     void Store(void);   // Write the record out to the file
     void RunningStatisticEngine(fdrpb::fdr_sample readrec);
     void appendRunningStatToStatfile(void);
+    void RefreshValue(std::string value);
     // reset all the variables related to stat
     inline void ResetRunningStat(void) {
         runningStatus.clear_fromtime();

@@ -19,6 +19,8 @@
 #include <google/protobuf/util/json_util.h>
 #include <google/protobuf/util/delimited_message_util.h>
 #include <google/protobuf/io/zero_copy_stream.h>
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/message.h>
 
 // This global variable is just for debugging to track the number of FDRStore objects
 // created for the whole FDR instance
@@ -66,10 +68,12 @@ void FDRStore::append(const google::protobuf::Message &data)
         outstream.open(storagefilepath, std::ios_base::app);
         if (outstream.is_open())
         {
-            std::string jsonstr;
-            google::protobuf::util::MessageToJsonString(data, &jsonstr);
-            outstream << jsonstr << std::endl;
-            outstream.close();
+          std::string jsonstr;
+          google::protobuf::util::JsonPrintOptions options;
+          options.always_print_primitive_fields  = true;
+          google::protobuf::util::MessageToJsonString(data, &jsonstr, options);
+          outstream << jsonstr << std::endl;
+          outstream.close();
         }
         else
         {
@@ -139,4 +143,30 @@ int FDRStore::readnext(google::protobuf::Message *datap){
 std::string FDRStore::getStoreFilePath()
 {
     return storagefilepath;
+}
+
+void FDRStore::printUnsetFields(const google::protobuf::Message& message) {
+  const google::protobuf::Descriptor* descriptor = message.GetDescriptor();
+  const google::protobuf::Reflection* reflection = message.GetReflection();
+
+  for (int i = 0; i < descriptor->field_count(); ++i) {
+    const google::protobuf::FieldDescriptor* field = descriptor->field(i);
+    bool is_set = false;
+
+    if (field->is_repeated()) {
+      // For repeated fields, check if the field has any elements
+      if (reflection->FieldSize(message, field) > 0) {
+        is_set = true;
+      }
+    } else {
+      // For singular fields, check if the field has been set
+      if (reflection->HasField(message, field)) {
+        is_set = true;
+      }
+    }
+
+    if (!is_set) {
+      std::cout << "Field not set: " << field->name() << std::endl;
+    }
+  }
 }

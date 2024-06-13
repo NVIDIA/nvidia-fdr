@@ -39,6 +39,9 @@ private:
 
     google::protobuf::io::ZeroCopyInputStream *binaryinzerocopystream;
 
+    //Helpful to debug if properties are not set 
+    void printUnsetFields(const google::protobuf::Message &data);
+
 public:
     FDRStore(std::string filename, std::string fileformat, int isStoreReaderWriter);
     FDRStore(std::string filename, std::string fileformat, std::string paramClass, std::string compClass, std::string compID);
