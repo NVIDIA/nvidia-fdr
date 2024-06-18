@@ -5,3 +5,11 @@ fdr_logs_db
 fdrtool
 protoc_middleman
 *.tar.xz
+BirthCertificate.tar
+HMC.HGX_BMC_0.others.dat
+brd_serial
+dist/
+fdrtool.egg-info/
+fdrtool.spec
+param.out
+warning.txt
