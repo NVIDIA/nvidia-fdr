@@ -1,2 +1,20 @@
-option('tests', type: 'feature', description: 'Build tests', value: 'enabled')
-option('logging', type : 'combo', choices : ['spdlog', 'phosphor-logging'], value : 'phosphor-logging')
+option(
+    'tests',
+    type: 'feature',
+    description: 'Build tests',
+    value: 'enabled'
+)
+
+option(
+    'logging',
+    type : 'combo',
+    choices : ['spdlog', 'phosphor-logging'],
+    value : 'phosphor-logging'
+)
+
+option(
+    'platform_ppf',
+    type : 'string',
+    description : 'Platform PPF file',
+    value : ''
+)
