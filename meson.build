@@ -103,6 +103,9 @@ else
 
 endif
 
+shmem = dependency('nvidia-shmem')
+deps += shmem
+
 if get_option('tests').enabled()
     gtest = dependency('gtest', main: true, disabler: true, required: false)
     gmock = dependency('gmock', disabler: true, required: false)
@@ -143,6 +146,7 @@ src = [
   'main.cpp',
   'ppf_sanity.cpp',
   'property_variant.hpp',
+  'fdr_grp_update.cpp'
 ]
 
 executable('nvidia-fdr',

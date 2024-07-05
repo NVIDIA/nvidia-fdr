@@ -34,6 +34,7 @@ using sdeventplus::Event;
 
 constexpr auto clockId = sdeventplus::ClockId::Monotonic;
 using Timer = sdeventplus::utility::Timer<clockId>;
+using groupPollRecords = std::pair<std::string, std::vector<Record *>>;
 
 class FlightDataRecorder_c
 {
@@ -45,6 +46,8 @@ private:
 	// This map includes only Subscribe records and used only for storing[store] as
 	// fetching[refresh] is taken by the subscription events
 	std::map<int, std::vector<Record *>> RecListSubscribeStoreMap;
+	// This map includes only Group Poll records and used for both fetching[refresh] and storing[store]
+	std::map<int, std::vector<groupPollRecords>> RecListGrpPollMap;	
 	sdeventplus::Event FdrEvents = sdeventplus::Event::get_default();
 	std::time_t LastCompactWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
 	std::time_t LastCompactSubWindowDirCreationSecsAt;   // Time of last compaction [paired with CompactionWindowSecs]
@@ -105,6 +108,7 @@ private:
 	bool CompareMessageWithLog(const fdrpb::fdr_book_of_errors& errMssg);
 	void PrintRecListPollSubscribeMap(void);
 	void PollRecordTimerCBEngine(int fetchFreqSecKey);
+	void GroupPollRecordTimerCBEngine(int fetchFreqSecKey);
 	void SubscribeStoreRecordTimerCBEngine(int storeFreqSec);
 	void CompactionWindowTimerCBEngine(void);
 	void CompactionSubWindowTimerCBEngine(void);
@@ -129,6 +133,8 @@ public:
 	void MakeBirthCertificateDeleteSafe(void);
 	void RefreshAndStore(bool viaTimerSkipChecks, const std::vector<Record *>& recordListToRefresh);
 	void RefreshAndStore(bool viaTimerSkipChecks);
+	void GroupRefreshAndStore(bool viaTimerSkipChecks, const std::vector<groupPollRecords>& groupList);
+	void GroupRefreshAndStore(bool viaTimerSkipChecks);
 	void StoreSubscribeRecords(const std::vector<Record *>& recordListToStore);
 	void Compactor(bool viaTimerSkipChecks);
 	void BookOfErrorEngine(std::string infoID, unsigned int paramID, std::string componentID,

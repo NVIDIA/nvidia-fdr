@@ -19,6 +19,8 @@
 #include <sdeventplus/event.hpp>
 #include <sdeventplus/source/signal.hpp>
 #include <stdplus/signal.hpp>
+#include <unordered_map>
+#include "fdr_grp_update.hpp"
 
 using sdeventplus::Event;
 using sdeventplus::source::Enabled;
@@ -521,7 +523,32 @@ void FlightDataRecorder_c::CreateRecords(void)
 					// based on the fetchtype segregate the resource list as per its 
 					// StoreFreqSecs: only for Subscribe fetchtype records for triggering the Store()
 					// FetchFreqSecs: only for Poll fetchtype records for triggering both Refresh() and Store()
-					if(info.FetchType == "Subscribe") {
+					if (info.FetchType == "GroupPoll") {
+						bool keyFound = false;
+						auto recordKey = getGroupPollRecordKey(info);
+						if (!recordKey.empty()) {
+							if(RecListGrpPollMap.find(info.FetchFreqSecs) != RecListGrpPollMap.end()) {
+								for (auto& groupRecords : RecListGrpPollMap[info.FetchFreqSecs]) {
+									auto& [groupKey, records] = groupRecords;
+									if (groupKey == recordKey) {
+										records.push_back(resource);
+										keyFound = true;
+										break;
+									}
+								}
+							}
+							if (!keyFound) {
+								std::vector<Record*> records;
+								records.push_back(resource);
+								fdrlog::debug("GroupPoll Inserting new group FetchFreqSecs: {} Key: {}", 
+									info.FetchFreqSecs, recordKey);
+								auto entry = std::make_pair(recordKey, records);
+								RecListGrpPollMap[info.FetchFreqSecs].push_back(entry);
+							}
+						} else {
+							fdrlog::error("Unsupported record type GroupPoll with FetchMethod {}", info.FetchMethod);
+						}
+					} else if(info.FetchType == "Subscribe") {
 						RecListSubscribeStoreMap[info.StoreFreqSecs].push_back(resource);
 						auto pair = std::make_pair(info.DbusParams.ObjectPath, info.DbusParams.Interface);
 						subscribedPaths.push_back(pair);
@@ -574,6 +601,7 @@ void FlightDataRecorder_c::MakeBirthCertificateDeleteSafe(void) {
 void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
 {
 	// 1. execute all the records irrespective of whether birth certificate got created or not
+	GroupRefreshAndStore(true);
 	RefreshAndStore(true);
 
 	// 2. create the birth certificate archieve, if not already present
@@ -629,6 +657,36 @@ void FlightDataRecorder_c::RefreshAndStore(bool viaTimerSkipChecks, const std::v
 			this->CheckExceptionRateLimit();
 		}
 	}
+}
+
+void FlightDataRecorder_c::GroupRefreshAndStore([[maybe_unused]] bool viaTimerSkipChecks, const std::vector<groupPollRecords>& groupList)
+{
+	for (auto& grp : groupList) 
+	{
+		bool expt = false;
+		try {
+			// 1. Get Group Refresh Method
+			auto keys = splitGroupFetchKeys(grp.first);
+			// 2. Refresh data based on the method
+			FdrGrpUpdate::RefreshAndStore(keys, grp.second);
+		} catch (const std::exception& e) {
+			expt = true;
+			fdrlog::warn("GroupRefreshAndStore(): {}", e.what());
+		} catch (...) {
+			expt = true;
+			fdrlog::warn("GroupRefreshAndStore(): unknown exception !!!");
+		}
+
+		if (expt) {
+			this->CheckExceptionRateLimit();
+		}
+	}
+}
+
+void FlightDataRecorder_c::GroupRefreshAndStore(bool viaTimerSkipChecks) {
+  for (auto& entry : RecListGrpPollMap) {
+    GroupRefreshAndStore(viaTimerSkipChecks, entry.second);
+  }
 }
 
 void FlightDataRecorder_c::RefreshAndStore(bool viaTimerSkipChecks)

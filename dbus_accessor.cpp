@@ -32,8 +32,8 @@ DbusPropertyChangedHandler registerServicePropertyChanged(
     }
     catch (const std::exception &e)
     {
-        fdrlog::warn("registerServicePropertyChanged failed in registering signal handler: error = {}",
-            e.what());
+        fdrlog::warn("registerServicePropertyChanged failed in registering signal handler for ObPath = {}, intf = {}: error = {}",
+            objectPath, interface, e.what());
     }
     return propertyHandler;
 }

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "fdr_policy.hpp"
 #include <chrono>
 #include <ostream>
 #include <string>
@@ -105,4 +106,36 @@ inline std::string getSubsRecordKey(std::string& objPath,
 {
     auto key = objPath + '/' + inf + '/' + property;
     return key;
+}
+
+// Group Key is formed by combining FetchMethod primary key and secondary key 
+// which is specific to the FetchMethod 
+// Example - For shmem the group key is Shmem/<namespace>
+inline std::string getGroupPollRecordKey(Info_t& info)
+{
+    if (info.FetchMethod == "Shmem")
+    {
+        auto key = info.FetchMethod + '/' + info.ShmemParams.Namespace;
+        return key;
+    }
+    else 
+    {
+        return std::string();
+    }
+}
+
+inline std::vector<std::string> splitGroupFetchKeys(const std::string& groupKey) {
+    std::vector<std::string> result;
+    size_t start = 0;
+    size_t end = groupKey.find('/');
+    
+    while (end != std::string::npos) {
+        result.push_back(groupKey.substr(start, end - start));
+        start = end + 1;
+        end = groupKey.find('/', start);
+    }
+    // Add the last substring
+    result.push_back(groupKey.substr(start));
+    
+    return result;
 }
