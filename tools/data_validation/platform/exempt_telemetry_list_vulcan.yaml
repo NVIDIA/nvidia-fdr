@@ -1,0 +1,8 @@
+# List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
+# Platform: VULCAN
+
+TGUID:
+  - GPU-XID-LOGS
+
+ParamClass:
+  - Specs
