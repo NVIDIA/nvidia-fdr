@@ -195,10 +195,10 @@ class Catalog:
             if (file_extension != '.dat') or filename.endswith(param_description_filename) or filename.endswith(Boot_event_filename):
                 continue
 
-            if filename.startswith('HMC.') and filename.endswith('.others.dat'):
+            if filename.startswith('Baseboard.') and filename.endswith('.others.dat'):
                 try:
                     file_path = os.path.join(root, filename)
-                    os.system("cp "+file_path+" .")
+                    # os.system("cp "+file_path+" .")
                     found_filename = True  # Set the flag to indicate filename is found
                     break  # Break out of the loop once a suitable filename is found
 
@@ -206,16 +206,16 @@ class Catalog:
                     logging.error("Exception occurred while decoding file {}: {}".format(os.path.join(root, filename), e))
                     break
         if found_filename:
-            brd_serial = self.JsonFromBinary(filename)
+            self.JsonFromBinary(file_path)
             with open("brd_serial", 'r') as file:
                 lines = file.readlines() 
-            return lines[0]
+            return lines[0] if len(lines) > 0 else "xyz"
 
     return "xyz"
 
   def GetSerialNumber(self):
-    for item in ParamDescription['Baseboard']['Inventory']:
-        if(ParamDescription['Baseboard']['Inventory'][item]['ParamName'] == 'BRD-SERIAL') :
+    for item in ParamDescription['Baseboard'].get('Inventory', {}):
+        if(ParamDescription['Baseboard']['Inventory'][item].get('ParamName', '') == 'BRD-SERIAL') :
           return item
     return None
 

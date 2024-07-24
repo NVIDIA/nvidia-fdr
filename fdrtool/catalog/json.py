@@ -94,7 +94,7 @@ class JSONCatalogEntry(CatalogEntry):
     
 
     data = json.loads(json_str)
-    if data.get("ParamID") == "12":
+    if data.get("ParamName") == "BRD-SERIAL":
         with open("brd_serial", 'w') as file:
             serial_number= data.get("ParamValueString")
             if serial_number: 
