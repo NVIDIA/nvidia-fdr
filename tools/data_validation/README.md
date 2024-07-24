@@ -14,6 +14,16 @@ For each parameter in the PPF, we will run the corresponding busctl command and 
     - python3 check_datatypes.py `<fdr_ppf_vulcan.yaml>` `busctl.results`  `busctl.cmds` > datatype_diff.out
     - python3 check_datatypes.py ./data/fdr_ppf.yaml ./data/busctl.results.3  busctl.cmds > datatype_diff.out
 
+# Setup
+1. Add ssh-id to authentication agent
+    - eval \`ssh-agent -s\`; ssh-add 
+2. Enable SSH port-forwarding to BMC (Required for fdrtool and telemetry-agent)
+    - ssh -fNT -L 18888:192.168.31.1:80 user@BMC_IP -p 22
+3. Clone nvidia-fdr repository to get the fdrtool.
+    - git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/nvidia-fdr.git
+4. Clone nvidia-telemetry-agent repository
+    - git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/nvidia-telemetry-agent.git
+
 # Telemetry coverage of FDR dump
 Check if the entries in the telemetry catalog are present in the FDR dump.
 
@@ -33,42 +43,13 @@ python3 check_fdr_telemetry_coverage.py \
 -p "Vulcan" > fdr_telemetry_coverage_output.txt
 ```
 # Validating the FDR dump
-## Setup
-1. Create a ssh-key
-    - ssh-keygen
-2. Copy the ssh-key to Host
-    -  ssh-copy-id -i <ssh public key> user@IP
-3. Add ssh-id to authentication agent
-    - eval \`ssh-agent -s\`; ssh-add 
-4. Enable SSH port-forwarding to BMC (Required for fdrtool and telemetry-agent)
-    - ssh -fNT -L 18888:192.168.31.1:80 user@BMC_IP -p 22
-5. Clone nvidia-fdr repository to get the fdrtool.
-    - git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/nvidia-fdr.git
-6. Clone nvidia-telemetry-agent repository
-    - git clone ssh://git@gitlab-master.nvidia.com:12051/dgx/nvidia-telemetry-agent.git
-
-## Validate sensor data
-1. bash fdr_validation.sh \
--h user@host_ip \
--n <path/to/capture_sensor_reading.sh; should be in pwd by default> \
--w <path/to/workload.py; should be in pwd by default> \
--o <path/to/output/directory>
-2. collect fdr dump
-    - Use fdrtool to collect and decode the dump
-    - FDR dump should be decoded with -kn option.
-3. python3 compare_nvidia-smi_fdr_dump.py \
--n <path/to/nvidia-smi.output; should be in ./tmp by default> \
--f <path/to/fdr/dump>
--o <path/to/output/directory>
-
-## Validate static data
-1. collect the fdr dump (not required if already downloaded in above steps)
-    - Use fdrtool to collect and decode the dump
-    - FDR dump should be decoded with -kn option.
-2. collect the RedFish data using Nvidia Telemetry Agent
-3. python3 compare_telemetry-agent_fdr_dump.py \
+Compare the values in Telemetry-Agent's output with FDR dump's output.
+## How to run
+```
+python3 ./data_validator \
 -t <path/to/latest_results.csv; This is the output of the Telemetry Agent> \
--f <path/to/fdr_logs/fdr; path to latest decoded dump>
+-f <path/to/fdr_logs/fdr; path to latest decoded dump> > data_validator_result_%(date +%s).txt
+```
 
 ### Output of the compare_telemetry-agent_fdr_dump script
 - Missing ID from FDR logs: If the parameter is present in the Telemetry-Agent's output (Telemetry catalog) but not in FDR's others.dat file.
@@ -76,7 +57,5 @@ python3 check_fdr_telemetry_coverage.py \
 - Mismatch at: The value of the parameter in the Telemetry-Agent's output do not match with the parameter value in FDR's others.dat file.  
 
 ### Note
-- The script will only consider the entries in the Telemetry-Agent's output that do not have "Sensor." in it.
-- The script will only consider the entries in the FDR's others.dat file.
 - The script changes True and False to 1 and 0 respectively.
-- The script only compares the integer part of floating point numbers.
+- In case of floating point numbers, the script will consider the values (Telemetry Agent's value and FDR dump's value) same if the difference is less than or equal to 10% of the Telemetry Agents's output.

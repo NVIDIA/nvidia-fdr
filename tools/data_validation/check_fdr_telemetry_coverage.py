@@ -20,6 +20,8 @@ def parse_fdr_dump(fdr_logs_dir):
                 fdr_logs_ids[boot_count] = set()
             for file in files:
                 if "hifi.dat" in file: continue
+                if ".Event" in file: continue
+            
                 comp_class, comp_id, filetype = file.split(".", 2)
                 print("[INFO]", "Filename", os.path.join(root_name, file))
                 comp_class = comp_class.upper()
