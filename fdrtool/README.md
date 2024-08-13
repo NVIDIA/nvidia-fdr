@@ -24,6 +24,15 @@ make fdrtool
 ```
 **Note:** 'make clean' will delete the executable, the protobuf compiled file and the fdr_logs directory.
 
+# Python package build.
+```bash
+make install
+```
+Install python package.
+```bash
+cd dist && pip3 install fdrtool-<fdrtool version>.tar.gz
+```
+
 # Docker image Build
 #### How to build new image
 Docker file is in root directory of nvidia-fdr make sure you are in the same directory.
