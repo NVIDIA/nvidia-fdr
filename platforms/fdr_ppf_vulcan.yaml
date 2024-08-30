@@ -49,11 +49,6 @@ Preconditions:
         value: *LogsBasePath
       CommandRetryPolicy: No
       ExitOnFailure: Yes
-    - ID: CheckHmcWaitReady
-      CommandParams:
-        Command: "busctl get-property xyz.openbmc_project.GpuMgr /xyz/openbmc_project/inventory/system/HGX_BMC_0 xyz.openbmc_project.State.Decorator.OperationalStatus State | grep -i -q xyz.openbmc_project.State.Decorator.OperationalStatus.StateType.Enabled"
-      CommandRetryPolicy: Yes
-      ExitOnFailure: No
 
 GPU: &gpu
   Params:
@@ -13097,6 +13092,18 @@ HMC: &hmc
             ObjectPath: "/xyz/openbmc_project/inventory/system/bmc/HGX_BMC_0"
             Interface: "xyz.openbmc_project.State.Decorator.Health"
             Property: "Health"
+
+        - ID: BMCReady
+          <<: *hmc-status-defaults
+          ParamID: 21           # NOTE: haven't re-arranged the ID.
+          FetchFreqSecs: 30
+          StoreFreqSecs: 30
+          StorePolicy: OnChange
+          DbusParams:
+            Service: "xyz.openbmc_project.State.ConfigurableStateManager"
+            ObjectPath: "/xyz/openbmc_project/state/configurableStateManager/Manager"
+            Interface: "xyz.openbmc_project.State.FeatureReady"
+            Property: "State"
 
     - ID: Sensor.Thermal
       InfoList:

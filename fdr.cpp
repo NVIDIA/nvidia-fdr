@@ -986,7 +986,7 @@ void FlightDataRecorder_c::dbusEventHandlerCallback(
 				}
 				else if (auto ptr (std::get_if<std::string>(&property.second)); ptr){
 					const char* value1 = ptr->c_str();
-					std::string value(value1);
+					value = value1;
 				}
 				else{
 					return;
