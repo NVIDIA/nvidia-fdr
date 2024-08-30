@@ -47,13 +47,6 @@ GeneralConfig:
           - *LogsBasePath
       CommandRetryPolicy: No
       ExitOnFailure: Yes
-    - ID: CheckHmcWaitReady
-      CommandParams:
-        Command:
-          busctl get-property xyz.openbmc_project.GpuMgr /xyz/openbmc_project/inventory/system/HGX_BMC_0
-          xyz.openbmc_project.State.Decorator.OperationalStatus State | grep -i -q xyz.openbmc_project.State.Decorator.OperationalStatus.StateType.Enabled
-      CommandRetryPolicy: Yes
-      ExitOnFailure: No
 
 GPU: &gpu
   Params:
