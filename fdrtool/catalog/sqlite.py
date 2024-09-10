@@ -166,7 +166,7 @@ class SQLiteDBCatalogEntry(CatalogEntry):
   def __init__(self, filepath, ParamIDClassDict = None, ParamIDNameDict= None):
     super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
     self.ParamIDClassDict = ParamIDClassDict
-    self.tablename = self.FindTablename()
+    self.tablename = self.FindTablename(db_type='SQLITE')
 
     if self.tablename.startswith(tuple(FDR_TABLE_SCHEMA)):
       self.tabletype = [key for key in FDR_TABLE_TYPE if self.tablename.startswith(key.name)][0] # List should have only one item
