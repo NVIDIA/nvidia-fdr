@@ -29,3 +29,15 @@ length_delimited: True
 
 # Location/environment of the machine: Field(FIE), Factory(FAC), Default is Unknown(UNK)
 environment: FAC
+
+# Generate Coverage Report
+generate_cvg_report: False
+telemetry_catalog:"/path/of/telemetry_catalog.csv"  # Path to Telemetry Catalog File
+telemetry_uri_exp:"/path/of/uri_expansion.csv"  # Path to Telemetry Catalog File
+platform:"Blackwell-HGX-8-GPU"
+exempt_list:"/path/to/nvidia-fdr/tools/data_validation/platform/exempt_telemetry_list_vulcan.yaml"        # Path to Exempt List
+fdr_output_dir:""     # Path to Output the Coverage Report, If left empty Coverage will be generated in the fdr logs directory
+
+#Generate Value Validation Report
+value_validation_report: False
+telemetry_agent_output:"" #path of telemetry agent output csv file

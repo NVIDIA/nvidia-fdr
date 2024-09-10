@@ -38,6 +38,22 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 session = requests.session()
 MRDValues = {}
 
+logger = logging.getLogger(__name__)
+is_customer_view = True
+try:
+    with open("./.customer_view", 'r+') as view:
+        is_customer_view = bool(int(view.read().strip()))
+except:
+    pass
+
+if not is_customer_view:
+    logger.propagate = False
+    logger_handler = logging.FileHandler("./tc.log")
+    logger_handler.setFormatter(logging.Formatter('%(levelname)s - %(message)s'))
+    if logger.hasHandlers():
+        logger.handlers.clear()
+    logger.addHandler(logger_handler)
+
 def find_column_index(header_row, column_name):
     for i in range(len(header_row)):
         if column_name in header_row[i]:
@@ -62,13 +78,13 @@ def decide_poll_period(paramclass):
         return 1
     elif paramclass in ('Sensor.Clock', 'Sensor.Other', 'Sensor.Pressure', 'Sensor.Voltage', 'Error'):
         return 10*slowness_factor
-    elif paramclass in ('Sensor.Perf'):
+    elif paramclass in ('Sensor.Perf', 'Link-Quality'):
         return 10*slowness_factor
     elif paramclass in ('Sensor.Speed'):
         return 10*slowness_factor
     elif paramclass in ('Config', 'Status'):
         return 60*slowness_factor
-    elif paramclass in ('Inventory', 'Specs'):
+    elif paramclass in ('Inventory', 'Specs', 'Performance'):
         return 60*60
     elif paramclass in ('Unknown'):
         return 1
@@ -305,7 +321,7 @@ class Catalog:
 
         # Populate test cases based on the sheet
         try:
-            # logging.error(f'Parsing Catalog File: {catalog_file}')
+            # logger.error(f'Parsing Catalog File: {catalog_file}')
             with open(catalog_file, newline='') as f:
                 reader = csv.reader(f)
 
@@ -421,7 +437,7 @@ class Catalog:
                 tc.POLL_PERIOD = decide_poll_period(tc.PARAMCLASS)
                 self.CatalogEntries.append(tc)
                 added_entries += 1
-        logging.info(f"Added #{added_entries} missing MRD entries")
+        logger.info(f"Added #{added_entries} missing MRD entries")
 
     # Function used to remove entries that are not in MRD. Called whenh --get_mrd_only is used.    
     def RemoveNonMrdEntries(self):
@@ -431,7 +447,7 @@ class Catalog:
             if not (entry.URI+"#/"+entry.FIELD in MRDValues or (entry.URI in MRDValues and entry.FIELD == "Reading") or entry.MRD):
                 self.CatalogEntries.remove(entry)
                 removed_entries += 1
-        logging.info(f"Removed #{removed_entries} non MRD entries")                
+        logger.info(f"Removed #{removed_entries} non MRD entries")
     
     def ConvertToTimeSeriesDataPoints(self):
         @dataclass
@@ -658,7 +674,7 @@ class Catalog:
             try:
                 os.makedirs(outputdir)
             except IOError:
-                logging.error("Unable to open make output directory: %s", outputdir)
+                logger.error("Unable to open make output directory: %s", outputdir)
                 sys.exit(1)
         now = datetime.now()
         self.SaveFilePrefix = os.path.join(outputdir, "testresults_" + now.strftime("%Y_%m_%d_%H_%M_%S"))
@@ -695,7 +711,7 @@ class Catalog:
                         csv_writer.writeheader()
                     csv_writer.writerows(catalog_list_dicts)
             except IOError:
-                logging.error("Unable to open csv for writing %s", csv_file)
+                logger.error("Unable to open csv for writing %s", csv_file)
                 sys.exit(1)
             # create/update link to latest results
             os.symlink(csv_file, 'tmpLink')
@@ -708,7 +724,7 @@ class Catalog:
                 with open(json_file, 'a', newline='') as f:
                     json.dump(catalog_list_dicts, f)
             except IOError:
-                logging.error("Unable to open json for writing %s", json_file)
+                logger.error("Unable to open json for writing %s", json_file)
                 sys.exit(1)                            
             # create/update link to latest results
             os.symlink(json_file, 'tmpLink')
@@ -724,7 +740,7 @@ def ReadInURIExpansionLogic(uri_expansions_file, platform):
     Expansions = []
 
     try:
-        logging.info(f'Parsing URI Expansion File: {uri_expansions_file}')
+        logger.info(f'Parsing URI Expansion File: {uri_expansions_file}')
         with open(uri_expansions_file, newline='') as f:
             reader = csv.reader(f)
             header_row = next(reader)
@@ -735,7 +751,7 @@ def ReadInURIExpansionLogic(uri_expansions_file, platform):
                 Expansions.append(exp)
 
     except EnvironmentError:  # parent of IOError, OSError *and* WindowsError where available
-        logging.error(f"Could not open URI Expansions file {uri_expansions_file}")
+        logger.error(f"Could not open URI Expansions file {uri_expansions_file}")
         
     # Normalize list by replacing known values in placeholders themeselves
     # print("\n\n\nBefore Processing")
@@ -765,7 +781,7 @@ def expand_range_to_list(input):
     return expanded_list
 
 def ExpandTc(tc, extrapolated_tcs): #NOTE: This is a recursive function. Beware of unintended flows.
-    logging.info(f'Input URI: {tc.URI}')
+    logger.info(f'Input URI: {tc.URI}')
 
     if "{" not in tc.URI:  # Base condition: No wildcards in URI, so no (further) expansion is required
         # print(f'{uri}') # return the uri as is
@@ -790,25 +806,25 @@ def ExpandTc(tc, extrapolated_tcs): #NOTE: This is a recursive function. Beware 
         if match:
             matched=True
             if '{InstanceId}' not in exp.placeholder:
-                logging.info(f'simple replacement: {exp.placeholder} --> {exp.replacement}')
+                logger.info(f'simple replacement: {exp.placeholder} --> {exp.replacement}')
                 tc.URI = tc.URI.replace(exp.placeholder, exp.replacement)
                 if "{" not in tc.URI: # If no more expansions possible, add the entry
                     # print(f'Output URI: {tc.URI}') # return the uri as is
                     extrapolated_tcs.append(tc)
             else:
                 instanceid_range = expand_range_to_list(exp.replacement)
-                logging.info(f'list replacement: {exp.placeholder} --> {instanceid_range}')
+                logger.info(f'list replacement: {exp.placeholder} --> {instanceid_range}')
                 for id in instanceid_range:
                     text2search = match.group()
                     text2replace = text2search.replace('{InstanceId}', f'{id}')
-                    # logging.debug(f'list replacement: {text2search} --> {text2replace}')
+                    # logger.debug(f'list replacement: {text2search} --> {text2replace}')
                     temp_tc = copy.copy(tc)
                     temp_tc.URI = temp_tc.URI.replace(text2search, text2replace)
                     temp_tc.TGUID = f'{tc.TGUID}[{id}]'
                     ExpandTc(temp_tc, extrapolated_tcs) #Recurse to expand other wildcard parts of the URI, if any
                 break
     if not matched:
-        logging.error(f'No Match for: {tc.TGUID :<30} {tc.URI}')  
+        logger.error(f'No Match for: {tc.TGUID :<30} {tc.URI}')  
     
     # if "{" in tc.URI:
     #     print(f'Expansion incomplete for: {tc.TGUID :<30} {tc.URI}')  
@@ -829,12 +845,12 @@ def ClearLogServices():
     except (requests.exceptions.Timeout, 
             requests.exceptions.InvalidURL, 
             requests.exceptions.RequestException) as e:
-        logging.warning("Unable to get list of Service logs !!!")
+        logger.warning("Unable to get list of Service logs !!!")
 
     for service_log_object in cmd_results['Members']:
         for k,v in service_log_object.items():
             if 'postcodes' not in v.lower():
-                logging.debug(f"Clearing log:{v}")
+                logger.debug(f"Clearing log:{v}")
                 service_log_list.append(v)
 
     # Iterate through the list of service logs and clear the ones where clearlog is found
@@ -846,7 +862,7 @@ def ClearLogServices():
         except (requests.exceptions.Timeout, 
                 requests.exceptions.InvalidURL, 
                 requests.exceptions.RequestException) as e:
-            logging.warning(f"Unable to get access service {service_log}!!!")
+            logger.warning(f"Unable to get access service {service_log}!!!")
         if 'Actions' in cmd_results:
             if '#LogService.ClearLog' in cmd_results['Actions']:
                 if 'target' in cmd_results['Actions']['#LogService.ClearLog']:
@@ -856,7 +872,7 @@ def ClearLogServices():
                     except (requests.exceptions.Timeout, 
                             requests.exceptions.InvalidURL, 
                             requests.exceptions.RequestException) as e: 
-                        logging.warning(f"Unable to clear log {clear_log_uri}!!!")
+                        logger.warning(f"Unable to clear log {clear_log_uri}!!!")
      
 
 def GetMrdList(filter_mrd_list=None):
@@ -875,13 +891,13 @@ def GetMrdList(filter_mrd_list=None):
             requests.exceptions.InvalidURL, 
             requests.exceptions.RequestException,
             requests.exceptions.HTTPError) as e:
-        logging.error(f"Unable to get list of MRD tables - exception occurd {e} !!!")
+        logger.error(f"Unable to get list of MRD tables - exception occurd {e} !!!")
         sys.exit(1)
 
     for mrd_object in cmd_results['Members']:
         for k,v in mrd_object.items():    
             mrd_list.append(v)
-    logging.debug(f"Unfiltered list of MRDs is: {mrd_list}")
+    logger.debug(f"Unfiltered list of MRDs is: {mrd_list}")
 
     
     # if filter mrd is specified then only includes those mrd
@@ -903,7 +919,7 @@ def GetMrdList(filter_mrd_list=None):
                     else:
                         mrd_list_filtered.append(mrd_item)
             if not mrd_matched:
-                logging.warning(f"MRD Filter {filter_mrd_item} didn't match any existing MRD: {mrd_list}")                                 
+                logger.warning(f"MRD Filter {filter_mrd_item} didn't match any existing MRD: {mrd_list}")
         return mrd_list_filtered       
     
 # MRD (Metric Report Definition) APIs are redfish endpoints which return 
@@ -913,10 +929,10 @@ def FetchMRDValues(mrd_list):
     
     # if MRD list is empty then print warning message and return
     if len(mrd_list) == 0:
-        logging.warning(f"MRD List is empty, will not be using MRDs for any telemetry data")
+        logger.warning(f"MRD List is empty, will not be using MRDs for any telemetry data")
         return 0
     
-    logging.info(f"MRD regions to be read are {mrd_list}")
+    logger.info(f"MRD regions to be read are {mrd_list}")
     
     mrd_start_time=time.time()
     
