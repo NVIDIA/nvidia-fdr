@@ -9,12 +9,10 @@
 *
 */
 
-#include "fdr_grp_update.hpp"
-
-#include "fdr_log.hpp"
 #include "fdr_record.hpp"
-
+#include "fdr_grp_update.hpp"
 #include <telemetry_mrd_client.hpp>
+#include "fdr_log.hpp"
 
 void FdrGrpUpdate::RefreshAndStore(const std::vector<std::string>& keys,
                                    const std::vector<Record*>& records)
