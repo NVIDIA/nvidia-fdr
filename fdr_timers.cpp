@@ -329,8 +329,8 @@ void FlightDataRecorder_c::InitTimerEvents(void)
     // step 4: Init Timer for CompactionWindowSecs
     // define Timer call back
     auto CompactionWindowTimerCB = [&](Timer&, int compactionWindowSecs) {
-        fdrlog::debug("CompactionWindowTimerCB: compactionWindowSecs: {}",
-                      compactionWindowSecs);
+        fdrlog::info("CompactionWindowTimerCB: compactionWindowSecs: {}",
+                     compactionWindowSecs);
         CompactionWindowTimerCBEngine();
     };
     auto CompactionWindowHandler =
@@ -351,8 +351,8 @@ void FlightDataRecorder_c::InitTimerEvents(void)
     // step 4: Init Timer for CompactionSubWindowSecs
     // define Timer call back
     auto CompactionSubWindowTimerCB = [&](Timer&, int CompactionSubWindowSecs) {
-        fdrlog::debug("CompactionSubWindowTimerCB: CompactionSubWindowSecs: {}",
-                      CompactionSubWindowSecs);
+        fdrlog::info("CompactionSubWindowTimerCB: CompactionSubWindowSecs: {}",
+                     CompactionSubWindowSecs);
         CompactionSubWindowTimerCBEngine();
     };
     auto CompactionSubWindowHandler =

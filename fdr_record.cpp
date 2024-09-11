@@ -161,10 +161,6 @@ void Record::Refresh(bool viaTimerSkipChecks)
         PropertyVariant val = dbus::readDbusProperty(
             info.DbusParams.Service, info.DbusParams.ObjectPath,
             info.DbusParams.Interface, info.DbusParams.Property);
-        fdr->BookOfErrorEngine(info.ID, info.ParamID, component.ID,
-                               current_time, val);
-
-        // Sensors
 
         if (data.paramtype == "Uint64")
         {
@@ -626,12 +622,6 @@ void Record::refreshDataCallback(PropertyVariant val)
     data.fdr_sample_data.set_timestamp(current_time);
     data.paramtype = info.DataType;
     data.fdr_sample_data.set_paramid(info.ParamID);
-
-    if (infogroup.ID == "Error")
-    {
-        fdr->BookOfErrorEngine(info.ID, info.ParamID, component.ID,
-                               current_time, val);
-    }
 
     if (auto ptr(std::get_if<std::string>(&val)); ptr)
     {

@@ -56,11 +56,6 @@ std::string EventSignalHandler::getFDRDeviceName(std::string& deviceName)
         auto deviceId = getDeviceId(deviceName);
         fdrDeviceName = "HGX_Chassis_" + deviceId;
     }
-    // Default device will be Baseboard0
-    else
-    {
-        fdrDeviceName = "HGX_Chassis_0";
-    }
 
     return fdrDeviceName;
 }
@@ -125,6 +120,10 @@ Change" string "REDFISH_MESSAGE_ID=ResourceEvent.1.0.ResourceErrorsDetected"
 void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
 {
     std::time_t eventTimestamp = std::time(nullptr);
+    std::string deviceName;
+    std::string errorMessage;
+    std::string severity;
+    EventRecord record;
 
     for (const auto& eventProperty : eventProperties)
     {
@@ -133,6 +132,15 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
         {
             for (const auto& eventData : eventProperty.second)
             {
+                if (eventData.first == "Severity")
+                {
+                    auto severityPtr =
+                        std::get_if<std::string>(&eventData.second);
+                    if (severityPtr)
+                    {
+                        severity = *(severityPtr);
+                    }
+                }
                 // Process additional data
                 if (eventData.first == "AdditionalData")
                 {
@@ -145,8 +153,6 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         return;
                     }
                     // Fetch device name and error message details
-                    std::string deviceName;
-                    std::string errorMessage;
                     std::string errorMessageDetails;
                     std::string errorOriginOfCondition;
                     std::string errorAdditionalInfo;
@@ -206,7 +212,8 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                     // Update event message to FDR store
                     auto fdrDeviceName = getFDRDeviceName(deviceName);
                     auto it = this->fdrDeviceEventsWriter.find(fdrDeviceName);
-                    if (it != this->fdrDeviceEventsWriter.end())
+                    if (it != this->fdrDeviceEventsWriter.end() &&
+                        !fdrDeviceName.empty())
                     {
                         // Object having FDR store writer and book of errors
                         // record
@@ -214,7 +221,7 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
 
                         // Store event data into FDR records - FDR store writer
                         auto fdrStoreWriter = fdrDeviceEventRec.first;
-                        auto record = fdrDeviceEventRec.second;
+                        record = fdrDeviceEventRec.second;
 
                         // Write descriptive event details data into new single
                         // file Filepath
@@ -258,26 +265,33 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         fdr_event_data.set_eventloggingpath(filePath);
                         // Write to fdr space
                         fdrStoreWriter->append(fdr_event_data);
-
-                        // Add book of errors record
-                        PropertyVariant val =
-                            std::string(""); // No value associated
-                        // Use infoID as 'FAULTS'
-                        // Use paramID as default 9999 - No params
-                        fdr->BookOfErrorEngine("FAULTS", 9999,
-                                               record.componentID,
-                                               eventTimestamp, val);
                     }
-                    else
-                    {
-                        fdrlog::error(
-                            "Event store got unknown device: {}; deviceName: {}",
-                            fdrDeviceName, deviceName);
-                    }
-                    break; // Skip processing other elements
                 }
             }
             break; // Skip processing other elements
+        }
+    }
+
+    if (!deviceName.empty() && !errorMessage.empty() &&
+        (severity == "xyz.openbmc_project.Logging.Entry.Level.Critical" ||
+         severity == "xyz.openbmc_project.Logging.Entry.Level.Warning"))
+    {
+        fdrlog::info(
+            "Triggering book of error condition for deviceName: {}; error : {};",
+            deviceName, errorMessage);
+        // Add book of errors record
+        PropertyVariant val = std::string(""); // No value associated
+        // Use infoID as 'FAULTS'
+        // Use paramID as default 9999 - No params
+        if (!record.componentID.empty())
+        {
+            fdr->BookOfErrorEngine("FAULTS", 9999, record.componentID,
+                                   eventTimestamp, val);
+        }
+        else
+        {
+            fdr->BookOfErrorEngine("FAULTS", 9999, deviceName, eventTimestamp,
+                                   val);
         }
     }
 }
