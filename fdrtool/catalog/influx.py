@@ -151,6 +151,9 @@ class InfluxDBCatalogEntry(CatalogEntry):
       case PROTO_MSG_TYPE.fdr_boot_event:
         pass
 
+      case PROTO_MSG_TYPE.fdr_event_details:
+        pass
+
       case _:
         print("Proto msg format didn't match")
 
