@@ -11,12 +11,12 @@
 
 #pragma once
 
+#include <cstdint>
 #include <map>
 #include <string>
 #include <tuple>
-#include <vector>
 #include <variant>
-#include <cstdint>
+#include <vector>
 
 /**
  * It is a common type used in openbmc DBus services
@@ -31,17 +31,17 @@ using Association = std::tuple<std::string, std::string, std::string>;
  *     It is not expected to use a variable of this type
  **/
 using InvalidMonoState =
-         std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, uint16_t>>>;
+    std::map<uint16_t, std::map<uint16_t, std::map<uint16_t, uint16_t>>>;
 
 /**
  *  Variant type used for Dbus blocking 'get' and 'set' properties
  */
 
 using PropertyVariant =
-    std::variant<InvalidMonoState, bool, uint8_t, int16_t, uint16_t,
-        int32_t, uint32_t, int64_t, uint64_t, double, std::string,
-        std::vector<std::string>, std::vector<Association>, std::tuple<bool, uint32_t>>;
-
+    std::variant<InvalidMonoState, bool, uint8_t, int16_t, uint16_t, int32_t,
+                 uint32_t, int64_t, uint64_t, double, std::string,
+                 std::vector<std::string>, std::vector<Association>,
+                 std::tuple<bool, uint32_t>>;
 
 using RetCoreApi = std::tuple<int, std::string, uint64_t>;
 

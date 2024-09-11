@@ -11,17 +11,20 @@
 
 #pragma once
 
-#include <sdbusplus/bus/match.hpp>
 #include "fdr_logs_schema.pb.h"
-#include "fdr_utils.hpp"
+
 #include "fdr_store.hpp"
+#include "fdr_utils.hpp"
+
+#include <sdbusplus/bus/match.hpp>
 
 // Store section.ID, component.ID and infogroup.ID for book_of_errors
-struct EventRecord {
-  Profile_t* profile; // Profile ref
-  std::string sectionID;   // Ex: GPU
-  std::string componentID; // Ex: GPU0
-  std::string infogroupID; // Ex: Error
+struct EventRecord
+{
+    Profile_t* profile;      // Profile ref
+    std::string sectionID;   // Ex: GPU
+    std::string componentID; // Ex: GPU0
+    std::string infogroupID; // Ex: Error
 };
 
 class EventSignalHandler
@@ -34,21 +37,24 @@ class EventSignalHandler
     std::string eventMember;
     std::unique_ptr<sdbusplus::bus::match_t> eventHandlerMatcher;
     std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>>
-      fdrDeviceEventsWriter;
+        fdrDeviceEventsWriter;
 
     using eventPropertiesType = std::vector<std::pair<
-      std::string, std::vector<std::pair<
-        std::string, std::variant<
-          uint64_t, uint32_t, std::string, bool, std::vector<std::string>>>>>>;
+        std::string,
+        std::vector<std::pair<std::string,
+                              std::variant<uint64_t, uint32_t, std::string,
+                                           bool, std::vector<std::string>>>>>>;
 
     void eventParser(eventPropertiesType&);
     std::string getFDRDeviceName(std::string&);
 
   public:
     EventSignalHandler(
-        std::string eventObjPath,
-        std::string eventIface, std::string eventMember, std::map<std::string,
-          std::pair<std::shared_ptr<FDRStore>, EventRecord>>& fdrDeviceEventsWriter) :
+        std::string eventObjPath, std::string eventIface,
+        std::string eventMember,
+        std::map<std::string,
+                 std::pair<std::shared_ptr<FDRStore>, EventRecord>>&
+            fdrDeviceEventsWriter) :
         eventObjPath(eventObjPath),
         eventIface(eventIface), eventMember(eventMember),
         fdrDeviceEventsWriter(fdrDeviceEventsWriter)

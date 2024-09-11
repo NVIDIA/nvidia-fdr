@@ -9,13 +9,17 @@
 *
 */
 
-#include "fdr_log.hpp"
 #include "fdr_redfish.hpp"
+
 #include "fdr_http.hpp"
+#include "fdr_log.hpp"
 
 using json = nlohmann::json;
 
-RedfishClient::RedfishClient(const std::string &prefix, const std::string &user, const std::string &password) : prefix(prefix), user(user), password(password)
+RedfishClient::RedfishClient(const std::string& prefix, const std::string& user,
+                             const std::string& password) :
+    prefix(prefix),
+    user(user), password(password)
 {
     this->httpc = new (HttpClient);
 
@@ -29,7 +33,6 @@ RedfishClient::RedfishClient(const std::string &prefix, const std::string &user,
 
 RedfishClient::~RedfishClient()
 {
-
     if (!this->token.empty())
     {
         this->logout();
@@ -42,7 +45,6 @@ RedfishClient::~RedfishClient()
 
 void RedfishClient::login()
 {
-
     std::map<std::string, std::string> headers = {
         {"Content-Type", "application/json"},
     };
@@ -53,11 +55,13 @@ void RedfishClient::login()
     };
     std::string payload = content.dump();
 
-    HttpResponse rsp = this->httpc->post(this->prefix + "/login", &headers, &payload);
+    HttpResponse rsp = this->httpc->post(this->prefix + "/login", &headers,
+                                         &payload);
 
     if (rsp.status_code != 200)
     {
-        fdrlog::warn("RedfishClient::login() error, status code: {} body: {}", rsp.status_code, rsp.body);
+        fdrlog::warn("RedfishClient::login() error, status code: {} body: {}",
+                     rsp.status_code, rsp.body);
         throw HttpException(rsp.status_code, rsp.body);
     }
 
@@ -70,7 +74,6 @@ void RedfishClient::login()
     }
     else
     {
-
         throw std::runtime_error("RedfishClient::login() got invalid token");
     }
 }
@@ -82,9 +85,10 @@ void RedfishClient::logout()
     {
         rsp = this->httpc->post(this->prefix + "/logout", nullptr, nullptr);
     }
-    catch (const HttpException &e)
+    catch (const HttpException& e)
     {
-        fdrlog::warn("RedfishClient::logout() Error Code: {}, message: {}", e.code, e.what());
+        fdrlog::warn("RedfishClient::logout() Error Code: {}, message: {}",
+                     e.code, e.what());
     }
 
     // 200: successfully logout
@@ -92,11 +96,12 @@ void RedfishClient::logout()
     // other status code might indicate some problem
     if (rsp.status_code != 200 || rsp.status_code != 401)
     {
-        fdrlog::warn("RedfishClient::logout() Error Code: {}, body: {}", rsp.status_code, rsp.body);
+        fdrlog::warn("RedfishClient::logout() Error Code: {}, body: {}",
+                     rsp.status_code, rsp.body);
     }
 }
 
-std::string RedfishClient::query(const std::string &uri)
+std::string RedfishClient::query(const std::string& uri)
 {
     std::map<std::string, std::string> headers;
     if (this->need_login())
@@ -145,7 +150,7 @@ std::string RedfishClient::query(const std::string &uri)
     }
 }
 
-json RedfishClient::query_json(const std::string &uri)
+json RedfishClient::query_json(const std::string& uri)
 {
     json j; // null object by default
     std::string result = this->query(uri);
@@ -158,10 +163,13 @@ json RedfishClient::query_json(const std::string &uri)
     {
         j = json::parse(result);
     }
-    catch (json::parse_error &e)
+    catch (json::parse_error& e)
     {
-        fdrlog::warn("RedfishClient::query_json(): error parsing json at byte {} from input: {}", e.byte, result);
-        fdrlog::debug("RedfishClient::query_json(): return default value std::string");
+        fdrlog::warn(
+            "RedfishClient::query_json(): error parsing json at byte {} from input: {}",
+            e.byte, result);
+        fdrlog::debug(
+            "RedfishClient::query_json(): return default value std::string");
 
         return "";
     }
@@ -169,7 +177,8 @@ json RedfishClient::query_json(const std::string &uri)
     return j;
 }
 
-std::string RedfishClient::query_string(const std::string &uri, const std::string &json_pointer)
+std::string RedfishClient::query_string(const std::string& uri,
+                                        const std::string& json_pointer)
 {
     if ((json_pointer == "") || (json_pointer == "/"))
     {
@@ -195,40 +204,48 @@ std::string RedfishClient::query_string(const std::string &uri, const std::strin
         return val.dump();
     }
 
-    fdrlog::warn("Val({}) at {} is not string, return default value std::string{{}}", val.dump(), json_pointer);
+    fdrlog::warn(
+        "Val({}) at {} is not string, return default value std::string{{}}",
+        val.dump(), json_pointer);
     return "";
 }
 
-uint64_t RedfishClient::query_uint64t(const std::string &uri, const std::string &json_pointer)
+uint64_t RedfishClient::query_uint64t(const std::string& uri,
+                                      const std::string& json_pointer)
 {
-
     json j = this->query_json(uri);
 
     auto val = j.at(json::json_pointer(json_pointer));
     // if number < 0 (minus mark in json), it's signed
-    // if number >= 0, it could be singed or unsigned, no way to distinguish them
+    // if number >= 0, it could be singed or unsigned, no way to distinguish
+    // them
     if (val.is_number_unsigned())
     {
         return val.get<uint64_t>();
     }
 
-    fdrlog::warn("Val({}) at {} is not unsigned int, return default value uint64_t{{0}}", val.dump(), json_pointer);
+    fdrlog::warn(
+        "Val({}) at {} is not unsigned int, return default value uint64_t{{0}}",
+        val.dump(), json_pointer);
     return uint64_t{0};
 }
 
-int64_t RedfishClient::query_int64t(const std::string &uri, const std::string &json_pointer)
+int64_t RedfishClient::query_int64t(const std::string& uri,
+                                    const std::string& json_pointer)
 {
-
     json j = this->query_json(uri);
 
     auto val = j.at(json::json_pointer(json_pointer));
     // if number < 0(minus mark in json), it's signed
-    // if number >= 0, it could be singed or unsigned, no way to distinguish them
+    // if number >= 0, it could be singed or unsigned, no way to distinguish
+    // them
     if (val.is_number_integer())
     {
         return val.get<int64_t>();
     }
 
-    fdrlog::warn("Val({}) at {} is not a integer number, return default value int64_t{{0}} ", val.dump(), json_pointer);
+    fdrlog::warn(
+        "Val({}) at {} is not a integer number, return default value int64_t{{0}} ",
+        val.dump(), json_pointer);
     return int64_t{0};
 }
