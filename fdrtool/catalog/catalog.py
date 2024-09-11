@@ -17,7 +17,7 @@ import google.protobuf.json_format as protobuf_json_format
 logging.basicConfig(level=logging.INFO)
 import traceback
 from enum import Enum
-from exception import FileNotFound
+from exception import FileNotFound, VersionMisMatch
 import copy
 
 # Import third-party library modules
@@ -93,7 +93,7 @@ class Catalog:
     for entry in self.CatalogEntries[PROTO_MSG_TYPE.fdr_boot_event.name]:
       for message in entry.messages:
         message_dict = entry.GetMessageDict(message)
-        version_number = message_dict.get('DataDirFormatVersion')
+        version_number = str(message_dict.get('DataDirFormatVersion'))
         if version_number != '2':
           raise VersionMisMatch("Version of the fdr-dump is not matching with the FDRTool.")
         else:
@@ -328,11 +328,16 @@ class CatalogEntry:
       self.msg_type = PROTO_MSG_TYPE.fdr_sample
 
 
-  def FindTablename(self):
+  def FindTablename(self, db_type):
     tablename = None
     self.paramClass = ""
     if self.msg_type == PROTO_MSG_TYPE.fdr_stat or self.msg_type == PROTO_MSG_TYPE.fdr_sample:
-      tablename_prefix = 'ST' if self.msg_type == PROTO_MSG_TYPE.fdr_stat else 'VT'
+      tablename_prefix = (
+        'PST' if db_type == 'SQLITE' and self.msg_type == PROTO_MSG_TYPE.fdr_stat else
+        'PVT' if db_type == 'SQLITE' else
+        'ST' if self.msg_type == PROTO_MSG_TYPE.fdr_stat else
+        'VT'
+      )
       tablename_suffix = '_{}'.format(self.compID) if self.compID else ''
       tablename = '{}_{}_{}{}'.format(tablename_prefix, self.paramClass, self.compClass, tablename_suffix)
     elif self.msg_type == PROTO_MSG_TYPE.fdr_params:

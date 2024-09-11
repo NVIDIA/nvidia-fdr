@@ -78,7 +78,7 @@ class InfluxDBCatalogEntry(CatalogEntry):
     super().__init__(filepath, ParamIDClassDict, ParamIDNameDict)
     self.ParamIDClassDict = ParamIDClassDict
     self.ParamIDNameDict = ParamIDNameDict
-    self.tablename = self.FindTablename()
+    self.tablename = self.FindTablename(db_type='INFLUX')
     
   def UpdateTableName(self, param_class):
     if "_" in self.tablename:
