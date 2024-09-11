@@ -11,14 +11,16 @@
 
 #pragma once
 
-#include <iostream>
-#include <nlohmann/json.hpp>
 #include "fdr_http.hpp"
+
+#include <nlohmann/json.hpp>
+
+#include <iostream>
 
 class RedfishClient
 {
-private:
-    HttpClient *httpc;
+  private:
+    HttpClient* httpc;
 
     std::string prefix;
     // user and password are optional
@@ -36,18 +38,23 @@ private:
     void login();
     void logout();
 
-    nlohmann::json query_json(const std::string &uri);
+    nlohmann::json query_json(const std::string& uri);
 
-public:
-    RedfishClient(const std::string &prefix, const std::string &user = std::string{}, const std::string &password = std::string{});
+  public:
+    RedfishClient(const std::string& prefix,
+                  const std::string& user = std::string{},
+                  const std::string& password = std::string{});
     ~RedfishClient();
 
     // query the entire json document
-    std::string query(const std::string &uri);
+    std::string query(const std::string& uri);
 
     // query part of the json document with json_pointer
     // see also https://json.nlohmann.me/features/json_pointer/
-    std::string query_string(const std::string &uri, const std::string &json_pointer);
-    std::uint64_t query_uint64t(const std::string &uri, const std::string &json_pointer);
-    std::int64_t query_int64t(const std::string &uri, const std::string &json_pointer);
+    std::string query_string(const std::string& uri,
+                             const std::string& json_pointer);
+    std::uint64_t query_uint64t(const std::string& uri,
+                                const std::string& json_pointer);
+    std::int64_t query_int64t(const std::string& uri,
+                              const std::string& json_pointer);
 };

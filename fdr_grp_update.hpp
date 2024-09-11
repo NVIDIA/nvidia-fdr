@@ -11,18 +11,18 @@
 
 #pragma once
 
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 
-
-// List of records which belong to the same FetchMethod 
-//  Group Key and Records 
+// List of records which belong to the same FetchMethod
+//  Group Key and Records
 #define GROUP_KEY_METHOD_POS 0
 #define GROUP_KEY_NAMESPACE_POS 1
-#define MIN_GROUP_KEY_SIZE   2
+#define MIN_GROUP_KEY_SIZE 2
 
-class FdrGrpUpdate {
-  public: 
-  static void RefreshAndStore(const std::vector<std::string>& keys,
-                      const std::vector<Record *>& records);
+class FdrGrpUpdate
+{
+  public:
+    static void RefreshAndStore(const std::vector<std::string>& keys,
+                                const std::vector<Record*>& records);
 };

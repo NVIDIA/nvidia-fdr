@@ -10,11 +10,11 @@
 */
 
 #pragma once
+#include "fdr_common.hpp"
 #include "property_variant.hpp"
 
-#include <sdbusplus/bus.hpp>
 #include <sdbusplus/asio/object_server.hpp>
-#include "fdr_common.hpp"
+#include <sdbusplus/bus.hpp>
 
 namespace dbus
 {
@@ -55,13 +55,21 @@ std::string getService(const std::string& objectPath,
  * @param property
  * @return the value based on std::variant
  */
-PropertyVariant readDbusProperty(const std::string& service, const std::string& objPath, const std::string& interface, const std::string& property);
+PropertyVariant readDbusProperty(const std::string& service,
+                                 const std::string& objPath,
+                                 const std::string& interface,
+                                 const std::string& property);
 
-RetCoreApi readDbusDGDProperty(const std::string& service, const std::string& objPath, const std::string& interface, const std::string& property, const std::int64_t& devId);
+RetCoreApi readDbusDGDProperty(const std::string& service,
+                               const std::string& objPath,
+                               const std::string& interface,
+                               const std::string& property,
+                               const std::int64_t& devId);
 
-PassthroughFPGA readDbusPTProperty(const std::string& service, const std::string& objPath, 
-                                 const std::string& interface, const uint8_t& opcode,
-                                 const std::uint8_t& arg1, const std::uint8_t& arg2);
+PassthroughFPGA
+    readDbusPTProperty(const std::string& service, const std::string& objPath,
+                       const std::string& interface, const uint8_t& opcode,
+                       const std::uint8_t& arg1, const std::uint8_t& arg2);
 
 /**
  * @brief setDbusProperty() sets a value for a Dbus property
