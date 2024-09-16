@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "fdr_policy.hpp"
+
 class PPFSanity
 {
   private:
