@@ -7,6 +7,10 @@ F_NAME_TEMPLATE=""
 FDR_LOG_PATH="/var/emmc/fdr/"
 TAR_BLOCK_SZ="512"
 LIVE_DATA_BUFFER="10240"
+# ~90% of 44 mins. Rest of the time will be used in creating the tar
+FILE_ADDITION_TIME_LIMIT=2340
+script_start_time=$(date +%s)
+STOP_FILE_ADDITION=0
 
 # Script arguments
 ARG_DUMP_ID="00000000"
@@ -96,6 +100,12 @@ function check_size_and_add()
     #     echo "[INFO] Size exceeded the limit!! Cannot add: $FILE_NAMES"
     #     return 1
     # fi
+
+    if (( STOP_FILE_ADDITION == 1 )); then
+        echo "Skipping file addition due to time constraints."
+        return
+    fi
+
     for file in $FILE_NAMES; do
         # echo "[INFO] check_size_and_add ${file}"
         local file_size=$(du -cb $file | tail -n 1 | cut -d$'\t' -f 1)
@@ -109,6 +119,13 @@ function check_size_and_add()
             final_files+=($file)
             count_of_files=$(( count_of_files + 1 ))
             echo "[INFO] Added $file, Current dump size: $current_dump_size"
+        fi
+        script_current_time=$(date +%s)
+        script_elapsed_time=$((script_current_time - script_start_time))
+        if ((script_elapsed_time >= FILE_ADDITION_TIME_LIMIT)); then
+            echo "Time Limit for file addition reached its limit:$script_elapsed_time seconds Script will not add any more data for tar"
+            STOP_FILE_ADDITION=1
+            return
         fi
     done
     return 0
@@ -205,6 +222,18 @@ function main()
     create_manifest_file
     check_size_and_add $MANIFEST_FILE
 
+    # Add journalctl -u 'nvidia-fdr' output to the dump
+    JOURNALCTL_OUTPUT_FILENAME="journalctl_u_nvidia-fdr.output"
+    # Can also use: --since "-2 day"
+    journalctl --since yesterday -u 'nvidia-fdr' &> ${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}
+    check_size_and_add "${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}"
+
+
+    # Add the PPF yaml file
+    FDR_PPF_FILE_PATH="/etc/nvidia-fdr/platforms/fdr_ppf_*"
+    cp $FDR_PPF_FILE_PATH $FDR_LOG_DIR_BASE_NAME/
+    check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$(basename "$FDR_PPF_FILE_PATH")"
+
     # Collecting all the required directory names, that are within the time range
     files=$(ls -1 $FDR_LOG_PATH)
     for file_name in $files; do
@@ -270,19 +299,6 @@ function main()
         fi
         echo
     done
-
-
-    # Add journalctl -u 'nvidia-fdr' output to the dump
-    JOURNALCTL_OUTPUT_FILENAME="journalctl_u_nvidia-fdr.output"
-    # Can also use: --since "-2 day"
-    journalctl --since yesterday -u 'nvidia-fdr' &> ${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}
-    check_size_and_add "${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}"
-
-
-    # Add the PPF yaml file
-    FDR_PPF_FILE_PATH="/etc/nvidia-fdr/platforms/fdr_ppf_*"
-    cp $FDR_PPF_FILE_PATH $FDR_LOG_DIR_BASE_NAME/
-    check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$(basename "$FDR_PPF_FILE_PATH")"
     
     echo "[INFO] Estimated tar size:" $(( current_dump_size ))
     echo 
