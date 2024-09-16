@@ -24,17 +24,18 @@ GeneralConfig:
   LogsFormat: BINARY
   LogsBasePath: &LogsBasePath
   - /var/emmc/fdr/
-  PartitionThresoldCheckMB: 1536
-  CompactionWindowSecs: 86400
-  CompactionSubWindowSecs: 1800
-  HiFiDataPreserveTimeSecs: 300
-  DefaultCompactionSensors:
+  PartitionThresoldCheckMB: 1536 # emmc Partition threshold size check [if available space < 1.5 GB, then exit FDR]
+  CompactionWindowSecs: 86400 # 1 day, every day new directory is created
+  CompactionSubWindowSecs: 1800 # .5 hours, every 30 minutes stats are appended
+  HiFiDataPreserveTimeSecs: 300 # 5 minutes, <-5 minutes ---Error--- +5 minutes> so total 10 minutes worth of entires
+  DefaultCompactionSensors: &compaction-definition-sensors
     RecordRetentionPolicy: Recreate
     CompactionMethod: Average
+
   Events:
     ObjectPath: /xyz/openbmc_project/logging
     Interface: org.freedesktop.DBus.ObjectManager
-    Member: InterfacesAdded
+    Member: InterfacesAdded   
   Threshold: 300
   Checks:
   - ID: CheckDumpDirMount
@@ -5887,6 +5888,8 @@ GPU: &gpu
       StoreFreqSecs: 10
       StorePolicy: OnChange
 
+    
+
   - ID: Sensor.Clock
     InfoList:
     - ID: CURR-CLK-GFX
@@ -5947,6 +5950,9 @@ GPU: &gpu
       StoreFreqSecs: 600
       StorePolicy: OnChange
           #NA OOFB
+
+    <<: *compaction-definition-sensors
+
   - ID: Sensor.Other
     InfoList:
     - ID: UTIL-SM-TIME-TOTAL
@@ -7286,6 +7292,8 @@ GPU: &gpu
       ParamID: 488
       StoreFreqSecs: 600
       StorePolicy: OnChange
+    
+    <<: *compaction-definition-sensors
 
   - ID: Sensor.Power
     InfoList:
@@ -7330,6 +7338,8 @@ GPU: &gpu
       ParamID: 491
       StoreFreqSecs: 10
       StorePolicy: OnChangec
+    
+    <<: *compaction-definition-sensors
 
   - ID: Sensor.Thermal
     InfoList:
@@ -7404,6 +7414,8 @@ GPU: &gpu
       StoreFreqSecs: 10
       StorePolicy: OnChange
 
+    <<: *compaction-definition-sensors  
+
   - ID: Sensor.Voltage
     InfoList:
     - ID: VOLTAGE
@@ -7419,6 +7431,8 @@ GPU: &gpu
       ParamID: 497
       StoreFreqSecs: 10
       StorePolicy: OnChange
+
+    <<: *compaction-definition-sensors
 
   - ID: Specs
     InfoList:
@@ -12652,6 +12666,8 @@ NVSwitch: &nvswitch
       ParamID: 293
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    
+    <<: *compaction-definition-sensors
 
   - ID: Specs
     InfoList:
@@ -34723,6 +34739,8 @@ Baseboard: &baseboard
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
+    <<: *compaction-definition-sensors
+
   - ID: Sensor.Pressure
     InfoList:
     - ID: ALT-PRESSURE
@@ -34739,6 +34757,7 @@ Baseboard: &baseboard
       ParamID: 29
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    <<: *compaction-definition-sensors
 
   - ID: Sensor.Thermal
     InfoList:
@@ -34773,10 +34792,6 @@ Baseboard: &baseboard
       StoreFreqSecs: 10
       StorePolicy: OnChange
 
-  - ID: Sensor.Thermal
-    InfoList:
-
-
     - ID: HEALTH
       DataType: Text
       DbusParams:
@@ -34804,6 +34819,7 @@ Baseboard: &baseboard
       ParamID: 33
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    <<: *compaction-definition-sensors
 
 HMC: &hmc
   Params:
@@ -34915,6 +34931,7 @@ HMC: &hmc
       ParamID: 6
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    <<: *compaction-definition-sensors
 
   - ID: Status
     InfoList:
@@ -35003,6 +35020,8 @@ FPGA: &fpga
       StoreFreqSecs: 10
       StorePolicy: OnChange
 
+    <<: *compaction-definition-sensors
+
   - ID: Specs
     InfoList:
 
@@ -35076,6 +35095,7 @@ PCIeSwitch: &pcieswitch
       ParamID: 1
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    <<: *compaction-definition-sensors
 
 
   - ID: Config
@@ -35157,6 +35177,7 @@ PCIeSwitch: &pcieswitch
       ParamID: 4
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    <<: *compaction-definition-sensors
 
 PCIeRetimer: &retimer
   Params:
@@ -35178,6 +35199,7 @@ PCIeRetimer: &retimer
       ParamID: 5
       StoreFreqSecs: 10
       StorePolicy: OnChange
+    <<: *compaction-definition-sensors
 
   - ID: Status
     InfoList:
@@ -35402,6 +35424,39 @@ HSC: &hsc
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
+  - ID: Sensor.Thermal
+    InfoList:
+
+    - ID: TEMP-GB-HSC
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_HSC_$hscid_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 14
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+
+    - ID: TEMP-GB-HSC-STBY
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_StandbyHSC_$hscid_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 15
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+
+    <<: *compaction-definition-sensors
+
   - ID: Sensor.Power
     InfoList:
 
@@ -35433,36 +35488,8 @@ HSC: &hsc
       StoreFreqSecs: 10
       StorePolicy: OnChange
 
-  - ID: Sensor.Thermal
-    InfoList:
+    <<: *compaction-definition-sensors
 
-    - ID: TEMP-GB-HSC
-      DataType: Uint64
-      DbusParams:
-        Interface: xyz.openbmc_project.Sensor.Value
-        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_HSC_$hscid_Temp_0
-        Property: Value
-        Service: xyz.openbmc_project.NSM
-      FetchFreqSecs: 10
-      FetchMethod: DBUS
-      FetchType: Poll
-      ParamID: 14
-      StoreFreqSecs: 10
-      StorePolicy: OnChange
-
-    - ID: TEMP-GB-HSC-STBY
-      DataType: Uint64
-      DbusParams:
-        Interface: xyz.openbmc_project.Sensor.Value
-        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_Chassis_0_StandbyHSC_$hscid_Temp_0
-        Property: Value
-        Service: xyz.openbmc_project.NSM
-      FetchFreqSecs: 10
-      FetchMethod: DBUS
-      FetchType: Poll
-      ParamID: 15
-      StoreFreqSecs: 10
-      StorePolicy: OnChange
 
 
 Sections:
