@@ -10,6 +10,7 @@
 */
 
 #include "fdr_events.hpp"
+#include "fdr_policy.hpp"
 
 #include "fdr.hpp"
 #include "fdr_log.hpp"
