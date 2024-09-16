@@ -9,11 +9,13 @@
 *
 */
 
-#include <iostream>
-#include "fdr.hpp"
-#include "property_variant.hpp"
 #include "fdr_events.hpp"
+
+#include "fdr.hpp"
 #include "fdr_log.hpp"
+#include "property_variant.hpp"
+
+#include <iostream>
 
 /** @brief Helper to fetch device id from device name */
 std::string getDeviceId(const std::string& deviceName)
