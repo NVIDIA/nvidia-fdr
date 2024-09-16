@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include "fdr_record.cpp"
+
 #include <string>
 #include <unordered_map>
 #include <vector>
