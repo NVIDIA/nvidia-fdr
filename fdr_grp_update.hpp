@@ -15,6 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "fdr_record.hpp"
+
 // List of records which belong to the same FetchMethod
 //  Group Key and Records
 #define GROUP_KEY_METHOD_POS 0
