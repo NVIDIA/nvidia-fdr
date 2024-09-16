@@ -11,11 +11,11 @@
 
 #pragma once
 
+#include "fdr_policy.hpp"
+
 #include <map>
 #include <string>
 #include <vector>
-
-#include "fdr_policy.hpp"
 
 class PPFSanity
 {

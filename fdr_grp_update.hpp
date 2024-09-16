@@ -11,11 +11,11 @@
 
 #pragma once
 
-#include "fdr_record.cpp"
-
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "fdr_record.cpp"
 
 // List of records which belong to the same FetchMethod
 //  Group Key and Records
