@@ -9,17 +9,20 @@
 *
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-#include <string>
-#include <exception>
+#include "ppf_sanity.hpp"
+
 #include "yaml-cpp/yaml.h" //yaml-cpp lib used for parsing input (yaml) files
 
 #include "fdr_common.hpp"
-#include "fdr_policy.hpp"
-#include "ppf_sanity.hpp"
 #include "fdr_log.hpp"
+#include "fdr_policy.hpp"
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <exception>
+#include <iostream>
+#include <string>
 
 // Sanity check the Platform Profile File [PPF]
 int PPFSanity::SanityTestPPF(const std::string PPFName)

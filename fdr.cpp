@@ -903,8 +903,8 @@ void FlightDataRecorder_c::StoreSubscribeRecords(
 
 // create a hidden empty file /tmp/.fdrHmcAlive, if it not exist. This file will
 // be used to determine whether this fdr instance is due to HMC boot or fdr
-// instance restart. In case of HMC reboot: 		Since HMC is an Embedded system, any
-// content written to /tmp directory
+// instance restart. In case of HMC reboot: 		Since HMC is an Embedded
+// system, any content written to /tmp directory
 //      will be erased after reboot, as it have only ramfs and not have backing
 //      disk.
 // In case of fdr restart:
@@ -913,10 +913,11 @@ void FlightDataRecorder_c::StoreSubscribeRecords(
 // 		* Since its only a service in HMC, restart of HMC wont erase the content
 // of /tmp
 // 		* with this infra, fdr will identify itself, whether the restart of fdr
-// is due 		  to HMC reboot or fdr restart[due to any malfunction or crash or config
-// change, etc]
+// is due 		  to HMC reboot or fdr restart[due to any malfunction or crash
+// or config change, etc]
 // 		* This way of identifying the fdr instance restart is required to get
-// the correct 		  boot counter maintained as per the BootEventLog.dat file NOTE:
+// the correct 		  boot counter maintained as per the BootEventLog.dat file
+// NOTE:
 // 1. This way of identifying the fdr restart will work fine only in HMC[as /tmp
 // directory 	  content is cleared on every reboot of HMC]
 // 2. This wont work in Host, where /tmp is backed with actual disk and the /tmp

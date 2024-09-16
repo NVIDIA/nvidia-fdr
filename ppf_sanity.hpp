@@ -11,6 +11,12 @@
 
 #pragma once
 
+#include "fdr_policy.hpp"
+
+#include <map>
+#include <string>
+#include <vector>
+
 class PPFSanity
 {
   private:

@@ -13,6 +13,7 @@
 
 #include "fdr_logs_schema.pb.h"
 
+#include "fdr_policy.hpp"
 #include "fdr_store.hpp"
 #include "fdr_utils.hpp"
 
