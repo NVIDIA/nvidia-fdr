@@ -272,3 +272,47 @@ int64_t LeakyBucket::Add(int64_t amount)
 
     return amount;
 }
+
+namespace systemUtils
+{
+
+bool checkEnvValue(const std::string& var_name,
+                   const std::string& expected_value)
+{
+    std::string command = "fw_printenv " + var_name;
+    char buffer[128];
+    std::string result;
+
+    // Open the pipe to execute the fw_printenv command
+    FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe)
+    {
+        fdrlog::error("Error: Failed to run command: {}", command);
+        return false;
+    }
+
+    // Read the output of the command
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
+    {
+        result += buffer;
+    }
+
+    if (pipe)
+    {
+        pclose(pipe);
+    }
+
+    // Check if the command's output contains the expected value
+    std::string search_value = var_name + "=" + expected_value;
+    if (result.find(search_value) == std::string::npos)
+    {
+        fdrlog::error("Error: Variable not found or value mismatch. Output: {}",
+                      result);
+        return false;
+    }
+
+    // If everything went well, return true
+    return true;
+}
+
+} // namespace systemUtils

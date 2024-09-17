@@ -400,7 +400,33 @@ if [ $ARG_DUMP_ACTION == "clean" ]; then
         echo "Failed to clean $FDR_LOG_PATH"
         exit 1
     fi
+    # Next restart of the service should be clean 
+    systemctl reset-failed nvidia-fdr.service
 
+    exit 0
+fi
+
+if [ $ARG_DUMP_ACTION == "genbirthcert" ]; then
+
+    # No-op when cert is already present 
+    FILE="/var/emmc/fdr/Bookkeeper/BirthCertificate.tar"
+    if [ -f "$FILE" ]; then
+        echo "Birt Cert is already present No action required"
+        exit 1
+    else
+        systemctl stop nvidia-fdr.service 
+        # Next restart of the service should be clean 
+        systemctl reset-failed nvidia-fdr.service
+
+        fw_setenv nvidiaFdrAction gen-birth-cert
+        if [ $? -ne 0 ]; then
+            echo "Failed fw_setenv nvidiaFdrAction gen-birth-cert"
+        fi
+        echo "Requesting generation of new Birth Cert using gen-birth-cert env"
+        # cert will generated in the next restart 
+        systemctl start nvidia-fdr.service
+    fi
+    
     exit 0
 fi
 
