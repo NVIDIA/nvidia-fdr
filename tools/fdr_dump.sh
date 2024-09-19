@@ -20,6 +20,7 @@ ARG_DUMP_START="0"
 ARG_DUMP_END=$EPOCHTIME
 ARG_DUMP_MAX_SIZE="1000000000"
 ARG_EXTENDED_SOURCE=""
+file_cnt_limit=20000
 
 function help()
 {
@@ -116,9 +117,10 @@ function check_size_and_add()
             return 1
         else
             current_dump_size=$(( current_dump_size + record_size ))
-            final_files+=($file)
-            count_of_files=$(( count_of_files + 1 ))
-            echo "[INFO] Added $file, Current dump size: $current_dump_size"
+            if [ "${#final_files[@]}" -lt "$file_cnt_limit" ]; then
+                final_files+=($file)
+                count_of_files=$(( count_of_files + 1 ))
+            fi
         fi
         script_current_time=$(date +%s)
         script_elapsed_time=$((script_current_time - script_start_time))
