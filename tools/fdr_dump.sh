@@ -142,7 +142,7 @@ function create_manifest_file()
     echo -e "Dump file name: $DEST_DUMP_FILE" >> $MANIFEST_FILE
 
     # HMC-BRD-SERIAL
-    command="busctl get-property xyz.openbmc_project.GpuMgr /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0/Assembly0 xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber"
+    command="busctl get-property xyz.openbmc_project.EntityManager /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0 xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber"
     echo -e "HMC-BRD-SERIAL: $( $command )" >> $MANIFEST_FILE
 
     # HMC-FW-VER
@@ -151,7 +151,7 @@ function create_manifest_file()
 
     # GPU SXM SN; TODO: Number of GPUs should not be hard coded.
     for gpuid in {1..8}; do
-        command="busctl get-property xyz.openbmc_project.GpuMgr /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber"
+        command="busctl get-property xyz.openbmc_project.NSM /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber"
         echo -e "GPU SXM $gpuid SerialNumber: $( $command )" >> $MANIFEST_FILE
     done
 
