@@ -1,0 +1,19 @@
+# List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
+# Platform: hgxb_hmc
+
+TGUID:
+  - GPU-XID-LOGS
+  - NVSWITCH-PORTS-CONNECTED
+  - GPU-SYMBOL-ERROR
+  - PCIERETIMER-DOWNLINK-HEALTH
+  - PCIERETIMER-UPLINK-HEALTH
+  - GPU-HEALTH-ROLLUP
+  - FPGA-HEALTH-ROLLUP
+  - HMC-HEALTH-ROLLUP
+  - BASEBOARD-HEALTH-ROLLUP
+  - PCIERETIMER-HEALTH
+  - PCIERETIMER-HEALTH-ROLLUP
+  - PCIERETIMER-LOGS
+ 
+ParamClass:
+  - Specs
