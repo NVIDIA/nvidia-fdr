@@ -308,7 +308,7 @@ int FlightDataRecorder_c::CheckCompactionSubWindowExpiry(
             profile.GeneralConfig.CompactionSubWindowSecs ||
         mainWindowCompactStatus == FDR_SUCCESS)
     {
-        fdrlog::debug(
+        fdrlog::info(
             "======================sub window timer expired======================");
 
         // check and exit fdr if disk availability is less.
@@ -356,7 +356,7 @@ void FlightDataRecorder_c::CompactorGetLeastAndFarTimestamp(
     }
     else
     {
-        fdrlog::debug(
+        fdrlog::info(
             "CompactorGetLeastAndFarTimestamp: directory timestamp: {}",
             splittedList[3]);
         leastWindowTimestamp = std::strtoull(splittedList[3].c_str(), &endPtr,
@@ -365,7 +365,7 @@ void FlightDataRecorder_c::CompactorGetLeastAndFarTimestamp(
         {
             farWindowTimestamp = leastWindowTimestamp +
                                  profile.GeneralConfig.CompactionWindowSecs;
-            fdrlog::debug(
+            fdrlog::info(
                 "CompactorGetLeastAndFarTimestamp: Converted leastWindowTimestamp: {}, farWindowTimestamp: {}",
                 leastWindowTimestamp, farWindowTimestamp);
         }
@@ -851,13 +851,13 @@ std::string
         {
             directoryTocompact = readrec.compactdirectory();
         }
-        fdrlog::debug(
+        fdrlog::info(
             "CompactorGetDirectoryToCompact: dirCounter: {}; CompactDirectory: {}",
             dirCounter, readrec.compactdirectory());
 
         if (dirCounter >= numberOfDirToLook)
         {
-            fdrlog::debug(
+            fdrlog::info(
                 "CompactorGetDirectoryToCompact: dirCounter reached. directoryTocompact: {}",
                 directoryTocompact);
             break;
