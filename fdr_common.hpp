@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "fdr_log.hpp"
 #include "fdr_policy.hpp"
 
 #include <stdlib.h>
@@ -148,4 +149,10 @@ inline std::vector<std::string> splitGroupFetchKeys(const std::string& groupKey)
     result.push_back(groupKey.substr(start));
 
     return result;
+}
+
+namespace systemUtils
+{
+bool checkEnvValue(const std::string& var_name,
+                   const std::string& expected_value);
 }

@@ -754,23 +754,39 @@ void FlightDataRecorder_c::CollectAndArchieveBirthCertificate(void)
     // 2. create the birth certificate archieve, if not already present
     if (!(std::filesystem::exists(birthCertFilePath)))
     {
-        std::string fdrDumpPath = profile.GeneralConfig.LogsBasePath;
-        std::string commandStr =
-            "find " + fdrDumpPath +
-            " | grep -e .others.dat -e Bookkeeper | xargs tar -cJf " +
-            birthCertFilePath;
-
-        // fdrlog::debug("CollectAndArchieveBirthCertificate: tarCmd: {},
-        // commandStr);
-        CommandResult_t cmdResult = exec(commandStr.c_str());
-        if (cmdResult.cmdExitstatus != FDR_SUCCESS)
+        if (systemUtils::checkEnvValue("nvidiaFdrAction", "gen-birth-cert"))
         {
-            fdrlog::warn("tarCmd command Failed: {}, cmdExitstatus: {}",
-                         commandStr, cmdResult.cmdExitstatus);
+            std::string fdrDumpPath = profile.GeneralConfig.LogsBasePath +
+                                      GetDirectoryName();
+            std::string bookKeeperPath = profile.GeneralConfig.LogsBasePath +
+                                         CommonFdrKeepersDirName;
+
+            std::string commandStr =
+                "find  " + fdrDumpPath +
+                " -type f -name *others.dat | xargs tar -cJf " +
+                birthCertFilePath + " " + bookKeeperPath;
+
+            fdrlog::info("CollectAndArchieveBirthCertificate: tarCmd: {}",
+                         commandStr);
+            CommandResult_t cmdResult = exec(commandStr.c_str());
+            if (cmdResult.cmdExitstatus != FDR_SUCCESS)
+            {
+                fdrlog::warn("tarCmd command Failed: {}, cmdExitstatus: {}",
+                             commandStr, cmdResult.cmdExitstatus);
+            }
+            fdrlog::info(
+                "CollectAndArchieveBirthCertificate: Successfully created Birth certificate: {}",
+                birthCertFilePath);
+
+            // clean env
+            commandStr = "fw_setenv nvidiaFdrAction";
+            cmdResult = exec(commandStr.c_str());
+            if (cmdResult.cmdExitstatus != FDR_SUCCESS)
+            {
+                fdrlog::error("exec command Failed: {}, cmdExitstatus: {}",
+                              commandStr, cmdResult.cmdExitstatus);
+            }
         }
-        fdrlog::debug(
-            "CollectAndArchieveBirthCertificate: Successfully created Birth certificate: {}",
-            birthCertFilePath);
     }
     else
     {
