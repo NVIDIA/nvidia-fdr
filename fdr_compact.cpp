@@ -420,7 +420,7 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(
             }
             else
             {
-                fdrlog::warn(
+                fdrlog::debug(
                     "CompactorCreateHighFidelityFiles: Falied to Delete older destination file: {}",
                     destHighFidelityLogile);
             }
