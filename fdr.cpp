@@ -347,7 +347,7 @@ int FlightDataRecorder_c::CheckAvailableFdrPartitionDiskSize(void)
         std::filesystem::space_info space = std::filesystem::space(path);
         size_t availableSpaceMB = space.available / ONE_MB;
 
-        // fdrlog::warn("Available space: {} MB", availableSpaceMB);
+        fdrlog::info("Available space: {} MB", availableSpaceMB);
 
         if (availableSpaceMB <= profile.GeneralConfig.PartitionThresoldCheckMB)
         {
@@ -859,7 +859,8 @@ void FlightDataRecorder_c::GroupRefreshAndStore(
         catch (const std::exception& e)
         {
             expt = true;
-            fdrlog::warn("GroupRefreshAndStore(): {}", e.what());
+            fdrlog::warn("GroupRefreshAndStore(): {} for key {}", e.what(),
+                         grp.first);
         }
         catch (...)
         {

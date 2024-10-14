@@ -124,6 +124,15 @@ inline std::string getGroupPollRecordKey(Info_t& info)
 {
     if (info.FetchMethod == "Shmem")
     {
+        if (info.ShmemParams.Namespace.empty())
+        {
+            fdrlog::warn(
+                "getGroupPollRecordKey() Bad shmem parameters {}:{}:{}",
+                info.DbusParams.Interface, info.DbusParams.ObjectPath,
+                info.DbusParams.Property);
+            return std::string();
+        }
+
         auto key = info.FetchMethod + '/' + info.ShmemParams.Namespace;
         return key;
     }

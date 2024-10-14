@@ -266,11 +266,9 @@ void Record::Refresh(bool viaTimerSkipChecks)
             }
             else
             {
-                // fdrlog::warn("DBus read failed: Unknown numerical variant
-                // type: "
-                //          "; ObjectPath: {}; Property: {}",
-                //           info.DbusParams.ObjectPath,
-                //           info.DbusParams.Property);
+                fdrlog::warn(
+                    "DBus read failed: Unknown numerical variant type ObjectPath: {}; Property: {}",
+                    info.DbusParams.ObjectPath, info.DbusParams.Property);
                 return;
             }
         }

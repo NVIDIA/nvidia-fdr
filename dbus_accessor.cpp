@@ -78,7 +78,9 @@ std::string getService(const std::string& objectPath,
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        fdrlog::warn("getService() DBus error: error = {}", e.what());
+        fdrlog::warn(
+            "getService() DBus error: ObPath = {}, intf = {}, error = {}",
+            objectPath, interface, e.what());
     }
     return ret;
 }
@@ -100,8 +102,9 @@ PropertyVariant readDbusProperty(const std::string& service,
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        // fdrlog::warn("readDbusProperty() Failed to get property: error = {}",
-        // e.what());
+        fdrlog::warn(
+            "readDbusProperty() Failed to get property: ObPath = {}, Service = {}, Intf = {}, Property = {}, error = {}",
+            objPath, service, interface, property, e.what());
     }
     return value;
 }
@@ -131,8 +134,9 @@ RetCoreApi readDbusDGDProperty(const std::string& service,
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        // fdrlog::warn("readDbusDGDProperty: Failed to get property: error =
-        // {}", e.what());
+        fdrlog::warn(
+            "readDbusProperty() Failed to get property: error = {} ObPath = {}, Service = {}, Intf = {}, Property = {}",
+            objPath, service, interface, property, e.what());
     }
     auto rc = std::get<int>(response);
     auto data = std::get<std::vector<uint32_t>>(response);
@@ -140,8 +144,8 @@ RetCoreApi readDbusDGDProperty(const std::string& service,
     if (rc != 0)
     {
         fdrlog::warn(
-            "readDbusDGDProperty: bad return: objPath: {}; property: {}; DevId: {}",
-            objPath, property, devId);
+            "readDbusDGDProperty: bad return: objPath: {}; property: {}; DevId: {}, Service = {}, Intf = {}",
+            objPath, property, devId, service, interface);
     }
     else
     {
