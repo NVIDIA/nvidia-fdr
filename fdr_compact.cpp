@@ -391,6 +391,14 @@ void FlightDataRecorder_c::CompactorCreateHighFidelityFiles(
     fs::path directoryPath = profile.GeneralConfig.LogsBasePath + "/" +
                              directoryTocompact + "/";
 
+    if (!(std::filesystem::exists(directoryPath)))
+    {
+        fdrlog::warn(
+            "CompactorCreateHighFidelityFiles directory does not exists!!: {}",
+            directoryPath.string());
+        return;
+    }
+
     // Iterate over the files in the directory
     for (const auto& entry : fs::directory_iterator(directoryPath))
     {
@@ -489,6 +497,14 @@ void FlightDataRecorder_c::CompactorRemoveSamplesLogfiles(
     // Set the directory path
     fs::path directoryPath = profile.GeneralConfig.LogsBasePath + "/" +
                              directoryTocompact + "/";
+
+    if (!(std::filesystem::exists(directoryPath)))
+    {
+        fdrlog::warn(
+            "CompactorRemoveSamplesLogfiles directory does not exists!!: {}",
+            directoryPath.string());
+        return;
+    }
 
     try
     {
