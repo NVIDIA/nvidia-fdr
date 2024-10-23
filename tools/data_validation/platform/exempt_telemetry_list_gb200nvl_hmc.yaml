@@ -1,0 +1,15 @@
+# List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
+# Platform: GB200NVL-hmc
+
+TGUID:
+  - GPU-XID-LOGS
+  - GPU-PORT-NEIGHBOR-MTU-DISCARDS
+  - GPU-SYMBOL-ERROR
+  - GPU-PORT-MULTICAST-XMIT-PKTS
+  - GPU-PORT-UNICAST-RCV-PKTS
+  - GPU-PORT-UNICAST-XMIT-PKTS
+  - GPU-ERR-CTR-QP1-DROPPED
+  - GPU-ERR-CTR-REMOTE-PHYS-RX
+  - GPU-ERR-CTR-SWITCH-REPLAY-RX
+ParamClass:
+  - Specs
