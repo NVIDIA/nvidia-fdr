@@ -18,10 +18,19 @@ PROTO_DIR := ..
 ```
 
 ## Build
-The following command builds an "executable" (a shell script actually).
+We can have 2 versions of Build now:
+1. Customer's Build: This version can be release to customers
+
 ```bash
 make fdrtool
 ```
+2. Developer's Build: This version can generate coverage report & data_validation from the same commandline argument while decoding the dump into JSON.
+
+```bash
+make fdrtool CUSTOMER=0
+```
+The above command(s) builds an "executable" (a shell script actually).
+
 **Note:** 'make clean' will delete the executable, the protobuf compiled file and the fdr_logs directory.
 
 # Python package build.
@@ -97,7 +106,15 @@ The confuration file template is provided as *[config.yaml](https://gitlab-maste
 | --influx_token | String | Token for authenticating to InfluxDB Host |
 | --append, -a | Boolean | default=False. Set to True if we want to append the logs to existing database. If this flag is not provided, any existing database with same name will be deleted first. |
 | --length_delimited, -ld | Boolean | default=False. Set to True if we want to decode length-delimited binary. If this flag is not provided, the decoding will be performed for zero-delimited COBS-R binary. <br /><br /> *Note: This is used for dev/test only. This option will be removed in the future before release.*|
-| --environment, -e | String | defaule=UNK. Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)|
+| --environment, -e | String | default=UNK. Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)|
+| --generate_cvg_report, -gcr | Boolean | (Only available in Dev Build, and for JSON Decode option only), default=False, Set to True, If we want to generate coverage report along with decode of fdr dump |
+| --telemetry_catalog, -tc | String | (Only available in Dev Build, required if --generate_cvg_report is set to True) Provide Path to catalog csv file |
+| --telemetry_uri_exp, -tu | String | (Only available in Dev Build, required if --generate_cvg_report is set to True) Provide Path to uri_expansion csv file |
+| --platform, -pl | String | (Only available in Dev Build, required if --generate_cvg_report is set to True) Provide Platform name from uri_expansion csv. |
+| --exempt_list, -el | String | (Only available in Dev Build), Provide path to exempt_list.yaml file. See ex: nvidia-fdr/platforms/fdr_ppf_vulcan.yaml |
+| --fdr_output_dir, -fd | String | (Only available in Dev Build), Provide Path where you want to save the report. Default Path: ./fdr_logs/fdr/coverage_report |
+| --value_validation_report, -vvr | Boolean | (Only available in Dev Build, and for JSON Decode option only), default=False, Set to True, If we want to generate value validation report along with decode of fdr dump |
+| --telemetry_agent_output, -ltc | String | (Only available in Dev Build, required if --value_validation_report is set to True) Provide Path to telemetry agent's csv file |
 
 ## Run
 Assuming the fdr application runs locally in HMC, the logs are also saved in HMC. 

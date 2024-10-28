@@ -89,6 +89,19 @@ def decodeBirthCertificate(file_location):
     
     
 def main(arglist=None):
+   is_customer_view = True
+   try:
+      with open("./.customer_view", 'r+') as view:
+        is_customer_view = bool(int(view.read().strip()))
+   except:
+      pass
+  #  is_customer_view = os.path.exists("./.customer_view")
+   if not is_customer_view:
+     try:
+       import check_fdr_telemetry_coverage
+       import data_validator
+     except:
+       pass
    start_time = datetime.now()
    status_code = 0
    argget = configargparse.ArgParser(prog='nvidia-fdrtool',\
@@ -116,6 +129,18 @@ def main(arglist=None):
 
   # json info
    argget.add_argument('-kn', '--key_name', default=False, action='store_true', help='Option to replace the ParamIDs with ParamName in the decoded logs.')
+   if not is_customer_view:
+    argget.add_argument('-gcr', '--generate_cvg_report', default=False, action='store_true', help='Option to also generate coverage report if enabled and decode format is json')
+    argget.add_argument('-tc', '--telemetry_catalog', required=False, type=str, help='Used for Coverage Report, Provide Path to the telemetry catalog.')
+    argget.add_argument('-tu', '--telemetry_uri_exp', required=False, type=str, help='Used for Coverage Report, Provide Path to the URI expansion.')
+    argget.add_argument('-pl', '--platform', required=False, default="Vulcan", type=str, help='Used for Coverage Report, Provide Target platform to test')
+    argget.add_argument('-el', '--exempt_list', required=False, default=None, type=str, help='Used for Coverage Report, Provide Exempt List CSV')
+    argget.add_argument('-fd', '--fdr_output_dir', required=False, type=str, help='Path to the directory where dump has been decoded into JSON')
+    # data validation
+    argget.add_argument('-vvr', '--value_validation_report', default=False, action='store_true', help='Option to also generate Data validation report if enabled and decode format is json')
+    argget.add_argument('-ltc', '--telemetry_agent_output', required=False, type=str, help='Used for Data Validation Report, Provide Path to the Latest Telemetry CSV for specified platform.')
+    argget.add_argument('-fdo', '--fdr_output', required=False, type=str, help='Path to the directory where dump has been decoded in JSON')
+
     
    # influxDB info
    argget.add_argument("--influx_url", type=str, help="InfluxDB Host URL")
@@ -154,7 +179,29 @@ def main(arglist=None):
    if args.environment not in ["FIE", "FAC", "UNK"]:
     logging.error('Invalid environment provided')
     args.environment = "UNK"
-  
+
+   if not is_customer_view:
+    if args.generate_cvg_report:
+      if args.decode_format != DECODE_FORMAT.JSON:
+        logging.error('Coverage report can be generated only when decode format is json')
+        return
+      else:
+        if not args.telemetry_catalog:
+          logging.error('\n--telemetry_catalog and --telemetry_uri_exp are required for generating coverage report')
+          return
+
+        if not args.telemetry_uri_exp:
+          logging.error('\n--telemetry_catalog and --telemetry_uri_exp are required for generating coverage report')
+          return
+
+    if args.value_validation_report:
+      if args.decode_format != DECODE_FORMAT.JSON:
+        logging.error('Data Validation report can be generated only when decode format is json')
+        return
+      else:
+        if not args.telemetry_agent_output:
+          logging.error('\n--telemetry_agent_output csv is required to generate data validation report')
+          return
 
    if arg_error:
     argget.print_help()
@@ -186,9 +233,29 @@ def main(arglist=None):
    else:
      print("Warning : To Decode Birthcertificate.tar use option -bc ")
 
+
   # Step-5: Clean up
    if MyCatalog:
     MyCatalog.Close()
+
+  # If Coverage Report is asked:
+   if not is_customer_view:
+    if args.generate_cvg_report:
+      for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Coverage Report.."):
+        pass
+      if args.fdr_output_dir is None or args.fdr_output_dir == "":
+        args.fdr_output_dir="./fdr_logs/fdr"
+      check_fdr_telemetry_coverage.generate_coverage_report(args=args)
+
+    if args.value_validation_report:
+      for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Value Validation Report.."):
+        pass
+
+      if args.fdr_output_dir is None or args.fdr_output_dir == "":
+        args.fdr_output="./fdr_logs/fdr"
+      else:
+        args.fdr_output=args.fdr_output_dir
+      data_validator.generate_value_validation_report(args=args)
 
    end_time = datetime.now()
    print('\nTotal time taken: {} seconds.'\

@@ -21,3 +21,5 @@ urllib3==2.1.0
 pyinstaller==6.3.0
 cobs==1.2.1
 tqdm==4.66.1
+prometheus_client==0.20.0
+pyyaml==6.0.2
