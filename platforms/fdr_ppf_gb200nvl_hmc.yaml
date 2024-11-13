@@ -23,7 +23,7 @@ FingerPrint:
 GeneralConfig:
   LogsFormat: BINARY
   LogsBasePath: &LogsBasePath
-  - /var/emmc/fdr/
+    - "/var/emmc/fdr/"
   PartitionThresoldCheckMB: 1536 # emmc Partition threshold size check [if available space < 1.5 GB, then exit FDR]
   CompactionWindowSecs: 86400 # 1 day, every day new directory is created
   CompactionSubWindowSecs: 1800 # .5 hours, every 30 minutes stats are appended
@@ -35,6 +35,8 @@ GeneralConfig:
     ObjectPath: /xyz/openbmc_project/logging
     Interface: org.freedesktop.DBus.ObjectManager
     Member: InterfacesAdded
+
+Preconditions:
   Threshold: 300
   Checks:
   - ID: CheckDumpDirMount
