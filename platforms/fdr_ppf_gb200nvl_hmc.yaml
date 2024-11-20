@@ -44,16 +44,16 @@ Preconditions:
       Command: df $logbasepath | grep '/dev/mmcblk'
     Params:
       name: logbasepath
-      value:
-      - *LogsBasePath
+      value: *LogsBasePath
     CommandRetryPolicy: No
     ExitOnFailure: Yes
-  - ID: CheckHmcWaitReady
-    CommandParams:
-      Command: busctl get-property xyz.openbmc_project.GpuMgr /xyz/openbmc_project/inventory/system/HGX_BMC_0
-        xyz.openbmc_project.State.Decorator.OperationalStatus State | grep -i -q xyz.openbmc_project.State.Decorator.OperationalStatus.StateType.Enabled
-    CommandRetryPolicy: Yes
-    ExitOnFailure: No
+
+  #- ID: CheckHmcWaitReady
+  #  CommandParams:
+  #    Command: busctl get-property xyz.openbmc_project.State.ConfigurableStateManager /xyz/openbmc_project/state/configurableStateManager/Manager
+  #      xyz.openbmc_project.State.FeatureReady State | grep -i -q xyz.openbmc_project.State.Decorator.OperationalStatus.StateType.Enabled
+  #  CommandRetryPolicy: Yes
+  #  ExitOnFailure: No
 
 
 GPU: &gpu
