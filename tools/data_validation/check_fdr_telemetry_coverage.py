@@ -45,13 +45,19 @@ def parse_fdr_dump(fdr_logs_dir, log):
                             continue
                         try:
                             # Formatting the ID as: comp_class-param_name[0][comp_id][param_idx]
-                            suffix = f"[{comp_id.split('_')[-1]}]"
+                            suffix = re.findall(r'\d+', comp_id)
                             indices = re.findall(r'\[(\d+)\]', param_name)
-                            if len(indices) == 1:
-                                suffix += f"[{indices[0]}]"
+                            if len(suffix) > 1:
+                                suffix = ''.join(f'[{indices}]' for indices in suffix)
                             else:
-                                suffix += "[0]"
+                                suffix = f"[{comp_id.split('_')[-1]}]"
+                                if len(indices) == 1:
+                                    suffix += f"[{indices[0]}]"
+                                else:
+                                    suffix += "[0]"
+
                             id = f"{comp_class}-{param_name.split('[')[0]}{suffix}"
+                            #print(f"[FDR ID]: {id}")
                             fdr_logs_ids[boot_count].add(id)
 
                         except Exception as e:
@@ -195,6 +201,9 @@ def generate_coverage_report(args=None):
             id += f"[{tc.COMPID}]"
             id += f"[{tc.PARAMIDX}]" if tc.PARAMIDX != None and tc.PARAMIDX != "" else "[0]" 
             # print("[LOG] ID", id)
+            indices = re.findall(r'\[(\d+)\]',id)
+            if len(indices) == 1:
+                id = f"{id}[0]"
             if id in ids:
                 # print("[Found]", tc.TGUID)
                 # debug_log.info(f"[Found]: {id}")

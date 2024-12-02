@@ -6,29 +6,35 @@ import sys
 import os
 import re
 import logging
+import yaml
 
 csv.field_size_limit(sys.maxsize)
 pp = pprint.PrettyPrinter(indent=2, width=30, compact=True)
 
 def comparator(redfish_val, fdrlog_val):
     try:
+        if redfish_val.lower() == fdrlog_val.lower():
+            return "Match"
         if redfish_val.lower() == "true": redfish_val = 1
         elif redfish_val.lower() == "false": redfish_val = 0
         if fdrlog_val.lower() == "true": redfish_val = 1
         elif fdrlog_val.lower() == "false": redfish_val = 0
         if "xyz.openbmc_project" in fdrlog_val:
             if redfish_val == fdrlog_val.split(".")[-1]:
-                return True
+                return "Match"
     except: pass
     try:
         redfish_val = float(redfish_val)
         fdrlog_val = float(fdrlog_val)
-        return abs(redfish_val - fdrlog_val) <= 0.10 * redfish_val
+        if fdrlog_val == 0:
+           if redfish_val == 0:
+               return "Match"
+           else:
+               return "Mismatch"
+        else:
+            return "Partial-Match"
     except: pass
-    try: 
-        return str(redfish_val) == str(fdrlog_val) 
-    except: pass
-    return False
+    return "Mismatch"
 
 
 def parse_telemetry_agent_output(telemetry_agent_output_f):
@@ -145,38 +151,65 @@ def generate_value_validation_report(args=None):
     missing_count = {}
     found_match_count = {}
     found_mismatch_count = {}
+    exempted_items_count = {}
+    loss_in_ta_count = {}
 
     debug_log.info("Checking the IDs from TelemetryAgent in FDR logs")
+    exempt_list = []
+    if args.exempt_list:
+        with open(args.exempt_list) as stream:
+            try:
+                exempt_list = yaml.safe_load(stream)['TGUID']
+            except yaml.YAMLError as exc:
+                print("Exception in exempt list: ", exc)
+
     for t_id, t_val in ta_result_dict.items():
         for boot_count, fdr_boot_data in fdr_logs_dict.items():
             if boot_count not in missing_count: missing_count[boot_count] = 0
             if boot_count not in found_match_count: found_match_count[boot_count] = 0
             if boot_count not in found_mismatch_count: found_mismatch_count[boot_count] = 0
-            
-            try:
-                # print("[INFO]", t_id, t_val, fdr_boot_data[t_id])
-                if comparator(t_val, fdr_boot_data[t_id]):
-                    status = "Match"
-                    found_match_count[boot_count] += 1
+            if boot_count not in exempted_items_count: exempted_items_count[boot_count] = 0
+            if boot_count not in loss_in_ta_count: loss_in_ta_count[boot_count] = 0
+            tguid = t_id.split('[')[0]
+            if tguid in exempt_list:
+                debug_log.info(f"[Bootcount: {boot_count}] Exempting {t_id} Telemetry_Agent_value: {t_val}")
+                # found_match_count[boot_count] += 1
+                exempted_items_count[boot_count] += 1
+            else:
+                if t_val == '':
+                    try:
+                        debug_log.info(f"[Bootcount: {boot_count}] Skipping {t_id} Telemetry_Agent_value: {t_val} FDR_value: {fdr_boot_data[t_id]}")
+                    except Exception as e:
+                        debug_log.info(f"[Bootcount: {boot_count}] Skipping {t_id}, Missing ID from FDR logs also")
+                    loss_in_ta_count[boot_count] += 1
                 else:
-                    status = "Mismatch"
-                    found_mismatch_count[boot_count] += 1
-                debug_log.info(f"[Bootcount: {boot_count}] {status} at: {t_id} Telemetry_Agent_value: {t_val} FDR_value: {fdr_boot_data[t_id]}")
-            except Exception as e:
-                debug_log.error(f"[Bootcount: {boot_count}] Missing ID from FDR logs: {e} Telemetry_Agent_value: {t_val}")
-                missing_count[boot_count] += 1
-                # absent[boot_count].append(t_id.split("[")[0])
+                    try:
+                        # print("[INFO]", t_id, t_val, fdr_boot_data[t_id])
+                        status = comparator(t_val, fdr_boot_data[t_id])
+                        if status in ["Match", "Partial-Match"]:
+                            found_match_count[boot_count] += 1
+                        else:
+                            found_mismatch_count[boot_count] += 1
+                        debug_log.info(f"[Bootcount: {boot_count}] {status} at: {t_id} Telemetry_Agent_value: {t_val} FDR_value: {fdr_boot_data[t_id]}")
+                    except Exception as e:
+                        debug_log.error(f"[Bootcount: {boot_count}] Missing ID from FDR logs: {e} Telemetry_Agent_value: {t_val}")
+                        missing_count[boot_count] += 1
+                        # absent[boot_count].append(t_id.split("[")[0])
     
 
     debug_log.info("-------Generating Report-------")
     for boot_count in fdr_logs_dict.keys():
         report_log.info(f"BOOTCOUNT: {boot_count}")
         report_log.info(f"Total TGUIDs: {len(ta_result_dict.keys())}")
-        report_log.info(f"Missing count: {missing_count[boot_count]}")
+        report_log.info(f"Missing in FDR count: {missing_count[boot_count]}")
         report_log.info(f"Found and matched count: {found_match_count[boot_count]}")
         report_log.info(f"Found and mismatched count: {found_mismatch_count[boot_count]}")
-        report_log.info(f"Match percentage: {found_match_count[boot_count] / len(ta_result_dict.keys()) * 100}")
-        report_log.info(f"Coverage percentage: {(found_match_count[boot_count] + found_mismatch_count[boot_count]) / len(ta_result_dict.keys()) * 100}")
+        report_log.info(f"Exempted Items Count: {exempted_items_count[boot_count]}")
+        report_log.info(f"Missing in Telemetry Agent Count: {loss_in_ta_count[boot_count]}")
+        remaining_count = len(ta_result_dict.keys()) - exempted_items_count[boot_count] - loss_in_ta_count[boot_count]
+        report_log.info(f"Remaining TUIDs: {remaining_count}")
+        report_log.info(f"Match percentage: {found_match_count[boot_count] / remaining_count * 100}")
+        report_log.info(f"Coverage percentage: {(found_match_count[boot_count] + found_mismatch_count[boot_count]) / remaining_count * 100}")
         # print("BOOTCOUNT:", boot_count)
         # print("Total TGUIDs:", len(ta_result_dict.keys()))
         # print("Missing count:", missing_count[boot_count])
