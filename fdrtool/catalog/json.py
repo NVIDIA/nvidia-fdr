@@ -41,7 +41,7 @@ class JSONCatalogEntry(CatalogEntry):
         parts = self.filepath.split('/')
         CompClass = None
         if len(parts) > 4:
-            filename = parts[4].split('.')
+            filename = parts[-1].split('.')
             CompClass= filename[0]
 
         paramName = self.GetParamNameFromID(proto_msg,CompClass)
