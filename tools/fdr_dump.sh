@@ -107,27 +107,45 @@ function check_size_and_add()
         return
     fi
 
-    for file in $FILE_NAMES; do
-        # echo "[INFO] check_size_and_add ${file}"
-        local file_size=$(du -cb $file | tail -n 1 | cut -d$'\t' -f 1)
-        file_size=$(up_scale $file_size $TAR_BLOCK_SZ)
-        record_size=$(( $file_size + $(( 1 * $TAR_BLOCK_SZ)) ))
-        if (( current_dump_size + record_size > ARG_DUMP_MAX_SIZE )); then
-            echo "[INFO] Size exceeded the limit!! Cannot add: $file"
-            return 1
+    local script_current_time script_elapsed_time
+    
+    # Process multiple files at once using arrays
+    local -a files_to_process=($FILE_NAMES)
+    local item file_size record_size
+    
+    for item in "${files_to_process[@]}"; do
+        # Skip if item doesn't exist
+        [[ ! -e "$item" ]] && continue
+        
+        # Handle directories differently than files
+        if [[ -d "$item" ]]; then
+            # Use du for directories to get total size including contents
+            file_size=$(du -sb "$item" | cut -f1)
         else
-            current_dump_size=$(( current_dump_size + record_size ))
-            if [ "${#final_files[@]}" -lt "$file_cnt_limit" ]; then
-                final_files+=($file)
-                count_of_files=$(( count_of_files + 1 ))
-            fi
+            # Use stat for individual files
+            file_size=$(stat -c%s "$item")
         fi
-        script_current_time=$(date +%s)
-        script_elapsed_time=$((script_current_time - script_start_time))
-        if ((script_elapsed_time >= FILE_ADDITION_TIME_LIMIT)); then
-            echo "Time Limit for file addition reached its limit:$script_elapsed_time seconds Script will not add any more data for tar"
-            STOP_FILE_ADDITION=1
-            return
+        
+        file_size=$(up_scale "$file_size" "$TAR_BLOCK_SZ")
+        record_size=$(( file_size + TAR_BLOCK_SZ ))
+        
+        if (( current_dump_size + record_size <= ARG_DUMP_MAX_SIZE )); then
+            current_dump_size=$(( current_dump_size + record_size ))
+            final_files+=("$item")
+            (( count_of_files++ ))
+            echo "[INFO] Added $item, Current dump size: $current_dump_size"
+            
+            # Check time constraints periodically
+            script_current_time=$(date +%s)
+            script_elapsed_time=$((script_current_time - script_start_time))
+            if ((script_elapsed_time >= FILE_ADDITION_TIME_LIMIT)); then
+                echo "Time Limit for file addition reached its limit: $script_elapsed_time seconds Script will not add any more data for tar"
+                STOP_FILE_ADDITION=1
+                return
+            fi
+        else
+            echo "[INFO] Size exceeded the limit!! Cannot add: $item"
+            return 1
         fi
     done
     return 0
@@ -136,27 +154,39 @@ function check_size_and_add()
 function create_manifest_file()
 {
     MANIFEST_FILE="${FDR_LOG_DIR_BASE_NAME}/fdr_manifest.txt"
-    echo -e "Log type: FDR" > $MANIFEST_FILE
+    local TEMP_DIR="/tmp/manifest_$$"
+    mkdir -p "$TEMP_DIR"
+    {
+        echo "Log type: FDR"
+        echo "Dump file name: $DEST_DUMP_FILE"
+    } > "$MANIFEST_FILE"
+
+    # Run busctl commands in parallel and store outputs in temporary files
+    busctl get-property xyz.openbmc_project.EntityManager /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0 xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber > "$TEMP_DIR/serial" &
+
+    busctl get-property xyz.openbmc_project.Software.BMC.Inventory /xyz/openbmc_project/software/HGX_FW_BMC_0 xyz.openbmc_project.Software.Version Version > "$TEMP_DIR/fw_ver" &
     
-    # Dump file name
-    echo -e "Dump file name: $DEST_DUMP_FILE" >> $MANIFEST_FILE
-
-    # HMC-BRD-SERIAL
-    command="busctl get-property xyz.openbmc_project.EntityManager /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_0 xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber"
-    echo -e "HMC-BRD-SERIAL: $( $command )" >> $MANIFEST_FILE
-
-    # HMC-FW-VER
-    command="busctl get-property xyz.openbmc_project.Software.BMC.Inventory /xyz/openbmc_project/software/HGX_FW_BMC_0 xyz.openbmc_project.Software.Version Version"
-    echo -e "HMC-FW-VER: $( $command )" >> $MANIFEST_FILE
-
-    # GPU SXM SN; TODO: Number of GPUs should not be hard coded.
+    # Run GPU queries in parallel
+    # This needs to be changed for different platforms
     for gpuid in {1..8}; do
-        command="busctl get-property xyz.openbmc_project.NSM /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber"
-        echo -e "GPU SXM $gpuid SerialNumber: $( $command )" >> $MANIFEST_FILE
+        busctl get-property xyz.openbmc_project.GpuMgr "/xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid" xyz.openbmc_project.Inventory.Decorator.Asset SerialNumber > "$TEMP_DIR/gpu$gpuid" &
     done
+    # Wait for all background processes to complete
+    wait
 
-    # Extended source information
-    echo -e "Extended source information: $ARG_EXTENDED_SOURCE" >> $MANIFEST_FILE
+    {
+        echo "HMC-BRD-SERIAL: $(cat "$TEMP_DIR/serial")"
+        echo "HMC-FW-VER: $(cat "$TEMP_DIR/fw_ver")"
+        
+        for gpuid in {1..8}; do
+            echo "GPU SXM $gpuid SerialNumber: $(cat "$TEMP_DIR/gpu$gpuid")"
+        done
+        
+        echo "Extended source information: $ARG_EXTENDED_SOURCE"
+    } >> "$MANIFEST_FILE"
+
+    # Cleanup temporary files
+    rm -rf "$TEMP_DIR"
 }
 
 function arguments_validation()
@@ -175,31 +205,22 @@ function arguments_validation()
 
 function main()
 {
-    FDR_LOG_DIR=$(dirname "$FDR_LOG_PATH")
-    FDR_LOG_DIR_BASE_NAME=$(basename "$FDR_LOG_PATH")
+    local FDR_LOG_DIR=$(dirname "$FDR_LOG_PATH")
+    local FDR_LOG_DIR_BASE_NAME=$(basename "$FDR_LOG_PATH")
 
     pushd $FDR_LOG_DIR
     trap "popd" EXIT
 
     arguments_validation
-    
-    # Map each timestamp to a BootCount directory
-    declare -A timestamp_file_map
-    
-    # Map the bootcount number to the oldest directory(that contains others.dat)
-    declare -A bootcount_oldestTimestamp_map
-    
-    # Map of others.dat status. 
-    # REQUIRED => others.dat should be in the dump, not yet added
-    # ADDED => others.dat added to the dump
-    declare -A bootcount_addStatus_map
-    
-    # Will contain all the directories that are within the time range
-    required_files=()
-    
-    # final_files are required files(directories) that are within the size limit, and other files like
-    #   bookkeeper, manifest, journalctl, ppf.
-    final_files=()
+
+    # timestamp_file_map: Map each timestamp to a BootCount directory
+    # bootcount_oldestTimestamp_map: Map the bootcount number to the oldest directory(that contains others.dat)
+    # bootcount_addStatus_map: Map of others.dat status. REQUIRED => others.dat should be in the dump, not yet added ADDED => others.dat added to the dump
+    declare -A timestamp_file_map bootcount_oldestTimestamp_map bootcount_addStatus_map
+
+    #required_files: Will contain all the directories that are within the time range
+    #final_files: final_files are required files(directories) that are within the size limit, and other files like bookkeeper, manifest, journalctl, ppf.
+    declare -a required_files final_files
     
     # Total count of files to be added. This will be used to calculate the tar's metadata size
     count_of_files="0"
@@ -218,54 +239,54 @@ function main()
     current_dump_size=${dump_size_buffer}
 
     # Add Bookkeper to the dump
-    check_size_and_add $FDR_LOG_DIR_BASE_NAME/Bookkeeper
+    check_size_and_add "$FDR_LOG_DIR_BASE_NAME/Bookkeeper"
 
     # Add manifest file
     create_manifest_file
-    check_size_and_add $MANIFEST_FILE
+    check_size_and_add "$MANIFEST_FILE"
 
     # Add journalctl -u 'nvidia-fdr' output to the dump
     JOURNALCTL_OUTPUT_FILENAME="journalctl_u_nvidia-fdr.output"
     # Can also use: --since "-2 day"
-    journalctl --since yesterday -u 'nvidia-fdr' &> ${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}
-    check_size_and_add "${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}"
+    journalctl --since yesterday -u 'nvidia-fdr' &> "${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}" &
+    local JOURNALCTL_PID=$!
 
 
     # Add the PPF yaml file
     FDR_PPF_FILE_PATH="/etc/nvidia-fdr/platforms/fdr_ppf_*"
-    cp $FDR_PPF_FILE_PATH $FDR_LOG_DIR_BASE_NAME/
-    check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$(basename "$FDR_PPF_FILE_PATH")"
+    cp $FDR_PPF_FILE_PATH "$FDR_LOG_DIR_BASE_NAME/" &
+    local CP_PID=$!
 
     # Collecting all the required directory names, that are within the time range
-    files=$(ls -1 $FDR_LOG_PATH)
-    for file_name in $files; do
-        # Filter BootCount directories
-        if [[ "$file_name" =~ ^BootCount ]]; then
-            echo "[INFO] Checking $file_name"
-            timestamp=$(echo "$file_name" | cut -d '_' -f 4)
-            bootcount=$(echo "$file_name" | cut -d '_' -f 2)
-            timestamp_file_map[$timestamp]=$file_name
-            # Set the oldest BootCount directory for the given bootcount
-            if [[ ${bootcount_oldestTimestamp_map[$bootcount]} -ne "" ]]; then
-                bootcount_oldestTimestamp_map[$bootcount]=$((bootcount_oldestTimestamp_map[$bootcount] < $timestamp ? bootcount_oldestTimestamp_map[$bootcount] : $timestamp))
-            else 
-                bootcount_oldestTimestamp_map[$bootcount]=$timestamp
-            fi
-            # echo "[INFO] bootcount_oldestTimestamp_map ${bootcount_oldestTimestamp_map[$bootcount]}"
-            # Check if the time stamp lies within the given range
-            if [[ "$ARG_DUMP_START" -le "$timestamp" ]] && [[ "$timestamp" -le "$ARG_DUMP_END" ]]; then
-                required_files+=($timestamp)
-                bootcount_addStatus_map[$bootcount]="REQUIRED"
-            fi
+    while IFS= read -r file_name; do
+        [[ "$file_name" =~ ^BootCount ]] || continue
+        
+        local timestamp bootcount
+        timestamp=$(echo "$file_name" | cut -d '_' -f 4)
+        bootcount=$(echo "$file_name" | cut -d '_' -f 2)
+        
+        timestamp_file_map[$timestamp]=$file_name
+        
+        if [[ -n "${bootcount_oldestTimestamp_map[$bootcount]}" ]]; then
+            bootcount_oldestTimestamp_map[$bootcount]=$((${bootcount_oldestTimestamp_map[$bootcount]} < timestamp ? ${bootcount_oldestTimestamp_map[$bootcount]} : timestamp))
+        else 
+            bootcount_oldestTimestamp_map[$bootcount]=$timestamp
         fi
-    done
+        
+        if [[ "$ARG_DUMP_START" -le "$timestamp" && "$timestamp" -le "$ARG_DUMP_END" ]]; then
+            required_files+=($timestamp)
+            bootcount_addStatus_map[$bootcount]="REQUIRED"
+        fi
+    done < <(ls -1 "$FDR_LOG_PATH")
+    
+    wait $JOURNALCTL_PID
+    wait $CP_PID
+
+    check_size_and_add "${FDR_LOG_DIR_BASE_NAME}/${JOURNALCTL_OUTPUT_FILENAME}"
+    check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$(basename "$FDR_PPF_FILE_PATH")"
 
     # Sort the required directory names. From recent to old.
-    required_files_tmp=$(echo "${required_files[@]}" | tr " " "\n" | sort -r)
-    required_files=()
-    for file_name in $required_files_tmp ; do
-        required_files+=($file_name)
-    done
+    readarray -t required_files < <(printf '%s\n' "${required_files[@]}" | sort -r)
 
     # Add BootCount directories data
     # final_files will contain all the BootCount directories after checking the dump size limit.
@@ -276,46 +297,38 @@ function main()
         bootcount=$(echo $file_name | cut -d '_' -f 2)
         count_files="0"
         # Add others.dat files of this bootcount if not already added.
-        if [ ${bootcount_addStatus_map[$bootcount]} = "REQUIRED" ]; then
-            echo "[INFO] Adding other.dat files."
+        if [ "${bootcount_addStatus_map[$bootcount]}" = "REQUIRED" ]; then
             bootcount_addStatus_map[$bootcount]="ADDED"
             timestamp_other=${bootcount_oldestTimestamp_map[$bootcount]}
             file_name_other=${timestamp_file_map[$timestamp_other]}
-            echo "[INFO] Checking $file_name_other for other.dat files." 
-
-            count_files=$(ls -l $FDR_LOG_DIR_BASE_NAME/$file_name_other/*others.dat | wc -l)
-            if (( count_files == "0" )); then
-                echo "[WARNING] No others.dat files found in the directory $file_name_other."
+            
+            # Use find instead of ls for better performance
+            if find "$FDR_LOG_DIR_BASE_NAME/$file_name_other" -name "*others.dat" -print -quit | grep -q .; then
+                check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$file_name_other/*others.dat" || break
             else
-                check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$file_name_other/*others.dat"
-                if [ $? -ne 0 ]; then
-                    break
-                fi
+                echo "[WARNING] No others.dat files found in the directory $file_name_other."
             fi
         fi
 
         # Add the BootCount directory. Ignore the others.dat files; added above.
-        check_size_and_add "$(find $FDR_LOG_DIR_BASE_NAME/${file_name} -type f ! -name "*.others.dat")"
-        if [ $? -ne 0 ]; then
-            break
-        fi
+        check_size_and_add "$(find "$FDR_LOG_DIR_BASE_NAME/${file_name}" -type f ! -name "*.others.dat")" || break
         echo
     done
     
-    echo "[INFO] Estimated tar size:" $(( current_dump_size ))
+    echo "[INFO] Estimated tar size: $current_dump_size"
     echo 
     
     # Create tar
-    tar -o -C $FDR_LOG_DIR --exclude=$(dirname "$DEST_DUMP_FILE") -cf $DEST_DUMP_FILE  ${final_files[@]}
-    if [ $? -ne 0 ]; then
+    tar --create --file="$DEST_DUMP_FILE" --directory="$FDR_LOG_DIR" --exclude="$(dirname "$DEST_DUMP_FILE")" "${final_files[@]}"
+
+    if [ $? -eq 0 ]; then
+        local dump_tar_size=$(stat -c%s "$DEST_DUMP_FILE")
+        echo "[INFO] Size of tar: $dump_tar_size"
+        echo "[INFO] actual tar size - expected tar size: $((dump_tar_size - current_dump_size))"
+    else
         echo "[ERROR] Failed to tar the dir: $FDR_LOG_PATH"
         exit 1
     fi
-    
-    dump_tar_size=$(du -cb $DEST_DUMP_FILE | tail -n 1  | cut -d$'\t' -f 1)
-    echo "[INFO] Size of tar: $dump_tar_size"
-    # echo "[INFO] Calculated size of files: $(($current_dump_size))"
-    echo "[INFO] actual tar size - expected tar size: $(($dump_tar_size - $current_dump_size))"
 }
 
 
