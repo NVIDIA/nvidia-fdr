@@ -162,7 +162,10 @@ void Record::Refresh(bool viaTimerSkipChecks)
             info.DbusParams.Service, info.DbusParams.ObjectPath,
             info.DbusParams.Interface, info.DbusParams.Property);
 
-        if (data.paramtype == "Uint64")
+        if (data.paramtype == "Integer" || data.paramtype == "Uint64" ||
+            data.paramtype == "Uint32" || data.paramtype == "Uint16" ||
+            data.paramtype == "Uint8" || data.paramtype == "Int64" ||
+            data.paramtype == "Int16")
         {
             if (auto ptr(std::get_if<double>(&val)); ptr)
             {
@@ -223,7 +226,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 return;
             }
         }
-        else if (data.paramtype == "Double")
+        else if (data.paramtype == "Double" || data.paramtype == "Float")
         {
             if (auto ptr(std::get_if<double>(&val)); ptr)
             {
@@ -396,6 +399,11 @@ void Record::Refresh(bool viaTimerSkipChecks)
     }
     else
     {
+        if (info.FetchMethod != "Shmem")
+        {
+            fdrlog::warn("Unknown FetchMethod: {} for Param: {}",
+                         info.FetchMethod, info.ID);
+        }
         return;
     }
 
