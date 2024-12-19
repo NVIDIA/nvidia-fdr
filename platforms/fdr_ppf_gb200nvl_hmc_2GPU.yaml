@@ -13447,5 +13447,9 @@ Sections:
     Params:
     - name: processormoduleid0
       value: 0
-    - name: processormoduleid1
+
+  - ID: DIMM_1
+    <<: *DIMM
+    Params:
+    - name: processormoduleid0
       value: 1
