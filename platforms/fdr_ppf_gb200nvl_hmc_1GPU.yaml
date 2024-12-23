@@ -108,7 +108,7 @@ GPU: &gpu
       DataType: string
       DbusParams:
         Interface: xyz.openbmc_project.Software.Version
-        ObjectPath: /xyz/openbmc_project/software/HGX_FW_GPU_$gpuid
+        ObjectPath: /xyz/openbmc_project/software/HGX_FW_GPU_0
         Property: Version
         Service: xyz.openbmc_project.PLDM
       FetchFreqSecs: 3600
@@ -136,7 +136,7 @@ GPU: &gpu
       DataType: string
       DbusParams:
         Interface: xyz.openbmc_project.Software.Version
-        ObjectPath: /xyz/openbmc_project/software/HGX_InfoROM_GPU_$gpuid
+        ObjectPath: /xyz/openbmc_project/software/HGX_InfoROM_GPU_0
         Property: Version
         Service: xyz.openbmc_project.PLDM
       FetchFreqSecs: 3600
@@ -12975,7 +12975,7 @@ CPU: &cpu
       DataType: string
       DbusParams:
         Interface: xyz.openbmc_project.Inventory.Decorator.PortState
-        ObjectPath: /xyz/openbmc_project/state/PLDM_Sensor_$nvlink0id_$eid/ProcessorModule_$processormoduleid_SysBus_0_NVLink_0 
+        ObjectPath: /xyz/openbmc_project/state/PLDM_Sensor_$nvlink0id_$eid/ProcessorModule_$processormoduleid_SysBus_0_NVLink_0
         Property: LinkState
         Service: xyz.openbmc_project.PLDM
       FetchFreqSecs: 600
@@ -12989,7 +12989,7 @@ CPU: &cpu
       DataType: string
       DbusParams:
         Interface: xyz.openbmc_project.Inventory.Decorator.PortState
-        ObjectPath: /xyz/openbmc_project/state/PLDM_Sensor_$nvlink1id_$eid/ProcessorModule_$processormoduleid_SysBus_0_NVLink_1
+        ObjectPath: /xyz/openbmc_project/state/PLDM_Sensor_$nvlink1id_$eid/ProcessorModule_$processormoduleid_SysBus_0_NVLink_0
         Property: LinkState
         Service: xyz.openbmc_project.PLDM
       FetchFreqSecs: 600
@@ -13263,7 +13263,7 @@ DIMM: &DIMM
         DataType: string
         DbusParams:
           Interface: xyz.openbmc_project.Inventory.Decorator.Asset
-          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/motherboard/ProcessorModule_$processormoduleid1_Memory_0
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/motherboard/ProcessorModule_$processormoduleid0_Memory_0
           Property: SerialNumber
           Service: xyz.openbmc_project.Smbios.MDR_V2
         FetchFreqSecs: 3600
@@ -13286,6 +13286,7 @@ Sections:
     Params:
     - name: gpuid
       value: 1
+
 
 
 - ID: Baseboard
@@ -13335,7 +13336,7 @@ Sections:
     - name: nvlink0id
       value: 512
     - name: nvlink1id
-      value: 513
+      value: 512
     - name: throttle0id
       value: 528
     - name: powerbreak0id
@@ -13366,7 +13367,47 @@ Sections:
       value: 617
 
 
-
+  - ID: HGX_CPU_1
+    <<: *cpu
+    Params:
+    - name: cpuid
+      value: 1
+    - name: processormoduleid
+      value: 1
+    - name: eid
+      value: 17
+    - name: nvlink0id
+      value: 4608
+    - name: nvlink1id
+      value: 4608
+    - name: sparechannel0id
+      value: 4688
+    - name: powerbreak0id
+      value: 4672
+    - name: throttle0id
+      value: 4624
+    - name: edpViolationid
+      value: 4656
+    - name: pcielink0id
+      value: 4704
+    - name: pcielink1id
+      value: 4705
+    - name: pcielink2id
+      value: 4706
+    - name: pcielink3id
+      value: 4707
+    - name: pcielink4id
+      value: 4608
+    - name: pcielink5id
+      value: 4709
+    - name: pcielink6id
+      value: 4710
+    - name: pcielink7id
+      value: 4711
+    - name: pcielink8id
+      value: 4712
+    - name: pcielink9id
+      value: 4713
 
 - ID: SBIOS
   Components:
@@ -13397,5 +13438,9 @@ Sections:
     Params:
     - name: processormoduleid0
       value: 0
-    - name: processormoduleid1
+
+  - ID: DIMM_1
+    <<: *DIMM
+    Params:
+    - name: processormoduleid0
       value: 1
