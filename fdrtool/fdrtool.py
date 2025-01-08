@@ -54,12 +54,11 @@ def dumpCollection(args):
         logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
         
 
-def decodingDump(binary_log_tar_file):
+def decodingDump(binary_log_tar_file, log_root_dir='./fdr_logs/'):
     #print("\n--------------------- Decoding FDR dump -----------------------")
     #print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
     # Remove existing logs directory to avoid issues with overlapping of logs in different formats
      
-    log_root_dir = './fdr_logs/'
     if os.path.exists(log_root_dir):
       shutil.rmtree(log_root_dir)
     # Step-2: Unzip the .tar file
@@ -74,8 +73,8 @@ def decodingDump(binary_log_tar_file):
     return log_root_dir
 
 
-def decodeBirthCertificate(file_location):
-    BirthCertificate_logs = './fdr_logs/birthcertificate'
+def decodeBirthCertificate(file_location, log_root_dir='./fdr_logs/'):
+    BirthCertificate_logs = os.path.join(log_root_dir, 'BirthCertificate')
     if os.path.exists(BirthCertificate_logs):
       shutil.rmtree(BirthCertificate_logs)
     binary_log = tarfile.open(file_location)
@@ -114,6 +113,7 @@ def main(arglist=None):
    argget.add_argument('-ul', '--use_local', default=False, action='store_true', help='Option to use local tar archive of binary logs if Redfish API for FDR dump is not available.')
    argget.add_argument('-bc', '--birth_certificate', default=False, action='store_true', help='Option to decode BirthCertificate.tar')
    argget.add_argument('-l', '--local_file', type=str, help='Local tar archive of binary logs if Redfish API for FDR dump is not available.')
+   argget.add_argument('-lr', '--log_root_dir', type=str, default='./fdr_logs/', help='Directory to store the logs.')
    
    
    argget.add_argument('-i', '--ip', type=str, help='Address of host, using http or https (example: https://123.45.6.7:8000)')
@@ -212,7 +212,7 @@ def main(arglist=None):
    binary_log_tar_file = dumpCollection(args)
 
    # Step-2: Unzip the .tar file
-   log_root_dir =  decodingDump(binary_log_tar_file)
+   log_root_dir =  decodingDump(binary_log_tar_file, args.log_root_dir)
 
    # Step-3: Create catalog of decoded binary logs
    MyCatalog = Catalog(vars(args), log_root_dir)
@@ -226,7 +226,7 @@ def main(arglist=None):
    if args.birth_certificate:
      tar_file='BirthCertificate.tar'
      os.system('cp ./fdr_logs/fdr/Bookkeeper/BirthCertificate.tar .')
-     log_root_dir = decodeBirthCertificate(tar_file)
+     log_root_dir = decodeBirthCertificate(tar_file, args.log_root_dir)
      MyCatalog = Catalog(vars(args), log_root_dir)
      MyCatalog.WriteAllEntries()
 
@@ -244,7 +244,7 @@ def main(arglist=None):
       for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Coverage Report.."):
         pass
       if args.fdr_output_dir is None or args.fdr_output_dir == "":
-        args.fdr_output_dir="./fdr_logs/fdr"
+        args.fdr_output_dir= f"{args.log_root_dir}/fdr"
       check_fdr_telemetry_coverage.generate_coverage_report(args=args)
 
     if args.value_validation_report:
@@ -252,7 +252,7 @@ def main(arglist=None):
         pass
 
       if args.fdr_output_dir is None or args.fdr_output_dir == "":
-        args.fdr_output="./fdr_logs/fdr"
+        args.fdr_output= f"{args.log_root_dir}/fdr"
       else:
         args.fdr_output=args.fdr_output_dir
       data_validator.generate_value_validation_report(args=args)

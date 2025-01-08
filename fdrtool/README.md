@@ -96,6 +96,7 @@ The confuration file template is provided as *[config.yaml](https://gitlab-maste
 | ------ | ------ | ------ |
 | --use_local, -ul | Boolean | default=False. Set to True if a local tarball should be used instead of collecting FDR dump from HMC using Redfish API. <br /><br /> *Note: This is used for dev/test only. This option will be removed in the future before release.*|
 | --local_file, -l | String | Path of the tar archive of FDR logs. <br /><br /> *Note: This is used for dev/test only. This option will be removed in the future before release.*|
+| --log_root_dir, -lr | String | default="./fdr_logs/", Decoded dump will be extracted at this path. |
 | --ip, -i | String | IP address of host |
 | --username, -u | String | Username for Authentication |
 | --password, -p | String | Password for Authentication |
