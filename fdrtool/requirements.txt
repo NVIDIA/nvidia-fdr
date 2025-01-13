@@ -2,7 +2,7 @@ certifi==2023.11.17
 charset-normalizer==3.3.2
 ConfigArgParse==1.7
 decorator==5.1.1
-idna==3.6
+idna==3.7
 influxdb-client==1.39.0
 jsonpatch==1.33
 jsonpath-rw==1.4.0
