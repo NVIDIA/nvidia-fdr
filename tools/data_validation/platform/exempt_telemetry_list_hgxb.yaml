@@ -1,8 +1,11 @@
 # List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
 # Platform: hgxb_hmc
 
+# List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
+# Platform: hgxb_hmc
 TGUID:
-  - GPU-XID-LOGS
+  - NVSWITCH-LINKS
+  - GPU-COUNT
   - NVSWITCH-PORTS-CONNECTED
   - GPU-SYMBOL-ERROR
   - PCIERETIMER-DOWNLINK-HEALTH
@@ -13,7 +16,35 @@ TGUID:
   - BASEBOARD-HEALTH-ROLLUP
   - PCIERETIMER-HEALTH
   - PCIERETIMER-HEALTH-ROLLUP
+  - GPU-THROTTLE-DURATION-PWR
+  - BASEBOARD-TEMP-THRESH-ALERT
+  - NVNIC-SPEED-CURR → check from PLDM
+  - NVSWITCH-ZONES
+  - GPU-PCI-DEV-ID
+  - GPU-PCI-VENDOR-ID
+  - GPU-PWR-MEM
+  - GPU-TEMP-MEM
+  - GPU-CTR-ENERGY
+  - GPU-PORT-XMIT-PKTS
+  - GPU-UTIL-DEC
+  - GPU-PORT-RCV-DATA
+  - HSC-TEMP-GB-HSC
+  - HSC-PWR-GB-HSC
+  - HMC-LOGS
+  - FPGA-LOGS
+  - GPU-XID-LOGS
   - PCIERETIMER-LOGS
- 
+  - BASEBOARD-REDFISH-EVENT-LOG
+  - GPU-CLK-EVENT-REASON
+  - MIN-PROG-CLK-MEM
+  - MAX-PROG-CLK-MEM
+  - MAX-PROG-CLK-MEM
+
+
+#duplicate entries
+  - BASEBOARD-TEMP-INLET-CURR
+  - GPU-DRVR-VERSION
+
 ParamClass:
   - Specs
+ 
