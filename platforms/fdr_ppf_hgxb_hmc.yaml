@@ -9978,6 +9978,276 @@ GPU: &gpu
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
+    
+    - ID: PORT-XMIT-DATA[0]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 578
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[1]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 579
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[2]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 580
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[3]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 581
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[4]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 582
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[5]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 583
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[6]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 584
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[7]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 585
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[8]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 586
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[9]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 587
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[10]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 588
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[11]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 589
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[12]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 590
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[13]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 591
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[14]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 592
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[15]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 593
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[16]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 594
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+
+    - ID: PORT-XMIT-DATA[17]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.PortMetricsOem2
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17
+        Property: TXBytes
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 595
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
   - ID: Link-Quality
     InfoList:
     - ID: EFFECTIVE-BER[0]
@@ -9990,7 +10260,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 578
+      ParamID: 596
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10004,7 +10274,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 579
+      ParamID: 597
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10018,7 +10288,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 580
+      ParamID: 598
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10032,7 +10302,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 581
+      ParamID: 599
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10046,7 +10316,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 582
+      ParamID: 600
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10060,7 +10330,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 583
+      ParamID: 601
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10074,7 +10344,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 584
+      ParamID: 602
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10088,7 +10358,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 585
+      ParamID: 603
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10102,7 +10372,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 586
+      ParamID: 604
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10116,7 +10386,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 587
+      ParamID: 605
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10130,7 +10400,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 588
+      ParamID: 606
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10144,7 +10414,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 589
+      ParamID: 607
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10158,7 +10428,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 590
+      ParamID: 608
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10172,7 +10442,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 591
+      ParamID: 609
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10186,7 +10456,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 592
+      ParamID: 610
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10200,7 +10470,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 593
+      ParamID: 611
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10214,7 +10484,7 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 594
+      ParamID: 612
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -10228,7 +10498,277 @@ GPU: &gpu
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 595
+      ParamID: 613
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+
+    
+    - ID: LINK-DOWNED-COUNTER[0]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_0
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 614
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[1]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_1
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 615
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[2]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_2
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 616
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[3]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_3
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 617
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[4]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_4
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 618
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[5]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_5
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 619
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[6]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_6
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 620
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[7]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_7
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 621
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[8]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_8
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 622
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[9]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_9
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 623
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[10]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_10
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 624
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[11]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_11
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 625
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[12]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_12
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 626
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[13]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_13
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 627
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[14]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_14
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 628
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[15]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_15
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 629
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[16]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_16
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 630
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+      
+
+    - ID: LINK-DOWNED-COUNTER[17]
+      DataType: Uint64
+      DbusParams:
+        Interface: xyz.openbmc_project.Metrics.IBPort
+        ObjectPath: /xyz/openbmc_project/inventory/system/processors/GPU_SXM_$gpuid/Ports/NVLink_17
+        Property: LinkDownCount
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 631
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43656,6 +44196,40 @@ NVNIC: &nvnic
       ParamID: 6
       StoreFreqSecs: 10
       StorePolicy: OnChange
+
+    - ID: SPEED-CURR
+      DataType: Double
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Item.Switch
+        ObjectPath: /xyz/openbmc_project/sensor/PLDM_Id_$pldmsensorid/NVSwitch_$nvnicid
+        Property: CurrentBandwidth
+        Service: xyz.openbmc_project.PLDM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 7
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+
+    <<: *compaction-definition-sensors
+
+  - ID: Sensor.Thermal
+    InfoList:
+    
+    - ID: TEMP-CURR
+      DataType: Double
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_NVLinkManagementNIC_$nvnicid_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.PLDM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ParamID: 8
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+
     <<: *compaction-definition-sensors
 
   - ID: Status
@@ -43672,7 +44246,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 7
+      ParamID: 9
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43686,7 +44260,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 8
+      ParamID: 10
       StoreFreqSecs: 600
       StorePolicy: OnChange
     
@@ -43700,7 +44274,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 9
+      ParamID: 11
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43714,7 +44288,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 10
+      ParamID: 12
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43728,7 +44302,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 11
+      ParamID: 13
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43742,7 +44316,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 12
+      ParamID: 14
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43756,7 +44330,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 13
+      ParamID: 15
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43770,7 +44344,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 14
+      ParamID: 16
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43787,7 +44361,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 15
+      ParamID: 17
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43801,7 +44375,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 16
+      ParamID: 18
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43815,7 +44389,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 17
+      ParamID: 19
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43832,7 +44406,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 18
+      ParamID: 20
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43846,7 +44420,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 19
+      ParamID: 21
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43860,7 +44434,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 20
+      ParamID: 22
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43875,7 +44449,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 21
+      ParamID: 23
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43889,7 +44463,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 22
+      ParamID: 24
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43903,7 +44477,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 23
+      ParamID: 25
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43917,7 +44491,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 24
+      ParamID: 26
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43931,7 +44505,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 25
+      ParamID: 27
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43945,7 +44519,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 26
+      ParamID: 28
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43960,7 +44534,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 27
+      ParamID: 29
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43974,7 +44548,7 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 28
+      ParamID: 30
       StoreFreqSecs: 600
       StorePolicy: OnChange
 
@@ -43988,12 +44562,9 @@ NVNIC: &nvnic
       FetchFreqSecs: 600
       FetchMethod: DBUS
       FetchType: Poll
-      ParamID: 29
+      ParamID: 31
       StoreFreqSecs: 600
       StorePolicy: OnChange
-
-
-
 
 
 Sections:
@@ -44202,3 +44773,5 @@ Sections:
     Params:
     - name: nvnicid
       value: 0
+    - name: pldmsensorid
+      value: 22
