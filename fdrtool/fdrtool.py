@@ -26,8 +26,11 @@ from datetime import datetime
 # Import locally developed modules
 from catalog.catalog import DECODE_FORMAT, Catalog
 from tqdm import tqdm
+from pathlib import Path
+from typing import List, Set
+from fnmatch import fnmatch
 
-tool_version = '1.0.0'
+tool_version = '2.2.0'
 
 def dumpCollection(args):
     #print("**********************Nvidia fdrtool**********************")
@@ -224,14 +227,22 @@ def main(arglist=None):
 
   # Additional option to decode the Birthcertificate.
    if args.birth_certificate:
-     tar_file='BirthCertificate.tar'
-     os.system('cp ./fdr_logs/fdr/Bookkeeper/BirthCertificate.tar .')
+     tar_file = os.path.join(log_root_dir, 'fdr/Bookkeeper/BirthCertificate.tar')
      log_root_dir = decodeBirthCertificate(tar_file, args.log_root_dir)
-     MyCatalog = Catalog(vars(args), log_root_dir)
-     MyCatalog.WriteAllEntries()
+     try:
+      MyCatalog = Catalog(vars(args), log_root_dir)
+      MyCatalog.WriteAllEntries()
+     except Exception as e:
+      shutil.rmtree(log_root_dir)
+      print("=========================================================")
+      print(f"    {e}        ")
+      print("  Skipping BirthCertificate Decode. Continuting....      ")
+      print("=========================================================")
 
    else:
-     print("Warning : To Decode Birthcertificate.tar use option -bc ")
+     print("=========================================================")
+     print("      To Decode Birthcertificate.tar use option -bc      ")
+     print("=========================================================")
 
 
   # Step-5: Clean up
@@ -256,6 +267,34 @@ def main(arglist=None):
       else:
         args.fdr_output=args.fdr_output_dir
       data_validator.generate_value_validation_report(args=args)
+    # Checking if Important files are present in decoded dir.
+    search_path = Path(args.log_root_dir).resolve()
+    patterns_to_find = [
+      'Bookkeeper',
+      'fdr_manifest.txt',
+      'fdr_ppf_*.yaml',
+      'journalctl*',
+    ]
+    unmatched_patterns = set(patterns_to_find)
+    matched_files = set()
+
+    for root, dirs, files in os.walk(search_path):
+      current_items = files + dirs
+      for item in current_items:
+        for pattern in list(unmatched_patterns):
+          if fnmatch(item, pattern):
+            matched_files.add(item)
+            unmatched_patterns.discard(pattern)
+
+    # if matched_files:
+    #   print("\nFound the following matches:")
+    #   for item in sorted(matched_files):
+    #     print(f"- {item}")
+
+    if unmatched_patterns:
+      print("\nDid not find following files:")
+      for pattern in sorted(unmatched_patterns):
+        print(f"- {pattern}")
 
    end_time = datetime.now()
    print('\nTotal time taken: {} seconds.'\
@@ -264,6 +303,15 @@ def main(arglist=None):
 
    return status_code
 
+def CheckIfNvidaFdrIsActive(REDFISH_OBJ):
+  print('Checking if service is enabled...')
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR"
+  response = REDFISH_OBJ.get(url)
+  service_enabled = response.dict.get('ServiceEnabled')
+  if service_enabled:
+    print("Nvidia-FDR service is enabled. Continuing...")
+  else:
+    raise Exception("Nvidia-FDR service is not enabled on HMC, Exiting...")
 
 def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
   from datetime import datetime
@@ -275,6 +323,7 @@ def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
                       password=password, default_prefix='/redfish/v1/')
   REDFISH_OBJ.login(auth="basic")
   print('Successfully logged in to host {}'.format(host_ip))
+  CheckIfNvidaFdrIsActive(REDFISH_OBJ)
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}  
   url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR/Actions/LogService.CollectDiagnosticData/"
