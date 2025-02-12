@@ -43392,7 +43392,7 @@ PCIeRetimer: &retimer
       DataType: Uint64
       DbusParams:
         Interface: xyz.openbmc_project.Inventory.Decorator.PortWidth
-        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/Up_0           
+        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/UP_0           
         Property: Width
         Service: xyz.openbmc_project.NSM
       FetchFreqSecs: 10
@@ -43406,7 +43406,7 @@ PCIeRetimer: &retimer
       DataType: Uint64
       DbusParams:
         Interface: xyz.openbmc_project.Inventory.Decorator.PortInfo
-        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/Up_0
+        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/UP_0
         Property: CurrentSpeed
         Service: xyz.openbmc_project.NSM
       FetchFreqSecs: 10
@@ -43420,7 +43420,7 @@ PCIeRetimer: &retimer
       DataType: Uint64
       DbusParams:
         Interface: xyz.openbmc_project.Inventory.Decorator.PortWidth
-        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/Down_0
+        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/DOWN_0
         Property: Width
         Service: xyz.openbmc_project.NSM
       FetchFreqSecs: 10
@@ -43434,7 +43434,7 @@ PCIeRetimer: &retimer
       DataType: Uint64
       DbusParams:
         Interface: xyz.openbmc_project.Inventory.Decorator.PortInfo
-        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/Down_0
+        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/DOWN_0
         Property: CurrentSpeed
         Service: xyz.openbmc_project.NSM
       FetchFreqSecs: 10
@@ -43452,7 +43452,7 @@ PCIeRetimer: &retimer
       DataType: string
       DbusParams:
         Interface: xyz.openbmc_project.PCIe.LTSSMState
-        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/Down_0
+        ObjectPath: /xyz/openbmc_project/inventory/system/fabrics/HGX_PCIeRetimerTopology_$retimerid/Switches/PCIeRetimer_$retimerid/Ports/DOWN_0
         Property: LTSSMState
         Service: xyz.openbmc_project.NSM
       FetchFreqSecs: 3600
