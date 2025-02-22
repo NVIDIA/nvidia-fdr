@@ -58,7 +58,7 @@ std::string getService(const std::string& objectPath,
 PropertyVariant readDbusProperty(const std::string& service,
                                  const std::string& objPath,
                                  const std::string& interface,
-                                 const std::string& property);
+                                 const std::string& property, Info_t& info);
 
 RetCoreApi readDbusDGDProperty(const std::string& service,
                                const std::string& objPath,

@@ -46,10 +46,13 @@ void FdrGrpUpdate::RefreshAndStore(const std::vector<std::string>& keys,
                 }
                 else
                 {
-                    fdrlog::error(
-                        "GroupRefreshAndStore: Key:{} not found in Shmem namespace:{}",
-                        rec->info.ShmemParams.Key,
-                        keys[GROUP_KEY_NAMESPACE_POS]);
+                    if (logThrottle::logThrottling(rec->info))
+                    {
+                        fdrlog::error(
+                            "GroupRefreshAndStore: Key:{} not found in Shmem namespace:{}",
+                            rec->info.ShmemParams.Key,
+                            keys[GROUP_KEY_NAMESPACE_POS]);
+                    }
                 }
             }
         }
