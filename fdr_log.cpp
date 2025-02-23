@@ -9,6 +9,7 @@
 *
 */
 
+#include <ctime>
 #include <iostream>
 #include <map>
 
@@ -16,6 +17,10 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include <spdlog/sinks/stdout_sinks.h>
 #endif /* SPDLOG */
+
+#ifndef LOG_ROTATION
+#define LOG_ROTATION 43200 // 12 hours
+#endif
 
 #include "fdr_log.hpp"
 
@@ -84,3 +89,37 @@ int LogLevel()
 }
 #endif
 } // namespace fdrlog
+
+namespace logThrottle
+{
+bool logThrottling(Info_t& info)
+{
+// Apply throttling only if disable from meta layer
+#ifndef THROTTLE_LOG_DISABLE
+
+    std::time_t current_time = std::time(nullptr);
+
+    // If timestamp is 0, set it to the current time and return true
+    if (info.timeStamp == 0)
+    {
+        info.timeStamp = static_cast<int>(current_time);
+        return true;
+    }
+
+    int time_diff = static_cast<int>(current_time - info.timeStamp);
+
+    // If the difference is >= repeatTime, update timestamp and return true
+    if (time_diff >= LOG_ROTATION)
+    {
+        info.timeStamp = static_cast<int>(current_time);
+        return true;
+    }
+
+    return false; // Throttle the log
+
+#else
+    return true; // Always log
+#endif
+}
+
+} // namespace logThrottle
