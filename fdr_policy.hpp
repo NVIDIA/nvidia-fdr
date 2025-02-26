@@ -107,8 +107,10 @@ struct Info_t
     ShmemParams_t ShmemParams;     // If FetchMethod==Shmem
     std::string DataType;          // Data Type ()
     InfoGroup_t*
-        parent_infogroup; // Pointer to the infogroup this info belongs to
+        parent_infogroup;  // Pointer to the infogroup this info belongs to
     std::string FetchType;
+    bool enableLog = true; // Default value for enableLog is true
+    int timeStamp = 0;     // Default value for timeStamp is 0
 };
 
 struct Param_t
