@@ -160,7 +160,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
 
         PropertyVariant val = dbus::readDbusProperty(
             info.DbusParams.Service, info.DbusParams.ObjectPath,
-            info.DbusParams.Interface, info.DbusParams.Property);
+            info.DbusParams.Interface, info.DbusParams.Property, info);
 
         if (data.paramtype == "Integer" || data.paramtype == "Uint64" ||
             data.paramtype == "Uint32" || data.paramtype == "Uint16" ||
