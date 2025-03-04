@@ -126,6 +126,9 @@ FlightDataRecorder_c::FlightDataRecorder_c(const std::string filename)
         exit(EXIT_FAILURE);
     }
 
+    // Clean up platform yaml
+    CleanupPlatformFiles();
+
     // check and exit if fdr partion disk availability is less during init time
     CheckFdrPartitionDiskUsageAndExit();
 
@@ -1341,5 +1344,40 @@ void FlightDataRecorder_c::initEventsSignalRegistration()
         EventSignalHandler* eventHandler = new EventSignalHandler(
             objPath, intf, member, fdrDeviceErrorsWriter);
         eventHandler->registerEventsSignal();
+    }
+}
+
+void FlightDataRecorder_c::CleanupPlatformFiles(void)
+{
+    const char* platforms_path = getenv("PLATFORMS_PATH");
+    std::string platformsDir = (platforms_path != nullptr ? platforms_path
+                                                          : "./platforms");
+
+    // Check if file deletion is disabled
+    const char* preserve_files = getenv("FDR_PRESERVE_PLATFORM_FILES");
+    if (preserve_files != nullptr)
+    {
+        fdrlog::info(
+            "Platform files deletion skipped (FDR_PRESERVE_PLATFORM_FILES is set)");
+        return;
+    }
+
+    try
+    {
+        for (const auto& entry :
+             std::filesystem::directory_iterator(platformsDir))
+        {
+            if (std::filesystem::is_regular_file(entry.path()))
+            {
+                fdrlog::info("Removing platform file: {}",
+                             entry.path().filename().string());
+                std::remove(entry.path().c_str());
+            }
+        }
+        fdrlog::info("Platform files cleanup complete");
+    }
+    catch (const std::exception& e)
+    {
+        fdrlog::error("Exception during platform files cleanup: {}", e.what());
     }
 }
