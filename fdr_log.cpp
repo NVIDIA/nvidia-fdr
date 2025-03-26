@@ -19,7 +19,7 @@
 #endif /* SPDLOG */
 
 #ifndef LOG_ROTATION
-#define LOG_ROTATION 43200 // 12 hours
+#define LOG_ROTATION 86400 // 24 hours
 #endif
 
 #include "fdr_log.hpp"

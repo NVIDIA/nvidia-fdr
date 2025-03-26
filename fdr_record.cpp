@@ -120,9 +120,12 @@ void Record::RefreshValue(std::string value)
     }
     catch (const std::exception& e)
     {
-        fdrlog::error(
-            "Exception in record RefreshValue:{} Value:{} exception:{}",
-            info.ID, value, e.what());
+        if (logThrottle::logThrottling(info))
+        {
+            fdrlog::error(
+                "Exception in record RefreshValue:{} Value:{} exception:{}",
+                info.ID, value, e.what());
+        }
     }
     catch (...)
     {
@@ -269,9 +272,12 @@ void Record::Refresh(bool viaTimerSkipChecks)
             }
             else
             {
-                fdrlog::warn(
-                    "DBus read failed: Unknown numerical variant type ObjectPath: {}; Property: {}",
-                    info.DbusParams.ObjectPath, info.DbusParams.Property);
+                if (logThrottle::logThrottling(info))
+                {
+                    fdrlog::warn(
+                        "DBus read failed: Unknown numerical variant type ObjectPath: {}; Property: {}",
+                        info.DbusParams.ObjectPath, info.DbusParams.Property);
+                }
                 return;
             }
         }
