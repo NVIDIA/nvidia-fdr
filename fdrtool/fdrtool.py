@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import List, Set
 from fnmatch import fnmatch
 
-tool_version = '2.2.0'
+tool_version = '2.2.1'
 
 def dumpCollection(args):
     #print("**********************Nvidia fdrtool**********************")
@@ -58,33 +58,37 @@ def dumpCollection(args):
         
 
 def decodingDump(binary_log_tar_file, log_root_dir='./fdr_logs/'):
-    #print("\n--------------------- Decoding FDR dump -----------------------")
-    #print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
-    # Remove existing logs directory to avoid issues with overlapping of logs in different formats
-     
     if os.path.exists(log_root_dir):
-      shutil.rmtree(log_root_dir)
-    # Step-2: Unzip the .tar file
-    print ("unzip the logs")
+        shutil.rmtree(log_root_dir)
+
+    print("Extracting the dump...")
     binary_log = tarfile.open(binary_log_tar_file)
-    binary_log.extractall(log_root_dir) # This will create a directory if it's not present already.
-    binary_log.close()
-    for i in tqdm(range(int(9e6)),ncols=100,desc ="Decoding dump"):
-        pass
-    #print('Successfully unzipped the tar archive of binary logs into {}.'.format(log_root_dir))
+
+    # Get total number of files in the archive
+    members = binary_log.getmembers()
+    total_files = len(members)
+
+    # Extract with real progress tracking
+    for i, member in enumerate(tqdm(members, desc="Extracting files", ncols=100)):
+        binary_log.extract(member, log_root_dir)
     
+    binary_log.close()
     return log_root_dir
 
 
 def decodeBirthCertificate(file_location, log_root_dir='./fdr_logs/'):
     BirthCertificate_logs = os.path.join(log_root_dir, 'BirthCertificate')
     if os.path.exists(BirthCertificate_logs):
-      shutil.rmtree(BirthCertificate_logs)
+        shutil.rmtree(BirthCertificate_logs)
+
     binary_log = tarfile.open(file_location)
-    binary_log.extractall(BirthCertificate_logs)
+
+    # Get members and show real progress
+    members = binary_log.getmembers()
+    for member in tqdm(members, desc="Extracting Birth Certificate", ncols=100):
+        binary_log.extract(member, BirthCertificate_logs)
+
     binary_log.close()
-    for i in tqdm(range(int(9e6)),ncols=100,desc ="Decoding BirthCertificate dump"):
-        pass
     return BirthCertificate_logs
 
     
@@ -252,16 +256,11 @@ def main(arglist=None):
   # If Coverage Report is asked:
    if not is_customer_view:
     if args.generate_cvg_report:
-      for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Coverage Report.."):
-        pass
       if args.fdr_output_dir is None or args.fdr_output_dir == "":
         args.fdr_output_dir= f"{args.log_root_dir}/fdr"
       check_fdr_telemetry_coverage.generate_coverage_report(args=args)
 
     if args.value_validation_report:
-      for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Value Validation Report.."):
-        pass
-
       if args.fdr_output_dir is None or args.fdr_output_dir == "":
         args.fdr_output= f"{args.log_root_dir}/fdr"
       else:

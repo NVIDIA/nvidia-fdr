@@ -14,6 +14,7 @@ import re
 import os
 # Import third-party library modules
 import google.protobuf.json_format as protobuf_json_format
+from tqdm import tqdm
 # Import locally developed modules
 from catalog.catalog import CatalogEntry, PROTO_MSG_TYPE
 
@@ -123,4 +124,8 @@ class JSONCatalogEntry(CatalogEntry):
   def __repr__(self): 
     return "Logs for {}:\n{}\n".format(self.filepath, self.messages)
 
+  def WriteAllEntries(self):
+    total_entries = len(self.entries)
+    for i, entry in enumerate(tqdm(self.entries, desc="Writing JSON files", ncols=100)):
+        entry.WriteEntry()
 

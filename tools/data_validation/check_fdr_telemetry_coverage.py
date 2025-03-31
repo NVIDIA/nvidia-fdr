@@ -8,6 +8,7 @@ import sys
 import os
 import re
 import logging
+from tqdm import tqdm
 
 def parse_fdr_dump(fdr_logs_dir, log):
     # Parse the fdr dump
@@ -19,10 +20,11 @@ def parse_fdr_dump(fdr_logs_dir, log):
             _, boot_count, _, timestamp = root_name.split("_")
             if not boot_count in fdr_logs_ids:
                 fdr_logs_ids[boot_count] = set()
+
             for file in files:
                 if "hifi.dat" in file: continue
                 if ".Event" in file: continue
-            
+
                 comp_class, comp_id, filetype = file.split(".", 2)
                 # print("[INFO]", "Filename", os.path.join(root_name, file))
                 log.info(f"Parsing Filename: {os.path.join(root_name, file)}")
@@ -128,6 +130,29 @@ def generate_summary_report(device_wise_data, total_summary, html_path):
         report.write(html)
     
 
+def get_total_steps(fdr_output_dir):
+    """
+    Estimates the total number of steps for progress tracking
+    """
+    # Count number of boot directories
+    boot_count_dirs = 0
+    files_count = 0
+
+    # Walk through the directory to count files and boot directories
+    for root, dirs, files in os.walk(fdr_output_dir):
+        root_name = os.path.basename(root)
+        if "BootCount" in root_name:
+            boot_count_dirs += 1
+            files_count += len([f for f in files if ".Event" not in f and "hifi.dat" not in f])
+
+    # If we couldn't find any, use reasonable defaults
+    if boot_count_dirs == 0:
+        boot_count_dirs = 1
+    if files_count == 0:
+        files_count = 100
+
+    # Steps: init + parse exempt + catalog init + sanitize + expand + parse files + process boot counts + generate report
+    return 6 + files_count + boot_count_dirs
 
 def generate_coverage_report(args=None):
     if args is None:
@@ -141,7 +166,13 @@ def generate_coverage_report(args=None):
 
         # argget.add_argument('-o', '--output', required=False, default="./tmp", type=str, help='Path to the output directory.')
         args = argget.parse_args()
+    print(f"\n\u00BB Generating coverage report")
+    # Create a progress bar for the overall process
+    total_steps = get_total_steps(args.fdr_output_dir)
+    progress_bar = tqdm(total=total_steps, desc="Generating coverage report", ncols=100)
 
+    # Step 1: Setup logging
+    progress_bar.set_description("Setting up logging...")
     log_directory = f"{args.fdr_output_dir}/coverage_report"
     os.makedirs(log_directory, exist_ok=True)
 
@@ -164,11 +195,16 @@ def generate_coverage_report(args=None):
     report_log.addHandler(report_handler)
 
     report_html_path = os.path.join(log_directory, 'fdr_coverage_report.html')
+    progress_bar.update(1)
 
+    # Step 2: Parse exempt list
+    progress_bar.set_description("Parsing exempt list...")
     global MyCatalog
-
     parse_exempt_list(args.exempt_list)
+    progress_bar.update(1)
 
+    # Step 3: Initialize catalog
+    progress_bar.set_description("Initializing telemetry catalog...")
     # TODO: Skip the catalog entries that are in the exempt list.
     MyCatalog = telemetry_catalog.Catalog(
         args.telemetry_catalog,
@@ -177,18 +213,97 @@ def generate_coverage_report(args=None):
         None,
         None
     )
+    progress_bar.update(1)
 
+    # Step 4: Read URI expansion logic
+    progress_bar.set_description("Reading URI Expansion...")
     telemetry_catalog.ReadInURIExpansionLogic(args.telemetry_uri_exp, args.platform)
+    progress_bar.update(1)
+
+    # Step 5: Sanitize catalog
+    progress_bar.set_description("Sanitizing catalog...")
     MyCatalog.Sanitize(exempt_dict["ParamClass"], exempt_dict["TGUID"])
+    progress_bar.update(1)
+
+    # Step 6: Expand catalog
+    progress_bar.set_description("Expanding catalog...")
     MyCatalog.Expand()
+    progress_bar.update(1)
 
-    fdr_dump_ids = parse_fdr_dump(args.fdr_output_dir, debug_log)
+    # Step 7: Parse FDR dump with nested progress bar
+    progress_bar.set_description("Parsing FDR dump...")
 
-    # Store the results for each boot count
+    # Modified parse_fdr_dump to work with progress tracking
+    def parse_fdr_dump_with_progress(fdr_logs_dir, log, main_progress_bar):
+        fdr_logs_ids = {}
+        file_count = 0
+
+        # First pass to count files
+        for (root, dirs, files) in os.walk(fdr_logs_dir, topdown=True):
+            root_name = os.path.basename(root)
+            if "BootCount" in root_name:
+                file_count += len([f for f in files if ".Event" not in f and "hifi.dat" not in f])
+
+        for (root, dirs, files) in os.walk(fdr_logs_dir, topdown=True):
+            root_name = os.path.basename(root)
+            if "BootCount" in root_name:
+                _, boot_count, _, timestamp = root_name.split("_")
+                if boot_count not in fdr_logs_ids:
+                    fdr_logs_ids[boot_count] = set()
+
+                for file in files:
+                    if "hifi.dat" in file: continue
+                    if ".Event" in file: continue
+
+                    comp_class, comp_id, filetype = file.split(".", 2)
+                    log.info(f"Parsing Filename: {os.path.join(root_name, file)}")
+                    comp_class = comp_class.upper()
+
+                    with open(os.path.join(root, file), "r") as f:
+                        for line in f:
+                            fdr_json_log = json.loads(line)
+                            try:
+                                param_id = fdr_json_log["ParamID"]
+                                param_name = fdr_json_log["ParamName"]
+                            except Exception as e:
+                                if "ParamID" not in fdr_json_log:
+                                    log.error(f"ParamID missing in the file: {os.path.join(root_name, file)}")
+                                if "ParamName" not in fdr_json_log and "ParamID" in fdr_json_log:
+                                    log.error(f"ParamName missing for ID {param_id} in the file {os.path.join(root_name, file)}")
+                                continue
+                            try:
+                                # Formatting the ID as: comp_class-param_name[0][comp_id][param_idx]
+                                suffix = re.findall(r'\d+', comp_id)
+                                indices = re.findall(r'\[(\d+)\]', param_name)
+                                if len(suffix) > 1:
+                                    suffix = ''.join(f'[{indices}]' for indices in suffix)
+                                else:
+                                    suffix = f"[{comp_id.split('_')[-1]}]"
+                                    if len(indices) == 1:
+                                        suffix += f"[{indices[0]}]"
+                                    else:
+                                        suffix += "[0]"
+
+                                id = f"{comp_class}-{param_name.split('[')[0]}{suffix}"
+                                fdr_logs_ids[boot_count].add(id)
+
+                            except Exception as e:
+                                print("[Exception]", e)
+
+                    # Update progress after processing each file
+                    main_progress_bar.update(1)
+
+        return fdr_logs_ids
+
+    fdr_dump_ids = parse_fdr_dump_with_progress(args.fdr_output_dir, debug_log, progress_bar)
+
+    # Step 8: Process each boot count with progress tracking
+    progress_bar.set_description("Processing boot counts...")
     results = {}
 
     for boot_count, ids in fdr_dump_ids.items():
         debug_log.info(f"Checking Boot ID: {boot_count}")
+        progress_bar.set_description(f"Processing boot count: {boot_count}")
         count_found = 0
         count_missi = 0
         
@@ -196,43 +311,44 @@ def generate_coverage_report(args=None):
         devicewise_result = {}
         categorised_report = {}
         default_data = {"missing": 0, "found": 0}
+
         for tc in MyCatalog.CatalogEntries:
             id = tc.TGUID.split('[')[0]
             id += f"[{tc.COMPID}]"
             id += f"[{tc.PARAMIDX}]" if tc.PARAMIDX != None and tc.PARAMIDX != "" else "[0]" 
-            # print("[LOG] ID", id)
             indices = re.findall(r'\[(\d+)\]',id)
             if len(indices) == 1:
                 id = f"{id}[0]"
             if id in ids:
-                # print("[Found]", tc.TGUID)
-                # debug_log.info(f"[Found]: {id}")
                 count_found += 1
                 update_device_list(devices_dict=devicewise_result, device_name=tc.COMPCLASS, increment_true=1)
             else:
                 debug_log.info(f"[Not found]: {id}")
-                #print("[Not found]", id)
                 count_missi += 1
                 update_device_list(devices_dict=devicewise_result, device_name=tc.COMPCLASS, increment_false=1)
-        
+
         results[boot_count]["count_found"] = count_found
         results[boot_count]["count_missi"] = count_missi
+        progress_bar.update(1)
 
+    # Step 9: Generate final report
+    progress_bar.set_description("Generating summary report...")
     for boot_count, res in results.items():
         coverage_percentage = res["count_found"] / (res["count_found"] + res["count_missi"]) * 100
         report_log.info(f"Result for boot count: {boot_count}")
         report_log.info(f"Found: {res['count_found']}")
         report_log.info(f"Missing: {res['count_missi']}")
         report_log.info(f"Coverage %: {coverage_percentage}")
-        # print("Result for boot count:", boot_count)
-        # print("Found:", res["count_found"])
-        # print("Missing:", res["count_missi"])
-        # print("Coverage %:", coverage_percentage)
 
     report_log.info(f"Device wise Result: {devicewise_result}")
     report_log.info(f"Boot Count wise Report: {results}")
     generate_summary_report(devicewise_result, results, report_html_path)
-    print(f"=> Coverage Report is generated at: {log_directory}")
+    progress_bar.update(1)
+
+    # Close the progress bar
+    progress_bar.set_description("Report Generated")
+    progress_bar.close()
+    print(f"\u00BB Find the coverage report at: {log_directory}")
 
 
 if __name__ == "__main__":
