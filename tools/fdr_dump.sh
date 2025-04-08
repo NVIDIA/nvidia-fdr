@@ -107,13 +107,52 @@ function check_size_and_add()
         return
     fi
 
-    for file in $FILE_NAMES; do
-        # echo "[INFO] check_size_and_add ${file}"
-        local file_size=$(du -cb $file | tail -n 1 | cut -d$'\t' -f 1)
-        file_size=$(up_scale $file_size $TAR_BLOCK_SZ)
-        record_size=$(( $file_size + $(( 1 * $TAR_BLOCK_SZ)) ))
-        if (( current_dump_size + record_size > ARG_DUMP_MAX_SIZE )); then
-            echo "[INFO] Size exceeded the limit!! Cannot add: $file"
+    local script_current_time script_elapsed_time
+    
+    # Process multiple files at once using arrays
+    local -a files_to_process=($FILE_NAMES)
+    local item file_size record_size
+    
+    for item in "${files_to_process[@]}"; do
+        # Skip if item doesn't exist
+        [[ ! -e "$item" ]] && continue
+        
+        # Handle directories differently than files
+        if [[ -d "$item" ]]; then
+            # Use du for directories to get total size including contents
+            file_size=$(du -sb "$item" | cut -f1)
+        else
+            # Use stat for individual files
+            file_size=$(stat -c%s "$item")
+        fi
+        
+        file_size=$(up_scale "$file_size" "$TAR_BLOCK_SZ")
+        record_size=$(( file_size + TAR_BLOCK_SZ ))
+        
+        if (( current_dump_size + record_size <= ARG_DUMP_MAX_SIZE )); then
+            current_dump_size=$(( current_dump_size + record_size ))
+            
+            # Check file count limit before adding
+            if [ "${#final_files[@]}" -lt "$file_cnt_limit" ]; then
+                final_files+=("$item")
+                (( count_of_files++ ))
+                echo "[INFO] Added $item, Current dump size: $current_dump_size, File count: ${#final_files[@]}"
+            else
+                echo "[INFO] File count limit ($file_cnt_limit) reached. Cannot add: $item"
+                STOP_FILE_ADDITION=1
+                return
+            fi
+            
+            # Check time constraints periodically
+            script_current_time=$(date +%s)
+            script_elapsed_time=$((script_current_time - script_start_time))
+            if ((script_elapsed_time >= FILE_ADDITION_TIME_LIMIT)); then
+                echo "Time Limit for file addition reached its limit: $script_elapsed_time seconds Script will not add any more data for tar"
+                STOP_FILE_ADDITION=1
+                return
+            fi
+        else
+            echo "[INFO] Size exceeded the limit!! Cannot add: $item"
             return 1
         else
             current_dump_size=$(( current_dump_size + record_size ))
