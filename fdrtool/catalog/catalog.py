@@ -110,24 +110,25 @@ class Catalog:
 
   def CreateCatalog(self):
     from datetime import datetime
-    for i in tqdm(range(1),ncols=100,desc ="Creating catalog"):
-        pass
     start_time = datetime.now()
+
+    files_to_process = []
     for root, dirs, files in os.walk(self.log_dir):
-      for filename in files:
-        file_extension = os.path.splitext(filename)[1]
-        if (file_extension != '.dat') or filename.endswith(param_description_filename) or filename.endswith(Boot_event_filename): # To ignore any non-log and non-stats files (e.g. BirthCertificate.tar)
-          continue
+        for filename in files:
+            file_extension = os.path.splitext(filename)[1]
+            if (file_extension != '.dat') or filename.endswith(param_description_filename) or filename.endswith(Boot_event_filename):
+                continue
+            files_to_process.append(os.path.join(root, filename))
+
+    for filepath in tqdm(files_to_process, desc="Decoding files", ncols=100):
         try:
-          self.decode_binary_file(os.path.join(root, filename))
+            self.decode_binary_file(filepath)
         except Exception as e:
-          logging.error("Exception occured while decoding file {}: {}".format(os.path.join(root, filename), e))
-          #traceback.print_exc()
+            logging.error(f"Exception occurred while decoding file {filepath}: {e}")
+
     end_time = datetime.now()
-    print("Finished decoding")
-    for i in tqdm(range(1), ncols=100,desc ="Creating logs"):
-        pass
-    
+    print(f"\u00BB Finished decoding: Time taken: {(end_time - start_time).total_seconds()} seconds")
+
 
     #print("\nFinished decoding : Time taken: {} seconds".format((end_time - start_time).total_seconds()))
     #print("creating is done")
@@ -416,31 +417,83 @@ class CatalogEntry:
         break
     return brd_serial
   
-
   # If compClass and paramClass are not provided, this method will use the predefined values
   # which were parsed from the filepath
 
-  def GetParamNameFromID(self, proto_msg, compClass ):
-    paramID=proto_msg.ParamID
-    try:
-      if compClass in self.ParamIDNameDict:
-          return self.ParamIDNameDict[str(compClass)][str(paramID)]
-    except Exception as e:
-      return(e)
-  
-  # Traverse ParamDescription dict and return ParamClass. 
+  def GetParamNameFromID(self, proto_msg, compClass):
+    """
+    Retrieves the parameter name associated with a parameter ID and component class.
+
+    This function uses a caching mechanism to improve performance by:
+    1. Creating a unique cache key from the component class and parameter ID
+    2. Checking if the result is already in the cache
+    3. If not found, looking up the parameter name in the ParamIDNameDict
+    4. Caching the result for future lookups
+
+    Args:
+        proto_msg: The protobuf message containing the ParamID
+        compClass (str): The component class to look up
+
+    Returns:
+        str: The parameter name associated with the parameter ID, or None if not found
+    """
+    # Create cache if it doesn't exist
+    if not hasattr(self, '_param_name_cache'):
+        self._param_name_cache = {}
+
+    paramID = proto_msg.ParamID
+    cache_key = (str(compClass), str(paramID))
+
+    # Check cache first
+    if cache_key in self._param_name_cache:
+        return self._param_name_cache[cache_key]
+
+    # Lookup and cache result
+    result = None
+    if str(compClass) in self.ParamIDNameDict:
+        result = self.ParamIDNameDict[str(compClass)].get(str(paramID))
+
+    self._param_name_cache[cache_key] = result
+    return result
+
   def GetParamClassFromName(self, ParamName):
-    stack = [(ParamDescription, [])]
-    while stack:
-        current_dict, path = stack.pop()
-        for key, value in current_dict.items():
-            current_path = path + [key]
-            if value == ParamName:
-                return current_path[1]
-            elif isinstance(value, dict):
-                stack.append((value, current_path))
-                
-  
+    """
+    Retrieves the parameter class associated with a given parameter name.
+
+    This function uses a caching mechanism to improve performance by:
+    1. First checking if the result is already in the cache
+    2. If not found, building a reverse lookup map (if not already built)
+    3. Looking up the parameter class in the map and caching the result
+
+    Args:
+        ParamName (str): The name of the parameter to look up
+
+    Returns:
+        str: The parameter class associated with the parameter name, or None if not found
+    """
+    # Create a cache if it doesn't exist
+    if not hasattr(self, '_param_class_cache'):
+        self._param_class_cache = {}
+
+    # Check cache first
+    if ParamName in self._param_class_cache:
+        return self._param_class_cache[ParamName]
+
+    # If not in cache, build a reverse lookup table if not already built
+    if not hasattr(self, '_param_name_to_class_map'):
+        self._param_name_to_class_map = {}
+        # Iterate through ParamDescription once to build the reverse lookup
+        for comp_class, param_classes in ParamDescription.items():
+            for param_class, param_ids in param_classes.items():
+                for param_id, param_info in param_ids.items():
+                    if 'ParamName' in param_info:
+                        self._param_name_to_class_map[param_info['ParamName']] = param_class
+
+    # Look up in our reverse map and cache the result
+    result = self._param_name_to_class_map.get(ParamName)
+    self._param_class_cache[ParamName] = result
+    return result
+
   def GetParamNameFromMsg(self, proto_msg , compClass):
     match self.msg_type:
       case PROTO_MSG_TYPE.fdr_sample | PROTO_MSG_TYPE.fdr_stat | PROTO_MSG_TYPE.fdr_book_of_errors:
