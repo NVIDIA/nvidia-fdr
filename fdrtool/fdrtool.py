@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import List, Set
 from fnmatch import fnmatch
 
-tool_version = '2.2.1'
+tool_version = '2.2'
 
 def dumpCollection(args):
     #print("**********************Nvidia fdrtool**********************")
