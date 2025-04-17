@@ -13,7 +13,7 @@ run_pyinstaller()
 # Define your package and dependencies
 setup(
     name='fdrtool',
-    version='2.2.1',
+    version='2.2',
     packages=find_packages(),
     package_data={'fdrtool': ['../fdr_logs_schema_pb2.py', '.customer_view']},  # Include the generated Python file
     install_requires=[
