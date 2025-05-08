@@ -1,10 +1,10 @@
 project(
   'nvidia-fdr', 'cpp',
   version : '0.1',
-  meson_version: '>=0.60',
+  meson_version: '>=1.1.1',
   default_options: [
     'prefix=/usr',
-    'cpp_std=c++20',
+    'cpp_std=c++23',
     'warning_level=3',
     #'werror=true',
   ],
