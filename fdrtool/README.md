@@ -260,15 +260,30 @@ Following command will generate the coverage report and store it in the `./fdr_l
 $./fdrtool -ul --local_file <path/to/dump.tar.xz> --json -ld -gcr -tc "<path/to/catalog.csv>" -tu "<path/to/uri_expansion.csv>" -el "<path/to/exempt_list.yaml>" -pl "<platform_name>" -fd "<path/to/decoded_logs_dir>"
 ```
 ## Value validation report
-Value validation report is a part of fdrtool which verifies the correctness of the decoded logs. Only accessible in dev build. It uses the telemetry agent's csv file to report if the values returned by the telemetry agent and the decoded logs are the matching and if not, it reports the mismatch. Value validation report is generated in HTML & log format. 
+Value validation report is a part of fdrtool which verifies the correctness of the decoded logs. Only accessible in dev build. It does following.
+- It evaluates whether values from Redfish and FDR logs match. (Uses Telemetry agent's csv file & decoded logs)
+- Handles different data formats and types:
+  - Case-insensitive string comparison
+  - Boolean values (true/false converted to 1/0)
+  - Numeric comparisons
+  - Special handling for OpenBMC project values
+- Comparison results are categorized as:
+  - "Match": Values are identical or equivalent
+  - "Partial-Match": Values are numerically close but not identical
+  - "Mismatch": Values differ significantly
+- Value validation report is generated in HTML & log format.
+- We have to consider following points in value validation report:
+  - Match Percentage: It is the percentage of parameters which are present in both the telemetry agent's csv file and the decoded logs and values are matching.
+  - Coverage Percentage: It is the percentage of parameters which are present in the FDR logs vs telemetry agent's csv file.
 
-In order to generate value validation report, we need to provide the following arguments:
-- --vvr: Generate value validation report.
-- --ltc: Path to the telemetry agent's csv file.
+To generate the report, we need to provide the following arguments:
+  - --vvr: Generate value validation report.
+  - --ltc: Path to the telemetry agent's csv file.
 
 ```bash
 $ ./fdrtool -ul --local_file ./tmp/HMC_UNK_SN1332124050115_10242024_041533.tar.xz --json -ld -vvr -ltc "<path/to/telemetry_agents_output.csv>"
 ```
+
 #### Exempt list YAML file
 Exempt list YAML file contains the list of parameters (TGUID/ParamClass) that are exempted from being considered in coverage and value validation report. It is a YAML file with the following format:
 ```yaml
