@@ -20,6 +20,7 @@ import tarfile
 import traceback
 import shutil
 import os
+import subprocess
 # Import third-party library modules
 import redfish
 from datetime import datetime
@@ -71,7 +72,40 @@ def decodingDump(binary_log_tar_file, log_root_dir='./fdr_logs/'):
     # Extract with real progress tracking
     for i, member in enumerate(tqdm(members, desc="Extracting files", ncols=100)):
         binary_log.extract(member, log_root_dir)
-    
+    # Check for compressed YAML files recursively
+    print("Checking for compressed YAML files...")
+    yaml_files = []
+    for root, dirs, files in os.walk(log_root_dir):
+        for file in files:
+            if file.endswith('.yaml'):
+                yaml_path = os.path.join(root, file)
+                yaml_files.append(yaml_path)
+
+    for yaml_path in yaml_files:
+        result = subprocess.run(['file', yaml_path], capture_output=True, text=True)
+        output = result.stdout.lower()
+
+        if any(keyword in output for keyword in ['compressed', 'archive', 'tar']):
+            # print(f"Found compressed YAML file: {yaml_path}")
+            temp_dir = f"{yaml_path}_temp_extract"
+            os.makedirs(temp_dir, exist_ok=True)
+            try:
+                subprocess.run(
+                    ['tar', '--strip-components=1', '-xf', yaml_path, '-C', temp_dir], 
+                    check=True
+                )
+                extracted_files = [f for f in os.listdir(temp_dir) if f.endswith('.yaml')]
+                if extracted_files:
+                    extracted_file_path = os.path.join(temp_dir, extracted_files[0])
+                    shutil.move(extracted_file_path, yaml_path)
+                    # print(f"Successfully replaced {yaml_path} with uncompressed version")
+                # else:
+                    # print(f"No YAML files found in the extracted content of {yaml_path}")
+                shutil.rmtree(temp_dir)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to decompress {yaml_path}: {e}")
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
     binary_log.close()
     return log_root_dir
 
