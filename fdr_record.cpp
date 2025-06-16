@@ -120,9 +120,12 @@ void Record::RefreshValue(std::string value)
     }
     catch (const std::exception& e)
     {
-        fdrlog::error(
-            "Exception in record RefreshValue:{} Value:{} exception:{}",
-            info.ID, value, e.what());
+        if (logThrottle::logThrottling(info))
+        {
+            fdrlog::error(
+                "Exception in record RefreshValue:{} Value:{} exception:{}",
+                info.ID, value, e.what());
+        }
     }
     catch (...)
     {
@@ -160,9 +163,12 @@ void Record::Refresh(bool viaTimerSkipChecks)
 
         PropertyVariant val = dbus::readDbusProperty(
             info.DbusParams.Service, info.DbusParams.ObjectPath,
-            info.DbusParams.Interface, info.DbusParams.Property);
+            info.DbusParams.Interface, info.DbusParams.Property, info);
 
-        if (data.paramtype == "Uint64")
+        if (data.paramtype == "Integer" || data.paramtype == "Uint64" ||
+            data.paramtype == "Uint32" || data.paramtype == "Uint16" ||
+            data.paramtype == "Uint8" || data.paramtype == "Int64" ||
+            data.paramtype == "Int16")
         {
             if (auto ptr(std::get_if<double>(&val)); ptr)
             {
@@ -223,7 +229,7 @@ void Record::Refresh(bool viaTimerSkipChecks)
                 return;
             }
         }
-        else if (data.paramtype == "Double")
+        else if (data.paramtype == "Double" || data.paramtype == "Float")
         {
             if (auto ptr(std::get_if<double>(&val)); ptr)
             {
@@ -266,9 +272,12 @@ void Record::Refresh(bool viaTimerSkipChecks)
             }
             else
             {
-                fdrlog::warn(
-                    "DBus read failed: Unknown numerical variant type ObjectPath: {}; Property: {}",
-                    info.DbusParams.ObjectPath, info.DbusParams.Property);
+                if (logThrottle::logThrottling(info))
+                {
+                    fdrlog::warn(
+                        "DBus read failed: Unknown numerical variant type ObjectPath: {}; Property: {}",
+                        info.DbusParams.ObjectPath, info.DbusParams.Property);
+                }
                 return;
             }
         }
@@ -396,6 +405,11 @@ void Record::Refresh(bool viaTimerSkipChecks)
     }
     else
     {
+        if (info.FetchMethod != "Shmem")
+        {
+            fdrlog::warn("Unknown FetchMethod: {} for Param: {}",
+                         info.FetchMethod, info.ID);
+        }
         return;
     }
 

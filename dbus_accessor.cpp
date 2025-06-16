@@ -88,7 +88,7 @@ std::string getService(const std::string& objectPath,
 PropertyVariant readDbusProperty(const std::string& service,
                                  const std::string& objPath,
                                  const std::string& interface,
-                                 const std::string& property)
+                                 const std::string& property, Info_t& info)
 {
     PropertyVariant value;
     auto& bus = getBus();
@@ -102,9 +102,12 @@ PropertyVariant readDbusProperty(const std::string& service,
     }
     catch (const sdbusplus::exception::exception& e)
     {
-        fdrlog::warn(
-            "readDbusProperty() Failed to get property: ObPath = {}, Service = {}, Intf = {}, Property = {}, error = {}",
-            objPath, service, interface, property, e.what());
+        if (logThrottle::logThrottling(info))
+        {
+            fdrlog::warn(
+                "readDbusProperty() Failed to get property: ObPath = {}, Service = {}, Intf = {}, Property = {}, error = {}",
+                objPath, service, interface, property, e.what());
+        }
     }
     return value;
 }

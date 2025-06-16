@@ -121,7 +121,10 @@ class CatalogEntry:
             return
 
         self.RFAPI = ContentOfColumn(row, "OOB API - Wildcards\n(Redfish URI and Field)")
-        
+        if self.RFAPI == '':
+            # Handling for catalog 3.8
+            self.RFAPI = ContentOfColumn(row, "OOB API - Wildcards\n(Redfish URI and Field. N/A for NvSwitch Tray)")
+
         self.PRIORITY = ContentOfColumn(row, "Applicable for \n"+PLATFORM)
         self.AVAILABILITY = ContentOfColumn(row, "Availability")
         self.TGUID = ContentOfColumn(row, "Telemetry GUID")

@@ -166,6 +166,7 @@ class FlightDataRecorder_c
     void InitTimerEvents(void);
     void RunEventLoop(void);
     void initRecordsSignalRegistration();
+    void CleanupPlatformFiles(void);
     int CheckAvailableFdrPartitionDiskSize(void);
     void CheckFdrPartitionDiskUsageAndExit(void);
 
