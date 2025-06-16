@@ -20,14 +20,18 @@ import tarfile
 import traceback
 import shutil
 import os
+import subprocess
 # Import third-party library modules
 import redfish
 from datetime import datetime
 # Import locally developed modules
 from catalog.catalog import DECODE_FORMAT, Catalog
 from tqdm import tqdm
+from pathlib import Path
+from typing import List, Set
+from fnmatch import fnmatch
 
-tool_version = '1.0.0'
+tool_version = '2.2'
 
 def dumpCollection(args):
     #print("**********************Nvidia fdrtool**********************")
@@ -54,35 +58,71 @@ def dumpCollection(args):
         logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
         
 
-def decodingDump(binary_log_tar_file):
-    #print("\n--------------------- Decoding FDR dump -----------------------")
-    #print("\nFDR dump to be decoded: {}".format(binary_log_tar_file))
-    # Remove existing logs directory to avoid issues with overlapping of logs in different formats
-     
-    log_root_dir = './fdr_logs/'
+def decodingDump(binary_log_tar_file, log_root_dir='./fdr_logs/'):
     if os.path.exists(log_root_dir):
-      shutil.rmtree(log_root_dir)
-    # Step-2: Unzip the .tar file
-    print ("unzip the logs")
+        shutil.rmtree(log_root_dir)
+
+    print("Extracting the dump...")
     binary_log = tarfile.open(binary_log_tar_file)
-    binary_log.extractall(log_root_dir) # This will create a directory if it's not present already.
+
+    # Get total number of files in the archive
+    members = binary_log.getmembers()
+    total_files = len(members)
+
+    # Extract with real progress tracking
+    for i, member in enumerate(tqdm(members, desc="Extracting files", ncols=100)):
+        binary_log.extract(member, log_root_dir)
+    # Check for compressed YAML files recursively
+    print("Checking for compressed YAML files...")
+    yaml_files = []
+    for root, dirs, files in os.walk(log_root_dir):
+        for file in files:
+            if file.endswith('.yaml'):
+                yaml_path = os.path.join(root, file)
+                yaml_files.append(yaml_path)
+
+    for yaml_path in yaml_files:
+        result = subprocess.run(['file', yaml_path], capture_output=True, text=True)
+        output = result.stdout.lower()
+
+        if any(keyword in output for keyword in ['compressed', 'archive', 'tar']):
+            # print(f"Found compressed YAML file: {yaml_path}")
+            temp_dir = f"{yaml_path}_temp_extract"
+            os.makedirs(temp_dir, exist_ok=True)
+            try:
+                subprocess.run(
+                    ['tar', '--strip-components=1', '-xf', yaml_path, '-C', temp_dir], 
+                    check=True
+                )
+                extracted_files = [f for f in os.listdir(temp_dir) if f.endswith('.yaml')]
+                if extracted_files:
+                    extracted_file_path = os.path.join(temp_dir, extracted_files[0])
+                    shutil.move(extracted_file_path, yaml_path)
+                    # print(f"Successfully replaced {yaml_path} with uncompressed version")
+                # else:
+                    # print(f"No YAML files found in the extracted content of {yaml_path}")
+                shutil.rmtree(temp_dir)
+            except subprocess.CalledProcessError as e:
+                print(f"Failed to decompress {yaml_path}: {e}")
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir)
     binary_log.close()
-    for i in tqdm(range(int(9e6)),ncols=100,desc ="Decoding dump"):
-        pass
-    #print('Successfully unzipped the tar archive of binary logs into {}.'.format(log_root_dir))
-    
     return log_root_dir
 
 
-def decodeBirthCertificate(file_location):
-    BirthCertificate_logs = './fdr_logs/birthcertificate'
+def decodeBirthCertificate(file_location, log_root_dir='./fdr_logs/'):
+    BirthCertificate_logs = os.path.join(log_root_dir, 'BirthCertificate')
     if os.path.exists(BirthCertificate_logs):
-      shutil.rmtree(BirthCertificate_logs)
+        shutil.rmtree(BirthCertificate_logs)
+
     binary_log = tarfile.open(file_location)
-    binary_log.extractall(BirthCertificate_logs)
+
+    # Get members and show real progress
+    members = binary_log.getmembers()
+    for member in tqdm(members, desc="Extracting Birth Certificate", ncols=100):
+        binary_log.extract(member, BirthCertificate_logs)
+
     binary_log.close()
-    for i in tqdm(range(int(9e6)),ncols=100,desc ="Decoding BirthCertificate dump"):
-        pass
     return BirthCertificate_logs
 
     
@@ -114,6 +154,7 @@ def main(arglist=None):
    argget.add_argument('-ul', '--use_local', default=False, action='store_true', help='Option to use local tar archive of binary logs if Redfish API for FDR dump is not available.')
    argget.add_argument('-bc', '--birth_certificate', default=False, action='store_true', help='Option to decode BirthCertificate.tar')
    argget.add_argument('-l', '--local_file', type=str, help='Local tar archive of binary logs if Redfish API for FDR dump is not available.')
+   argget.add_argument('-lr', '--log_root_dir', type=str, default='./fdr_logs/', help='Directory to store the logs.')
    
    
    argget.add_argument('-i', '--ip', type=str, help='Address of host, using http or https (example: https://123.45.6.7:8000)')
@@ -212,7 +253,7 @@ def main(arglist=None):
    binary_log_tar_file = dumpCollection(args)
 
    # Step-2: Unzip the .tar file
-   log_root_dir =  decodingDump(binary_log_tar_file)
+   log_root_dir =  decodingDump(binary_log_tar_file, args.log_root_dir)
 
    # Step-3: Create catalog of decoded binary logs
    MyCatalog = Catalog(vars(args), log_root_dir)
@@ -224,14 +265,22 @@ def main(arglist=None):
 
   # Additional option to decode the Birthcertificate.
    if args.birth_certificate:
-     tar_file='BirthCertificate.tar'
-     os.system('cp ./fdr_logs/fdr/Bookkeeper/BirthCertificate.tar .')
-     log_root_dir = decodeBirthCertificate(tar_file)
-     MyCatalog = Catalog(vars(args), log_root_dir)
-     MyCatalog.WriteAllEntries()
+     tar_file = os.path.join(log_root_dir, 'fdr/Bookkeeper/BirthCertificate.tar')
+     log_root_dir = decodeBirthCertificate(tar_file, args.log_root_dir)
+     try:
+      MyCatalog = Catalog(vars(args), log_root_dir)
+      MyCatalog.WriteAllEntries()
+     except Exception as e:
+      shutil.rmtree(log_root_dir)
+      print("=========================================================")
+      print(f"    {e}        ")
+      print("  Skipping BirthCertificate Decode. Continuting....      ")
+      print("=========================================================")
 
    else:
-     print("Warning : To Decode Birthcertificate.tar use option -bc ")
+     print("=========================================================")
+     print("      To Decode Birthcertificate.tar use option -bc      ")
+     print("=========================================================")
 
 
   # Step-5: Clean up
@@ -241,21 +290,44 @@ def main(arglist=None):
   # If Coverage Report is asked:
    if not is_customer_view:
     if args.generate_cvg_report:
-      for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Coverage Report.."):
-        pass
       if args.fdr_output_dir is None or args.fdr_output_dir == "":
-        args.fdr_output_dir="./fdr_logs/fdr"
+        args.fdr_output_dir= f"{args.log_root_dir}/fdr"
       check_fdr_telemetry_coverage.generate_coverage_report(args=args)
 
     if args.value_validation_report:
-      for i in tqdm(range(int(9e6)),ncols=100,desc ="Generating Value Validation Report.."):
-        pass
-
       if args.fdr_output_dir is None or args.fdr_output_dir == "":
-        args.fdr_output="./fdr_logs/fdr"
+        args.fdr_output= f"{args.log_root_dir}/fdr"
       else:
         args.fdr_output=args.fdr_output_dir
       data_validator.generate_value_validation_report(args=args)
+    # Checking if Important files are present in decoded dir.
+    search_path = Path(args.log_root_dir).resolve()
+    patterns_to_find = [
+      'Bookkeeper',
+      'fdr_manifest.txt',
+      'fdr_ppf_*.yaml',
+      'journalctl*',
+    ]
+    unmatched_patterns = set(patterns_to_find)
+    matched_files = set()
+
+    for root, dirs, files in os.walk(search_path):
+      current_items = files + dirs
+      for item in current_items:
+        for pattern in list(unmatched_patterns):
+          if fnmatch(item, pattern):
+            matched_files.add(item)
+            unmatched_patterns.discard(pattern)
+
+    # if matched_files:
+    #   print("\nFound the following matches:")
+    #   for item in sorted(matched_files):
+    #     print(f"- {item}")
+
+    if unmatched_patterns:
+      print("\nDid not find following files:")
+      for pattern in sorted(unmatched_patterns):
+        print(f"- {pattern}")
 
    end_time = datetime.now()
    print('\nTotal time taken: {} seconds.'\
@@ -264,6 +336,15 @@ def main(arglist=None):
 
    return status_code
 
+def CheckIfNvidaFdrIsActive(REDFISH_OBJ):
+  print('Checking if service is enabled...')
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR"
+  response = REDFISH_OBJ.get(url)
+  service_enabled = response.dict.get('ServiceEnabled')
+  if service_enabled:
+    print("Nvidia-FDR service is enabled. Continuing...")
+  else:
+    raise Exception("Nvidia-FDR service is not enabled on HMC, Exiting...")
 
 def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
   from datetime import datetime
@@ -275,6 +356,7 @@ def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
                       password=password, default_prefix='/redfish/v1/')
   REDFISH_OBJ.login(auth="basic")
   print('Successfully logged in to host {}'.format(host_ip))
+  CheckIfNvidaFdrIsActive(REDFISH_OBJ)
   # Trigger the FDR dump first.
   body = {"DiagnosticDataType":"OEM", "OEMDiagnosticDataType":"DiagnosticType=FDR"}  
   url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR/Actions/LogService.CollectDiagnosticData/"

@@ -131,9 +131,17 @@ function check_size_and_add()
         
         if (( current_dump_size + record_size <= ARG_DUMP_MAX_SIZE )); then
             current_dump_size=$(( current_dump_size + record_size ))
-            final_files+=("$item")
-            (( count_of_files++ ))
-            echo "[INFO] Added $item, Current dump size: $current_dump_size"
+            
+            # Check file count limit before adding
+            if [ "${#final_files[@]}" -lt "$file_cnt_limit" ]; then
+                final_files+=("$item")
+                (( count_of_files++ ))
+                echo "[INFO] Added $item, Current dump size: $current_dump_size, File count: ${#final_files[@]}"
+            else
+                echo "[INFO] File count limit ($file_cnt_limit) reached. Cannot add: $item"
+                STOP_FILE_ADDITION=1
+                return
+            fi
             
             # Check time constraints periodically
             script_current_time=$(date +%s)
