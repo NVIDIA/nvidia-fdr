@@ -8,7 +8,7 @@ jsonpatch==1.33
 jsonpath-rw==1.4.0
 jsonpointer==2.4
 ply==3.11
-protobuf==3.20
+protobuf==4.25.8
 python-dateutil==2.8.2
 reactivex==4.0.4
 redfish==3.2.1
