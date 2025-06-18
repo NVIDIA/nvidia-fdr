@@ -24,6 +24,7 @@ import subprocess
 # Import third-party library modules
 import redfish
 from datetime import datetime
+import time
 # Import locally developed modules
 from catalog.catalog import DECODE_FORMAT, Catalog
 from tqdm import tqdm
@@ -31,7 +32,13 @@ from pathlib import Path
 from typing import List, Set
 from fnmatch import fnmatch
 
-tool_version = '2.2'
+tool_version = '3.0'
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s:%(name)s:%(message)s',
+    stream=sys.stdout  # or to a file
+)
 
 def dumpCollection(args):
     #print("**********************Nvidia fdrtool**********************")
@@ -49,14 +56,29 @@ def dumpCollection(args):
             #binary_log_tar_file = CollectFdrDump_DEMO(args.ip, args.username, args.password)
             return binary_log_tar_file 
         else:# Retrieve the zip file from local machine
-            for i in tqdm(range(int(9e6)),ncols=100,desc ="Dump collection"):
+            for i in tqdm(range(int(9e6)),ncols=100,desc ="Dump collection", file=sys.stderr):
                 pass
             return args.local_file
     
     except Exception as e:
         print("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
         logging.error("fdrtool failed!\nException caught: \n{}\n".format(e))
-        
+
+def cleanUpFDRLogDirectory(ip, username, password):
+  print(f"Trying to reach the host {ip}....")
+  REDFISH_OBJ = redfish.redfish_client(
+    base_url=ip,
+    username=username,
+    password=password,
+    default_prefix='/redfish/v1/'
+  )
+  REDFISH_OBJ.login(auth="basic")
+  url = "/redfish/v1/Systems/HGX_Baseboard_0/LogServices/FDR/Actions/LogService.ClearLog/"
+  response = REDFISH_OBJ.post(url)
+  if response.status != 200:
+    raise Exception("Failed to clear FDR log directory! Response received:\n{}.".format(response))
+  else:
+    print(f"Successfully cleared FDR log directory!")
 
 def decodingDump(binary_log_tar_file, log_root_dir='./fdr_logs/'):
     if os.path.exists(log_root_dir):
@@ -70,7 +92,7 @@ def decodingDump(binary_log_tar_file, log_root_dir='./fdr_logs/'):
     total_files = len(members)
 
     # Extract with real progress tracking
-    for i, member in enumerate(tqdm(members, desc="Extracting files", ncols=100)):
+    for i, member in enumerate(tqdm(members, desc="Extracting files", ncols=100, file=sys.stderr)):
         binary_log.extract(member, log_root_dir)
     # Check for compressed YAML files recursively
     print("Checking for compressed YAML files...")
@@ -119,7 +141,7 @@ def decodeBirthCertificate(file_location, log_root_dir='./fdr_logs/'):
 
     # Get members and show real progress
     members = binary_log.getmembers()
-    for member in tqdm(members, desc="Extracting Birth Certificate", ncols=100):
+    for member in tqdm(members, desc="Extracting Birth Certificate", ncols=100, file=sys.stderr):
         binary_log.extract(member, BirthCertificate_logs)
 
     binary_log.close()
@@ -163,7 +185,7 @@ def main(arglist=None):
    argget.add_argument('-e', '--environment', type=str, help='Location of the machine. Field(FIE), Factory(FAC), Unknown(UNK)', default="UNK")
 
    # decode option
-   group_decode_format = argget.add_mutually_exclusive_group(required=True)
+   group_decode_format = argget.add_mutually_exclusive_group(required=False)
    group_decode_format.add_argument("--json", default=False, action="store_const", const = DECODE_FORMAT.JSON,  help="Decode the binary protobuf logs to JSON and store them locally.", dest = 'decode_format')
    group_decode_format.add_argument("--influx", default=False, action="store_const", const = DECODE_FORMAT.INFLUX, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to InfluxDB server.", dest = 'decode_format')
    group_decode_format.add_argument("--sqlite", default=False, action="store_const", const = DECODE_FORMAT.SQLITE, help="Decode the binary protobuf logs to appropriate format (line-protocol) to be written to local SQLite database.", dest = 'decode_format')
@@ -181,6 +203,7 @@ def main(arglist=None):
     argget.add_argument('-vvr', '--value_validation_report', default=False, action='store_true', help='Option to also generate Data validation report if enabled and decode format is json')
     argget.add_argument('-ltc', '--telemetry_agent_output', required=False, type=str, help='Used for Data Validation Report, Provide Path to the Latest Telemetry CSV for specified platform.')
     argget.add_argument('-fdo', '--fdr_output', required=False, type=str, help='Path to the directory where dump has been decoded in JSON')
+    argget.add_argument('-flc', '--clean_fdr_log_dir', default=False, action='store_true', help='Option to cleanup FDR log directory on BMC/HMC')
 
     
    # influxDB info
@@ -197,26 +220,41 @@ def main(arglist=None):
   # Parse the arguments
    args = argget.parse_args()
    arg_error = False
+
+   if not is_customer_view and args.clean_fdr_log_dir:
+     if not args.ip or not args.username or not args.password:
+       logging.error('Missing host information for clean up.')
+       arg_error = True
+     if arg_error:
+       argget.print_help()
+       return 1
+     cleanUpFDRLogDirectory(args.ip, args.username, args.password)
+     return 0
+
+   if not args.decode_format:
+     logging.error('One of the arguments --json --influx --sqlite is required.')
+     arg_error = True
+
    if not args.use_local and (not args.ip or not args.username or not args.password):
     logging.error('Missing host information.')
     arg_error = True
-    
+
    if args.use_local and not args.local_file:
     logging.error('Missing local logs file information.')
     arg_error = True
-    
+
    if args.key_name and args.decode_format != DECODE_FORMAT.JSON:
     logging.error('--key_name should be provided only while decoding to json.')
     arg_error = True
-  
+
    if args.decode_format == DECODE_FORMAT.INFLUX and (not args.influx_url or not args.influx_token or not args.influx_org):
     logging.error('Missing InfluxDB information.')
     arg_error = True
-    
+
    if args.append and args.decode_format != DECODE_FORMAT.SQLITE:
     logging.error('--append should be provided only while decoding to sqlite.')
     arg_error = True
-  
+
    if args.environment not in ["FIE", "FAC", "UNK"]:
     logging.error('Invalid environment provided')
     args.environment = "UNK"
@@ -248,7 +286,6 @@ def main(arglist=None):
     argget.print_help()
     return 1
    
-
    # Step-1: Redfish API call to get the zip file of fdr logs from HMC.
    binary_log_tar_file = dumpCollection(args)
 
@@ -319,11 +356,6 @@ def main(arglist=None):
             matched_files.add(item)
             unmatched_patterns.discard(pattern)
 
-    # if matched_files:
-    #   print("\nFound the following matches:")
-    #   for item in sorted(matched_files):
-    #     print(f"- {item}")
-
     if unmatched_patterns:
       print("\nDid not find following files:")
       for pattern in sorted(unmatched_patterns):
@@ -347,11 +379,8 @@ def CheckIfNvidaFdrIsActive(REDFISH_OBJ):
     raise Exception("Nvidia-FDR service is not enabled on HMC, Exiting...")
 
 def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
-  from datetime import datetime
   start_time = datetime.now()
-  
   print(f"Trying to reach the host {host_ip}....")
-  # Using Python redfish library (https://github.com/DMTF/python-redfish-library)
   REDFISH_OBJ = redfish.redfish_client(base_url=host_ip, username=username, \
                       password=password, default_prefix='/redfish/v1/')
   REDFISH_OBJ.login(auth="basic")
@@ -369,19 +398,64 @@ def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
   print(f"Redfish API: {url} {body}")
   response = REDFISH_OBJ.post(url, body=body)
   task_id = response.dict.get('Id')
+
   if response.is_processing:
-    # Wait for the dump to be ready
     task = response.monitor(REDFISH_OBJ)
-    import time
-    while task.is_processing:
+    task_start_time = time.time()
+
+    # Suppress redfish logging during progress bar display
+    import logging
+    redfish_logger = logging.getLogger('redfish')
+    original_level = redfish_logger.level
+    redfish_logger.setLevel(logging.ERROR)  # Only show errors, not info/debug
+
+    # Create progress bar for task monitoring with better configuration
+    with tqdm(desc="FDR Dump Task", unit="", ncols=100, 
+              bar_format='{l_bar}{bar}| {desc} [{elapsed}<{remaining}]', file=sys.stderr) as pbar:
+      status_count = 0
+      while task.is_processing:
         retry_time = task.retry_after if task.retry_after else 5
         task_status = task.dict['TaskState']
-        print('FDR Dump Task Status: {}. Retrying after {} seconds...'.format(task_status, retry_time))
+
+        # Update progress bar with current status and elapsed time
+        status_count += 1
+        elapsed_time = time.time() - task_start_time
+
+        # Create a more descriptive status message
+        if task_status == 'Running':
+          status_desc = f"Collecting FDR data... ({elapsed_time:.0f}s)"
+          pbar.set_description(f"🔄 {status_desc}")
+        elif task_status == 'Completed':
+          status_desc = f"Task completed! ({elapsed_time:.0f}s)"
+          pbar.set_description(f"✅ {status_desc}")
+          break
+        else:
+          status_desc = f"{task_status}... ({elapsed_time:.0f}s)"
+          pbar.set_description(f"📊 {status_desc}")
+
+        # Update progress bar (just to show activity, not actual progress)
+        pbar.update(0)  # Don't increment counter, just refresh display
+
+        if status_count % 2 == 0:
+          pbar.set_postfix_str("⏳ Processing")
+        else:
+          pbar.set_postfix_str("⏳ Processing.")
+
         time.sleep(retry_time)
         task = response.monitor(REDFISH_OBJ)
+
+        if time.time() - task_start_time > 300:  # 5 minutes timeout
+          pbar.set_description("❌ Task timed out")
+          redfish_logger.setLevel(original_level)  # Restore logging
+          raise Exception("FDR dump task timed out after 5 minutes")
+
+    # Restore redfish logging
+    redfish_logger.setLevel(original_level)
+    print(f"\n✅ FDR dump task completed successfully!")
+
   elif response.status != 200:
     raise Exception("FDR dump request failed! Response received:\n{}.".format(response))
-  # To-do: need to add other cases?
+
   # Verify the dump status
   url = response.dict['@odata.id']
   print(f'Checking FDR dump task status: {url}')
@@ -390,6 +464,7 @@ def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
     print('\nFDR dump is ready to be downloaded!')
   else:
     raise Exception("FDR dump request failed! Task status received:\n{}.".format(task))
+
   # Collect dump after TaskState becomes "Completed"
   entry_location=None
   for http_header in task.dict['Payload']['HttpHeaders']:
@@ -397,16 +472,55 @@ def CollectFdrDump(host_ip, username, password, env_tag="UNK"):
       entry_location=http_header.split(': ')[1]
   if entry_location is None:
     raise Exception("FDR dump path could not be found in the response! Response received:\n{}.".format(task))
+
   dump_timestamp = datetime.now()
-  # binary_log_tar_file = f'fdr_dump_{dump_timestamp}_{task_id}.tar.xz'
   binary_log_tar_file = f'./tmp/HMC_{env_tag}_SN{serial_number}_{dump_timestamp.strftime("%m%d%Y_%H%M%S")}.tar.xz'
   url = f"{entry_location}/attachment"
   print(f"\nDownloading FDR dump {binary_log_tar_file}....")
   print(f"Redfish API: {url}")
+  # Download with progress bar - Fixed for Redfish response
   response = REDFISH_OBJ.get(url)
-  with open(binary_log_tar_file, 'wb') as fd:
-    fd.write(response.read)
-  print(f"\nSuccessfully downloaded the FDR dump!")
+  
+  # Suppress redfish logging during download progress bar
+  redfish_logger = logging.getLogger('redfish')
+  original_level = redfish_logger.level
+  redfish_logger.setLevel(logging.ERROR)  # Only show errors, not info/debug
+  
+  # Get the response data
+  response_data = response.read
+  
+  # Show download progress (since we can't stream, show a simple progress bar)
+  if response_data:
+    data_size = len(response_data)
+    print(f"📦 Download size: {data_size:,} bytes ({data_size/1024/1024:.1f} MB)")
+    
+    # Write data with progress bar
+    with tqdm(total=data_size, unit='B', unit_scale=True, 
+              desc="📥 Downloading", ncols=100,
+              bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]', file=sys.stderr) as pbar:
+      with open(binary_log_tar_file, 'wb') as fd:
+        # Write in chunks to show progress
+        chunk_size = 8192
+        for i in range(0, data_size, chunk_size):
+          chunk = response_data[i:i + chunk_size]
+          fd.write(chunk)
+          pbar.update(len(chunk))
+  else:
+    # Fallback to original method if no data
+    print("⚠️  No data received from server, attempting fallback download...")
+    with tqdm(desc="📥 Downloading (fallback)", ncols=100, file=sys.stderr) as pbar:
+      with open(binary_log_tar_file, 'wb') as fd:
+        fd.write(response.read)
+        pbar.update(1)
+    
+    # Verify file was downloaded successfully
+    if os.path.getsize(binary_log_tar_file) == 0:
+      redfish_logger.setLevel(original_level)  # Restore logging
+      raise Exception("❌ Downloaded file is empty. Download may have failed.")
+  
+  # Restore redfish logging
+  redfish_logger.setLevel(original_level)
+  print(f"\n✅ Successfully downloaded the FDR dump!")
   REDFISH_OBJ.logout()
   print("\nLogged out of host {}".format(host_ip))
   
