@@ -33,7 +33,10 @@ The above command(s) builds an "executable" (a shell script actually).
 
 **Note:** 'make clean' will delete the executable, the protobuf compiled file and the fdr_logs directory.
 
-# Python package build.
+# Python package build (Default / Recommended Way).
+
+Using following command we can package the fdrtool for distribution
+
 ```bash
 make install
 ```

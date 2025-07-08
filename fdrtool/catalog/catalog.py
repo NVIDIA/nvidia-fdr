@@ -96,8 +96,8 @@ class Catalog:
         version_number = str(message_dict.get('DataDirFormatVersion'))
         if version_number != '2':
           raise VersionMisMatch("Version of the fdr-dump is not matching with the FDRTool.")
-        else:
-          logging.info("FDRTool using the %s version for decoding the FDR dump" % version_number)
+        # else:
+        #   logging.info("FDRTool using the %s version for decoding the FDR dump" % version_number)
         return
 
   def FindParamFilename(self, file_name):
