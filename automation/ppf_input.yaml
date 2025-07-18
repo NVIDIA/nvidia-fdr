@@ -1,0 +1,74 @@
+# Input template for YAML generator
+# This file defines the base structure and configurations for FDR YAML files
+
+# Single platform configuration
+copyright: |
+  #----------------------------------------------------------------------------------
+  #  Copyright (c) 2024, NVIDIA CORPORATION.  All rights reserved.
+  #
+  #  NVIDIA CORPORATION and its licensors retain all intellectual property
+  #  and proprietary rights in and to this software, related documentation
+  #  and any modifications thereto.  Any use, reproduction, disclosure or
+  #  distribution of this software and related documentation without an express
+  #  license agreement from NVIDIA CORPORATION is strictly prohibited.
+  #
+  # This file contains the parameters which FDR monitors, samples and
+  # writes into the specified target directory either periodically or as per
+  # the mentioned policy. 
+  #
+  # NOTE: 
+  # This file is not customer editable unless under the supervision of NVIDIA.
+
+
+
+platform:
+  name: gb200nvl-hmc
+  fingerprint:
+    - "grep -q -i openbmc-phosphor /etc/os-release"
+    - "grep -q -i gb200nvl-hmc /etc/os-release"
+  processors: accelerator
+  # Hard-coded column index to use for "Yes" values (Column 25 = "Applicable for GB300 NVL HMC")
+  applicable_column_index: 24
+  # Column index to use for values in dbus-expansion.csv 
+  expansion_column_index: 1
+  # Column index to use for values in 
+  shmem_column_index: 16
+  dbus_column_index: 15
+
+
+
+# Common configuration for all platforms
+general_config:
+  LogsFormat: BINARY
+  LogsBasePath: &LogsBasePath
+    - "/var/emmc/fdr/"
+  PartitionThresoldCheckMB: 1536
+  CompactionWindowSecs: 86400
+  CompactionSubWindowSecs: 1800
+  HiFiDataPreserveTimeSecs: 300
+  DefaultCompactionSensors: &compaction-definition-sensors
+    RecordRetentionPolicy: Recreate
+    CompactionMethod: Average
+  Events:
+    ObjectPath: /xyz/openbmc_project/logging
+    Interface: org.freedesktop.DBus.ObjectManager
+    Member: InterfacesAdded
+  
+# Precondition checks
+preconditions:
+  Threshold: 300
+  Checks:
+  - ID: CheckDumpDirMount
+    CommandParams:
+      Command: df $logbasepath | grep '/dev/mmcblk'
+    Params:
+      name: logbasepath
+      value: *LogsBasePath
+    CommandRetryPolicy: No
+    ExitOnFailure: Yes
+
+  - ID: CheckHmcWaitReady
+    CommandParams:
+      Command: busctl get-property xyz.openbmc_project.State.ConfigurableStateManager /xyz/openbmc_project/state/configurableStateManager/Manager xyz.openbmc_project.State.FeatureReady State | grep -i -q xyz.openbmc_project.State.FeatureReady.States.Enabled
+    CommandRetryPolicy: Yes
+    ExitOnFailure: No
