@@ -1,20 +1,15 @@
-option(
-    'tests',
-    type: 'feature',
-    description: 'Build tests',
-    value: 'enabled'
-)
+option('tests', type: 'feature', description: 'Build tests', value: 'enabled')
 
 option(
     'logging',
-    type : 'combo',
-    choices : ['spdlog', 'phosphor-logging'],
-    value : 'phosphor-logging'
+    type: 'combo',
+    choices: ['spdlog', 'phosphor-logging'],
+    value: 'phosphor-logging',
 )
 
 option(
     'platform_ppf',
-    type : 'string',
-    description : 'Platform PPF file',
-    value : ''
+    type: 'string',
+    description: 'Platform PPF file',
+    value: '',
 )
