@@ -18,8 +18,7 @@ using json = nlohmann::json;
 
 RedfishClient::RedfishClient(const std::string& prefix, const std::string& user,
                              const std::string& password) :
-    prefix(prefix),
-    user(user), password(password)
+    prefix(prefix), user(user), password(password)
 {
     this->httpc = new (HttpClient);
 

@@ -56,9 +56,8 @@ class EventSignalHandler
         std::map<std::string,
                  std::pair<std::shared_ptr<FDRStore>, EventRecord>>&
             fdrDeviceEventsWriter) :
-        eventObjPath(eventObjPath),
-        eventIface(eventIface), eventMember(eventMember),
-        fdrDeviceEventsWriter(fdrDeviceEventsWriter)
+        eventObjPath(eventObjPath), eventIface(eventIface),
+        eventMember(eventMember), fdrDeviceEventsWriter(fdrDeviceEventsWriter)
     {}
 
     ~EventSignalHandler();

@@ -24,9 +24,9 @@ Record::Record(Profile_t& profile, Section_t& section, Component_t& component,
                std::shared_ptr<FDRStore>& fdrStoreObj,
                std::shared_ptr<FDRStore>& fdrStatStoreObj,
                InfoGroup_t& infogroup, Info_t& info) :
-    profile(profile),
-    section(section), component(component), fdrLogReaderWriter(fdrStoreObj),
-    fdrStatwriter(fdrStatStoreObj), infogroup(infogroup), info(info)
+    profile(profile), section(section), component(component),
+    fdrLogReaderWriter(fdrStoreObj), fdrStatwriter(fdrStatStoreObj),
+    infogroup(infogroup), info(info)
 
 {
     LastFetchedAt = 0; // Init last read time to epoch

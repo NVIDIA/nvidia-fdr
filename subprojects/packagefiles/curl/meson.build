@@ -7,7 +7,7 @@ project(
     'c',
     version: '7.85.0',
     license: 'curl',
-    meson_version: '>=0.57.0'
+    meson_version: '>=0.57.0',
 )
 
 cc = meson.get_compiler('c')
@@ -111,9 +111,7 @@ endif
 proj = extern.add_project(
     'configure',
     configure_options: configure_options,
-    env: environment({
-        'CFLAGS': ' '.join(c_flags),
-    })
+    env: environment({'CFLAGS': ' '.join(c_flags)}),
 )
 
 libcurl_dep = proj.dependency('curl')
