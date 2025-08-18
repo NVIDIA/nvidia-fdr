@@ -11,6 +11,7 @@
 
 #include "fdr_common.hpp"
 
+#include "fdr_events.hpp"
 #include "fdr_log.hpp"
 
 #include <array>
@@ -19,6 +20,8 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
+#include <thread>
 
 CommandResult_t exec(const char* cmd)
 {
@@ -316,3 +319,47 @@ bool checkEnvValue(const std::string& var_name,
 }
 
 } // namespace systemUtils
+
+namespace fdrutil
+{
+
+void warnFdrLowSpace(const std::string& fdrdisk)
+{
+    std::error_code ec;
+    std::filesystem::space_info space = std::filesystem::space(fdrdisk, ec);
+    if (ec)
+    {
+        fdrlog::error("Failed to get disk space info for {}: {}", fdrdisk,
+                      ec.message());
+        return;
+    }
+    uint64_t total = space.capacity;
+    uint64_t free = space.free;
+    double percentUsed = 0.0;
+    if (total != 0)
+    {
+        percentUsed = (static_cast<double>(total - free) / total) * 100.0;
+    }
+    // 40% of total eMMC space is the threshold for warning.
+    // Why 40%? Because for FDR logs, the threshold is 50% of total eMMC.
+    // 40% is equivalent to ~1200 MB.
+    // FDR log threshold is ~1500 MB.
+    if (percentUsed >= 40.0)
+    {
+        fdrlog::warn("FDR eMMC partition is almost full");
+        try
+        {
+            rfEvent::createLogEntry(
+                "ResourceEvent.1.0.ResourceWarningThresholdExceeded",
+                {"FDR storage", "80%"},
+                "xyz.openbmc_project.Logging.Entry.Level.Critical",
+                "Please download the FDR logs and clear the FDR Storage using FDR log clear API.");
+        }
+        catch (const std::exception& e)
+        {
+            fdrlog::warn("Exception in rfEvent::createLogEntry: {}", e.what());
+        }
+    }
+}
+
+} // namespace fdrutil
