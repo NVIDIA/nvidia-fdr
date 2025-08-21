@@ -370,6 +370,22 @@ void FlightDataRecorder_c::InitTimerEvents(void)
     allFdrTimers.push_back(CompactionSubWindowTimer);
 
     // ------------------------------------------------------------------------------------------
+    // step 5: Init Timer for FDR Low Space Monitor
+    auto FdrLowSpaceMonitorHandler = [&](Timer&) {
+        const std::string fdrdisk = "/var/emmc/fdr";
+        fdrutil::warnFdrLowSpace(fdrdisk);
+    };
+    auto FdrLowSpaceMonitorHandlerBind = std::bind(FdrLowSpaceMonitorHandler,
+                                                   std::placeholders::_1);
+
+    fdrlog::info("Registering for FDR Low Space Monitor timer: {} seconds",
+                 10 * 60);
+    Timer FdrLowSpaceMonitorTimer(FdrEvents,
+                                  std::move(FdrLowSpaceMonitorHandlerBind),
+                                  std::chrono::seconds{10 * 60}); // 10 minutes
+
+    allFdrTimers.push_back(std::move(FdrLowSpaceMonitorTimer));
+    // ------------------------------------------------------------------------------------------
 }
 
 void FlightDataRecorder_c::RunEventLoop(void)

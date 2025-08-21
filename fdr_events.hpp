@@ -17,7 +17,9 @@
 #include "fdr_store.hpp"
 #include "fdr_utils.hpp"
 
+#include <phosphor-logging/lg2.hpp>
 #include <sdbusplus/bus/match.hpp>
+#include <xyz/openbmc_project/Logging/Entry/server.hpp>
 
 // Store section.ID, component.ID and infogroup.ID for book_of_errors
 struct EventRecord
@@ -65,3 +67,12 @@ class EventSignalHandler
 
     void registerEventsSignal();
 };
+
+namespace rfEvent
+{
+void createLogEntry(const std::string& messageId,
+                    const std::vector<std::string>& messageArgs,
+                    const std::string& severity, const std::string& resolution,
+                    const std::string& name = "System Event Log Entry",
+                    sdbusplus::bus_t* busPtr = nullptr);
+}
