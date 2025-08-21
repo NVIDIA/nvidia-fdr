@@ -165,3 +165,8 @@ namespace systemUtils
 bool checkEnvValue(const std::string& var_name,
                    const std::string& expected_value);
 }
+
+namespace fdrutil
+{
+void warnFdrLowSpace(const std::string& fdrdisk);
+}
