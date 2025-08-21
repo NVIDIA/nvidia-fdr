@@ -16,7 +16,12 @@
 #include "fdr_policy.hpp"
 #include "property_variant.hpp"
 
+#include <sdbusplus/bus.hpp>
+#include <sdbusplus/message.hpp>
+
 #include <iostream>
+#include <map>
+#include <sstream>
 
 /** @brief Helper to fetch device id from device name */
 std::string getDeviceId(const std::string& deviceName)
@@ -328,3 +333,58 @@ void EventSignalHandler::registerEventsSignal()
             std::string("',path='") + eventObjPath + std::string("'"),
         std::move(interfacesAddedHandler));
 }
+
+namespace rfEvent
+{
+
+void createLogEntry(const std::string& messageId,
+                    const std::vector<std::string>& messageArgs,
+                    const std::string& severity, const std::string& resolution,
+                    const std::string& name, sdbusplus::bus_t* busPtr)
+{
+    std::map<std::string, std::string> addData;
+    addData["REDFISH_MESSAGE_ID"] = messageId;
+    if (!messageArgs.empty())
+    {
+        std::ostringstream oss;
+        for (size_t i = 0; i < messageArgs.size(); ++i)
+        {
+            if (i > 0)
+                oss << ",";
+            oss << messageArgs[i];
+        }
+        addData["REDFISH_MESSAGE_ARGS"] = oss.str();
+    }
+    addData["xyz.openbmc_project.Logging.Entry.Resolution"] = resolution;
+    addData["Name"] = name;
+
+    try
+    {
+        if (busPtr)
+        {
+            auto method = busPtr->new_method_call(
+                "xyz.openbmc_project.Logging", "/xyz/openbmc_project/logging",
+                "xyz.openbmc_project.Logging.Create", "Create");
+            method.append(messageId);
+            method.append(severity);
+            method.append(addData);
+            busPtr->call_noreply(method);
+        }
+        else
+        {
+            auto localBus = sdbusplus::bus::new_default();
+            auto method = localBus.new_method_call(
+                "xyz.openbmc_project.Logging", "/xyz/openbmc_project/logging",
+                "xyz.openbmc_project.Logging.Create", "Create");
+            method.append(messageId);
+            method.append(severity);
+            method.append(addData);
+            localBus.call_noreply(method);
+        }
+    }
+    catch (const std::exception& e)
+    {
+        fdrlog::error("Failed to create Redfish event log: {}", e.what());
+    }
+}
+} // namespace rfEvent

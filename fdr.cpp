@@ -11,6 +11,7 @@
 
 #include "fdr.hpp"
 
+#include "fdr_events.hpp"
 #include "fdr_grp_update.hpp"
 #include "fdr_log.hpp"
 
@@ -354,6 +355,12 @@ int FlightDataRecorder_c::CheckAvailableFdrPartitionDiskSize(void)
 
         if (availableSpaceMB <= profile.GeneralConfig.PartitionThresoldCheckMB)
         {
+            rfEvent::createLogEntry(
+                "ResourceEvent.1.0.ResourceErrorsDetected",
+                {"FDR Storage", "Storage full"},
+                "xyz.openbmc_project.Logging.Entry.Level.Critical",
+                "Please download the FDR logs and clear the FDR Storage using FDR logclear API.");
+
             fdrlog::warn(
                 "availableSpaceMB {}MB is less than fdr threshold {}MB",
                 availableSpaceMB,
@@ -439,6 +446,16 @@ int FlightDataRecorder_c::ExecutePreconditionRules(void)
         // check what action needs to be done when this precondition failed
         if (precheckPassed == false)
         {
+            if (CheckRule.ID == "CheckDumpDirMount")
+            {
+                rfEvent::createLogEntry(
+                    "ResourceEvent.1.0.ResourceErrorsDetected",
+                    {"FDR Storage", "Storage not mounted"},
+                    "xyz.openbmc_project.Logging.Entry.Level.Critical",
+                    "Please restart HMC and if the issue persists, contact support");
+                fdrlog::error("Fdr storage is not mounted");
+            }
+
             if (CheckRule.ExitOnFailure == "true")
             {
                 fdrlog::error(
