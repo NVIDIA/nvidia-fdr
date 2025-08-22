@@ -48,11 +48,6 @@ Preconditions:
     CommandRetryPolicy: No
     ExitOnFailure: Yes
 
-  - ID: CheckHmcWaitReady
-    CommandParams:
-      Command: busctl get-property xyz.openbmc_project.State.ConfigurableStateManager /xyz/openbmc_project/state/configurableStateManager/Manager xyz.openbmc_project.State.FeatureReady State | grep -i -q xyz.openbmc_project.State.FeatureReady.States.Enabled
-    CommandRetryPolicy: Yes
-    ExitOnFailure: No
 
 
 GPU: &gpu
