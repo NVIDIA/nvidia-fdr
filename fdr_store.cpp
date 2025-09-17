@@ -79,10 +79,14 @@ void FDRStore::append(const google::protobuf::Message& data)
         if (outstream.is_open())
         {
             std::string jsonstr;
-            google::protobuf::util::JsonPrintOptions options;
-            options.always_print_primitive_fields = true;
-            google::protobuf::util::MessageToJsonString(data, &jsonstr,
-                                                        options);
+            auto status = google::protobuf::util::MessageToJsonString(data,
+                                                                      &jsonstr);
+            if (!status.ok())
+            {
+                fdrlog::error("Failed to convert message to JSON: {}",
+                              status.ToString());
+                // TODO: Better error handling
+            }
             outstream << jsonstr << std::endl;
             outstream.close();
         }
@@ -114,7 +118,14 @@ int FDRStore::readnext(google::protobuf::Message* datap)
             std::string line;
             if (std::getline(instream, line))
             {
-                google::protobuf::util::JsonStringToMessage(line, datap);
+                auto status =
+                    google::protobuf::util::JsonStringToMessage(line, datap);
+                if (!status.ok())
+                {
+                    fdrlog::warn("Failed to parse JSON: {}", status.ToString());
+                    // Continue to next line or return error based on
+                    // requirements
+                }
                 return FDR_SUCCESS_DATA_READ;
             }
         }
