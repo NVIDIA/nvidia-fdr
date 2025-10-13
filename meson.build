@@ -71,6 +71,8 @@ if not yamlcpp_dep.found()
             'YAML_CPP_BUILD_TESTS'            : 'OFF',
             'YAML_CPP_BUILD_CONTRIB'          : 'OFF',
             'BUILD_SHARED_LIBS'               : 'OFF',
+            # Force-include <cstdint> in yaml-cpp sources to define uint16_t/uint32_t
+            'CMAKE_CXX_FLAGS'                 : '-include cstdint',
         },
     )
     yamlcpp_dep = cmake.subproject('yaml-cpp', options: yamlcpp_opts).dependency(
