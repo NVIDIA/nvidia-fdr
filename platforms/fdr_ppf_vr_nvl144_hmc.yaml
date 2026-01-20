@@ -1,0 +1,3131 @@
+FingerPrint:
+  Checks:
+  - grep -q -i openbmc-phosphor /etc/os-release
+  - grep -q -i vr-nvl144-hmc /etc/os-release
+GeneralConfig:
+  CompactionSubWindowSecs: 1800
+  CompactionWindowSecs: 86400
+  DefaultCompactionSensors:
+    CompactionMethod: Average
+    RecordRetentionPolicy: Recreate
+  Events:
+    Interface: org.freedesktop.DBus.ObjectManager
+    Member: InterfacesAdded
+    ObjectPath: /xyz/openbmc_project/logging
+  HiFiDataPreserveTimeSecs: 300
+  LogsBasePath:
+  - /var/emmc/fdr/
+  LogsFormat: BINARY
+  PartitionThresoldCheckMB: 1024
+Preconditions:
+  Checks:
+  - CommandParams:
+      Command: df $logbasepath | grep '/dev/mmcblk'
+    CommandRetryPolicy: false
+    ExitOnFailure: true
+    ID: CheckDumpDirMount
+    Params:
+      name: logbasepath
+      value:
+      - /var/emmc/fdr/
+  - CommandParams:
+      Command: busctl get-property xyz.openbmc_project.State.BMC /xyz/openbmc_project/state/bmc0
+        xyz.openbmc_project.State.BMC CurrentBMCState | grep -q 'BMCState.Ready'
+    CommandRetryPolicy: true
+    ExitOnFailure: false
+    ID: CheckHmcWaitReady
+  Threshold: 300
+SMA:
+  InfoGroups:
+  - ID: Config
+    InfoList:
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Version
+        ObjectPath: /xyz/openbmc_project/software/HGX_FW_GPU_SMA_$smaid
+        Property: Version
+        Service: xyz.openbmc_project.PLDM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-FW-VER
+      ParamID: 0
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-MIN-SECURITY-VER
+      ParamID: 1
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: SlotId
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SLOT-ID[1]
+      ParamID: 2
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: SlotId
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SLOT-ID[2]
+      ParamID: 3
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.ExtendedVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: ExtendedVersion
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-VERSION[1]
+      ParamID: 4
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.ExtendedVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: ExtendedVersion
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-VERSION[2]
+      ParamID: 5
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.VersionComparison
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: FirmwareComparisonNumber
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-FW-COMP[1]
+      ParamID: 6
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.VersionComparison
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: FirmwareComparisonNumber
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-FW-COMP[2]
+      ParamID: 7
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.BuildType
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: BuildType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-BUILD-TYPE[1]
+      ParamID: 8
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.BuildType
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: BuildType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-BUILD-TYPE[2]
+      ParamID: 9
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.State
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: State
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-FW-STATE[1]
+      ParamID: 10
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.State
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: State
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-FW-STATE[2]
+      ParamID: 11
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: SigningType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SIGN-TYPE[1]
+      ParamID: 12
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: SigningType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SIGN-TYPE[2]
+      ParamID: 13
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: SigningKeyIndex
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SIGN-KEY[1]
+      ParamID: 14
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: SigningKeyIndex
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SIGN-KEY[2]
+      ParamID: 15
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SECURITY-VERSION[1]
+      ParamID: 16
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-SECURITY-VERSION[2]
+      ParamID: 17
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Settings
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: WriteProtected
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-WP-STATUS[1]
+      ParamID: 18
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Settings
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: WriteProtected
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-WP-STATUS[2]
+      ParamID: 19
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Binary Blob
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityConfig
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+        Property: IrreversibleConfigState
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IRREVERSIBLE-CONFIG
+      ParamID: 20
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+        Property: TrustedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-AUTH-KEY-ALLOWED-IDX
+      ParamID: 21
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+        Property: RevokedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-AUTH-KEY-REVOKED-IDX
+      ParamID: 22
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: TrustedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
+      ParamID: 23
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: TrustedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
+      ParamID: 24
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: RevokedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
+      ParamID: 25
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: RevokedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
+      ParamID: 26
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-FW-SVN[1]
+      ParamID: 27
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-FW-SVN[2]
+      ParamID: 28
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-FW-MIN-SVN
+      ParamID: 29
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Version
+        ObjectPath: /xyz/openbmc_project/software/HGX_FW_ProcessorModule_SMA_$smaid
+        Property: Version
+        Service: xyz.openbmc_project.PLDM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-FW-VER
+      ParamID: 30
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-MIN-SECURITY-VER
+      ParamID: 31
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: SlotId
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SLOT-ID[1]
+      ParamID: 32
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: SlotId
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SLOT-ID[2]
+      ParamID: 33
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.ExtendedVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: ExtendedVersion
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-VERSION[1]
+      ParamID: 34
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.ExtendedVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: ExtendedVersion
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-VERSION[2]
+      ParamID: 35
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.VersionComparison
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: FirmwareComparisonNumber
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-FW-COMP[1]
+      ParamID: 36
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.VersionComparison
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: FirmwareComparisonNumber
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-FW-COMP[2]
+      ParamID: 37
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.BuildType
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: BuildType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[1]
+      ParamID: 38
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.BuildType
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: BuildType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[2]
+      ParamID: 39
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.State
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: State
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-FW-STATE[1]
+      ParamID: 40
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.State
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: State
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-FW-STATE[2]
+      ParamID: 41
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: SigningType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SIGN-TYPE[1]
+      ParamID: 42
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: SigningType
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SIGN-TYPE[2]
+      ParamID: 43
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: SigningKeyIndex
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SIGN-KEY[1]
+      ParamID: 44
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: SigningKeyIndex
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SIGN-KEY[2]
+      ParamID: 45
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SECURITY-VERSION[1]
+      ParamID: 46
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-SECURITY-VERSION[2]
+      ParamID: 47
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Settings
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: WriteProtected
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-WP-STATUS[1]
+      ParamID: 48
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Settings
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: WriteProtected
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-WP-STATUS[2]
+      ParamID: 49
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Binary Blob
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityConfig
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+        Property: IrreversibleConfigState
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IRREVERSIBLE-CONFIG
+      ParamID: 50
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+        Property: TrustedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-AUTH-KEY-ALLOWED-IDX
+      ParamID: 51
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+        Property: RevokedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-AUTH-KEY-REVOKED-IDX
+      ParamID: 52
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: TrustedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
+      ParamID: 53
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: TrustedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
+      ParamID: 54
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: RevokedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
+      ParamID: 55
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: List[int]
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: RevokedKeys
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
+      ParamID: 56
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-FW-SVN[1]
+      ParamID: 57
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-FW-SVN[2]
+      ParamID: 58
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.SecurityVersion
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+        Property: Version
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-FW-MIN-SVN
+      ParamID: 59
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+  - ID: Inventory
+    InfoList:
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Common.UUID
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+        Property: UUID
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-UUID
+      ParamID: 60
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+        Property: SKU
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-SKU
+      ParamID: 61
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Common.UUID
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+        Property: UUID
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-UUID
+      ParamID: 62
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.SKU
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+        Property: SKU
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-SKU
+      ParamID: 63
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+  - CompactionMethod: Average
+    ID: Sensor.Thermal
+    InfoList:
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SMA_$smaid_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-TEMP-CURR
+      ParamID: 64
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_SMA_$smaid_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-TEMP-CURR
+      ParamID: 65
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    RecordRetentionPolicy: Recreate
+  - ID: Status
+    InfoList:
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+        Property: IsActive,
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-ACTIVE-SLOT[1]
+      ParamID: 66
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+        Property: IsActive,
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-ACTIVE-SLOT[2]
+      ParamID: 67
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+        Property: SigningKeyIndex
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-ROT-ACTIVE-KEY-SET-ID
+      ParamID: 68
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.State.Chassis
+        ObjectPath: /xyz/openbmc_project/state/chassis0
+        Property: CurrentPowerState
+        Service: xyz.openbmc_project.State.Chassis
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-STATUS
+      ParamID: 69
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.State.Decorator.Health
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+        Property: Health
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-HEALTH
+      ParamID: 70
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: List[str]
+      DbusParams:
+        Interface: com.nvidia.ResetCounters.ResetCounterMetrics
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid/ResetStatistics
+        Property: BootReason
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: GPU-LAST-RST-RSN
+      ParamID: 71
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.State.Chassis
+        ObjectPath: /xyz/openbmc_project/state/chassis0
+        Property: CurrentPowerState
+        Service: xyz.openbmc_project.State.Chassis
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-STATUS
+      ParamID: 72
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.State.Decorator.Health
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+        Property: Health
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-HEALTH
+      ParamID: 73
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: List[str]
+      DbusParams:
+        Interface: com.nvidia.ResetCounters.ResetCounterMetrics
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid/ResetStatistics
+        Property: BootReason
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-LAST-RST-RSN
+      ParamID: 74
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+        Property: IsActive
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-ACTIVE-SLOT[1]
+      ParamID: 75
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Slot
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+        Property: IsActive
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-ACTIVE-SLOT[2]
+      ParamID: 76
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Security.Signing
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+        Property: SigningKeyIndex
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HPM-ROT-ACTIVE-KEY-SET-ID
+      ParamID: 77
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+  Params:
+  - name: smaid
+    value: 1
+Sections:
+- Components:
+  - ID: HGX_SMA_0
+    InfoGroups:
+    - ID: Config
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Version
+          ObjectPath: /xyz/openbmc_project/software/HGX_FW_GPU_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.PLDM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-VER
+        ParamID: 0
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-MIN-SECURITY-VER
+        ParamID: 1
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SLOT-ID[1]
+        ParamID: 2
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SLOT-ID[2]
+        ParamID: 3
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-VERSION[1]
+        ParamID: 4
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-VERSION[2]
+        ParamID: 5
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-COMP[1]
+        ParamID: 6
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-COMP[2]
+        ParamID: 7
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-BUILD-TYPE[1]
+        ParamID: 8
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-BUILD-TYPE[2]
+        ParamID: 9
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-STATE[1]
+        ParamID: 10
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-STATE[2]
+        ParamID: 11
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-TYPE[1]
+        ParamID: 12
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-TYPE[2]
+        ParamID: 13
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-KEY[1]
+        ParamID: 14
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-KEY[2]
+        ParamID: 15
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SECURITY-VERSION[1]
+        ParamID: 16
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SECURITY-VERSION[2]
+        ParamID: 17
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-WP-STATUS[1]
+        ParamID: 18
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-WP-STATUS[2]
+        ParamID: 19
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Binary Blob
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityConfig
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: IrreversibleConfigState
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IRREVERSIBLE-CONFIG
+        ParamID: 20
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-AUTH-KEY-ALLOWED-IDX
+        ParamID: 21
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-AUTH-KEY-REVOKED-IDX
+        ParamID: 22
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
+        ParamID: 23
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
+        ParamID: 24
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
+        ParamID: 25
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
+        ParamID: 26
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-SVN[1]
+        ParamID: 27
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-SVN[2]
+        ParamID: 28
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-MIN-SVN
+        ParamID: 29
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Version
+          ObjectPath: /xyz/openbmc_project/software/HGX_FW_ProcessorModule_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.PLDM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-VER
+        ParamID: 30
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-MIN-SECURITY-VER
+        ParamID: 31
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SLOT-ID[1]
+        ParamID: 32
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SLOT-ID[2]
+        ParamID: 33
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-VERSION[1]
+        ParamID: 34
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-VERSION[2]
+        ParamID: 35
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-COMP[1]
+        ParamID: 36
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-COMP[2]
+        ParamID: 37
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[1]
+        ParamID: 38
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[2]
+        ParamID: 39
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-STATE[1]
+        ParamID: 40
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-STATE[2]
+        ParamID: 41
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-TYPE[1]
+        ParamID: 42
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-TYPE[2]
+        ParamID: 43
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-KEY[1]
+        ParamID: 44
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-KEY[2]
+        ParamID: 45
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SECURITY-VERSION[1]
+        ParamID: 46
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SECURITY-VERSION[2]
+        ParamID: 47
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-WP-STATUS[1]
+        ParamID: 48
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-WP-STATUS[2]
+        ParamID: 49
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Binary Blob
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityConfig
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: IrreversibleConfigState
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IRREVERSIBLE-CONFIG
+        ParamID: 50
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-AUTH-KEY-ALLOWED-IDX
+        ParamID: 51
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-AUTH-KEY-REVOKED-IDX
+        ParamID: 52
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
+        ParamID: 53
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
+        ParamID: 54
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
+        ParamID: 55
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
+        ParamID: 56
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-SVN[1]
+        ParamID: 57
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-SVN[2]
+        ParamID: 58
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-MIN-SVN
+        ParamID: 59
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+    - ID: Inventory
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Common.UUID
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+          Property: UUID
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-UUID
+        ParamID: 60
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+          Property: SKU
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-SKU
+        ParamID: 61
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Common.UUID
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+          Property: UUID
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-UUID
+        ParamID: 62
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.SKU
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+          Property: SKU
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-SKU
+        ParamID: 63
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+    - CompactionMethod: Average
+      ID: Sensor.Thermal
+      InfoList:
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SMA_$smaid_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-TEMP-CURR
+        ParamID: 64
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_SMA_$smaid_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-TEMP-CURR
+        ParamID: 65
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      RecordRetentionPolicy: Recreate
+    - ID: Status
+      InfoList:
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: IsActive,
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-ACTIVE-SLOT[1]
+        ParamID: 66
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: IsActive,
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-ACTIVE-SLOT[2]
+        ParamID: 67
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-ACTIVE-KEY-SET-ID
+        ParamID: 68
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Chassis
+          ObjectPath: /xyz/openbmc_project/state/chassis0
+          Property: CurrentPowerState
+          Service: xyz.openbmc_project.State.Chassis
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-STATUS
+        ParamID: 69
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Decorator.Health
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+          Property: Health
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-HEALTH
+        ParamID: 70
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: List[str]
+        DbusParams:
+          Interface: com.nvidia.ResetCounters.ResetCounterMetrics
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid/ResetStatistics
+          Property: BootReason
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-LAST-RST-RSN
+        ParamID: 71
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Chassis
+          ObjectPath: /xyz/openbmc_project/state/chassis0
+          Property: CurrentPowerState
+          Service: xyz.openbmc_project.State.Chassis
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-STATUS
+        ParamID: 72
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Decorator.Health
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+          Property: Health
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-HEALTH
+        ParamID: 73
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: List[str]
+        DbusParams:
+          Interface: com.nvidia.ResetCounters.ResetCounterMetrics
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid/ResetStatistics
+          Property: BootReason
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-LAST-RST-RSN
+        ParamID: 74
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: IsActive
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-ACTIVE-SLOT[1]
+        ParamID: 75
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: IsActive
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-ACTIVE-SLOT[2]
+        ParamID: 76
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-ACTIVE-KEY-SET-ID
+        ParamID: 77
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+    Params:
+    - name: smaid
+      value: 0
+    - name: sma_slotid
+      value: 1
+  - ID: HGX_SMA_1
+    InfoGroups:
+    - ID: Config
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Version
+          ObjectPath: /xyz/openbmc_project/software/HGX_FW_GPU_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.PLDM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-VER
+        ParamID: 78
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-MIN-SECURITY-VER
+        ParamID: 79
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SLOT-ID[1]
+        ParamID: 80
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SLOT-ID[2]
+        ParamID: 81
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-VERSION[1]
+        ParamID: 82
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-VERSION[2]
+        ParamID: 83
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-COMP[1]
+        ParamID: 84
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-COMP[2]
+        ParamID: 85
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-BUILD-TYPE[1]
+        ParamID: 86
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-BUILD-TYPE[2]
+        ParamID: 87
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-STATE[1]
+        ParamID: 88
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-FW-STATE[2]
+        ParamID: 89
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-TYPE[1]
+        ParamID: 90
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-TYPE[2]
+        ParamID: 91
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-KEY[1]
+        ParamID: 92
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SIGN-KEY[2]
+        ParamID: 93
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SECURITY-VERSION[1]
+        ParamID: 94
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-SECURITY-VERSION[2]
+        ParamID: 95
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-WP-STATUS[1]
+        ParamID: 96
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-WP-STATUS[2]
+        ParamID: 97
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Binary Blob
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityConfig
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: IrreversibleConfigState
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IRREVERSIBLE-CONFIG
+        ParamID: 98
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-AUTH-KEY-ALLOWED-IDX
+        ParamID: 99
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-AUTH-KEY-REVOKED-IDX
+        ParamID: 100
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
+        ParamID: 101
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
+        ParamID: 102
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
+        ParamID: 103
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
+        ParamID: 104
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-SVN[1]
+        ParamID: 105
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-SVN[2]
+        ParamID: 106
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-FW-MIN-SVN
+        ParamID: 107
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Version
+          ObjectPath: /xyz/openbmc_project/software/HGX_FW_ProcessorModule_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.PLDM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-VER
+        ParamID: 108
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-MIN-SECURITY-VER
+        ParamID: 109
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SLOT-ID[1]
+        ParamID: 110
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: SlotId
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SLOT-ID[2]
+        ParamID: 111
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-VERSION[1]
+        ParamID: 112
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.ExtendedVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: ExtendedVersion
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-VERSION[2]
+        ParamID: 113
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-COMP[1]
+        ParamID: 114
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.VersionComparison
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: FirmwareComparisonNumber
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-COMP[2]
+        ParamID: 115
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[1]
+        ParamID: 116
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.BuildType
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: BuildType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[2]
+        ParamID: 117
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-STATE[1]
+        ParamID: 118
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.State
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: State
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-FW-STATE[2]
+        ParamID: 119
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-TYPE[1]
+        ParamID: 120
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: SigningType
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-TYPE[2]
+        ParamID: 121
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-KEY[1]
+        ParamID: 122
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SIGN-KEY[2]
+        ParamID: 123
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SECURITY-VERSION[1]
+        ParamID: 124
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-SECURITY-VERSION[2]
+        ParamID: 125
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-WP-STATUS[1]
+        ParamID: 126
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Settings
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: WriteProtected
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-WP-STATUS[2]
+        ParamID: 127
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Binary Blob
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityConfig
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: IrreversibleConfigState
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IRREVERSIBLE-CONFIG
+        ParamID: 128
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-AUTH-KEY-ALLOWED-IDX
+        ParamID: 129
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-AUTH-KEY-REVOKED-IDX
+        ParamID: 130
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
+        ParamID: 131
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: TrustedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
+        ParamID: 132
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
+        ParamID: 133
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: List[int]
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: RevokedKeys
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
+        ParamID: 134
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-SVN[1]
+        ParamID: 135
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-SVN[2]
+        ParamID: 136
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.SecurityVersion
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: Version
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-FW-MIN-SVN
+        ParamID: 137
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+    - ID: Inventory
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Common.UUID
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+          Property: UUID
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-UUID
+        ParamID: 138
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+          Property: SKU
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-SKU
+        ParamID: 139
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Common.UUID
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+          Property: UUID
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-UUID
+        ParamID: 140
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.SKU
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+          Property: SKU
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-SKU
+        ParamID: 141
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+    - CompactionMethod: Average
+      ID: Sensor.Thermal
+      InfoList:
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_GPU_SMA_$smaid_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-TEMP-CURR
+        ParamID: 142
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_SMA_$smaid_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-TEMP-CURR
+        ParamID: 143
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      RecordRetentionPolicy: Recreate
+    - ID: Status
+      InfoList:
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/1
+          Property: IsActive,
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-ACTIVE-SLOT[1]
+        ParamID: 144
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid/Slots/2
+          Property: IsActive,
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-ACTIVE-SLOT[2]
+        ParamID: 145
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_GPU_SMA_$smaid
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-ROT-ACTIVE-KEY-SET-ID
+        ParamID: 146
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Chassis
+          ObjectPath: /xyz/openbmc_project/state/chassis0
+          Property: CurrentPowerState
+          Service: xyz.openbmc_project.State.Chassis
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-STATUS
+        ParamID: 147
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Decorator.Health
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid
+          Property: Health
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-HEALTH
+        ParamID: 148
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: List[str]
+        DbusParams:
+          Interface: com.nvidia.ResetCounters.ResetCounterMetrics
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_GPU_SMA_$smaid/ResetStatistics
+          Property: BootReason
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: GPU-LAST-RST-RSN
+        ParamID: 149
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Chassis
+          ObjectPath: /xyz/openbmc_project/state/chassis0
+          Property: CurrentPowerState
+          Service: xyz.openbmc_project.State.Chassis
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-STATUS
+        ParamID: 150
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Decorator.Health
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid
+          Property: Health
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-HEALTH
+        ParamID: 151
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: List[str]
+        DbusParams:
+          Interface: com.nvidia.ResetCounters.ResetCounterMetrics
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_ProcessorModule_SMA_$smaid/ResetStatistics
+          Property: BootReason
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-LAST-RST-RSN
+        ParamID: 152
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/1
+          Property: IsActive
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-ACTIVE-SLOT[1]
+        ParamID: 153
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Slot
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid/Slots/2
+          Property: IsActive
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-ACTIVE-SLOT[2]
+        ParamID: 154
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Security.Signing
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_IRoT_ProcessorModule_SMA_$smaid
+          Property: SigningKeyIndex
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HPM-ROT-ACTIVE-KEY-SET-ID
+        ParamID: 155
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+    Params:
+    - name: smaid
+      value: 1
+    - name: sma_slotid
+      value: 2
+  ID: SMA
