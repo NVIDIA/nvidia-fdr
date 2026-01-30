@@ -1,7 +1,365 @@
+#----------------------------------------------------------------------------------
+#  Copyright (c) 2026, NVIDIA CORPORATION.  All rights reserved.
+#
+#  NVIDIA CORPORATION and its licensors retain all intellectual property
+#  and proprietary rights in and to this software, related documentation
+#  and any modifications thereto.  Any use, reproduction, disclosure or
+#  distribution of this software and related documentation without an express
+#  license agreement from NVIDIA CORPORATION is strictly prohibited.
+#
+# This file contains the parameters which FDR monitors, samples and
+# writes into the specified target directory either periodically or as per
+# the mentioned policy. 
+#
+# NOTE: 
+# This file is not customer editable unless under the supervision of NVIDIA.
+
+Baseboard:
+  InfoGroups:
+  - ID: Inventory
+    InfoList:
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Item.Chassis
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+        Property: Type
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: CHAS-TYPE
+      ParamID: 0
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+        Property: BuildDate
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-MFG-DATE[0]
+      ParamID: 1
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+        Property: BuildDate
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-MFG-DATE[1]
+      ParamID: 2
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+        Property: Model
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-BRD-PRDCT-NAME[0]
+      ParamID: 3
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+        Property: Model
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-BRD-PRDCT-NAME[1]
+      ParamID: 4
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+        Property: SerialNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-SERIAL[0]
+      ParamID: 5
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+        Property: SerialNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-SERIAL[1]
+      ParamID: 6
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+        Property: PartNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PART-NUM[0]
+      ParamID: 7
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+        Property: PartNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PART-NUM[1]
+      ParamID: 8
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+        Property: Model
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PRDCT-NAME[0]
+      ParamID: 9
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+        Property: Model
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PRDCT-NAME[1]
+      ParamID: 10
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+        Property: PartNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PRDCT-PART-NUM[0]
+      ParamID: 11
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+        Property: PartNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PRDCT-PART-NUM[1]
+      ParamID: 12
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+        Property: SerialNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PRDCT-SERIAL[0]
+      ParamID: 13
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+        Property: SerialNumber
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-PRDCT-SERIAL[1]
+      ParamID: 14
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+        Property: Manufacturer
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-VENDOR[0]
+      ParamID: 15
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+        Property: Manufacturer
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-VENDOR[1]
+      ParamID: 16
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Revision
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+        Property: Version
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-HW-REV[0]
+      ParamID: 17
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Inventory.Decorator.Revision
+        ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+        Property: Version
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PROCMOD-HW-REV[1]
+      ParamID: 18
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+  - CompactionMethod: Average
+    ID: Sensor.Power
+    InfoList:
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/power/HGX_Chassis_$baseboardid_TotalGPU_Power_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: PWR-TOTAL-CURR
+      ParamID: 19
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    RecordRetentionPolicy: Recreate
+  - ID: Status
+    InfoList:
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.State.Decorator.Health
+        ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+        Property: Health
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HEALTH
+      ParamID: 20
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+  - CompactionMethod: Average
+    ID: Sensor.Thermal
+    InfoList:
+    - DataType: Float
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_0_HSC_0_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HSC-TEMP[0]
+      ParamID: 21
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    - DataType: Float
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_1_HSC_0_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HSC-TEMP[1]
+      ParamID: 22
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    - DataType: Float
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_0_HSCC_0_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HSCC-TEMP[0]
+      ParamID: 23
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    - DataType: Float
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_1_HSCC_0_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.NSM
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HSCC-TEMP[1]
+      ParamID: 24
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    RecordRetentionPolicy: Recreate
+  Params:
+  - name: baseboardid
+    value: 1
 FingerPrint:
   Checks:
   - grep -q -i openbmc-phosphor /etc/os-release
-  - grep -q -i vr-nvl144-hmc /etc/os-release
+  - grep -q -i vr-nvl-hmc /etc/os-release
 GeneralConfig:
   CompactionSubWindowSecs: 1800
   CompactionWindowSecs: 86400
@@ -17,6 +375,97 @@ GeneralConfig:
   - /var/emmc/fdr/
   LogsFormat: BINARY
   PartitionThresoldCheckMB: 1024
+HMC:
+  InfoGroups:
+  - ID: Config
+    InfoList:
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Version
+        ObjectPath: /xyz/openbmc_project/software/HGX_FW_BMC_$hmcid
+        Property: Version
+        Service: xyz.openbmc_project.Software.BMC.Inventory
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: FW-VER
+      ParamID: 0
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Software.Version
+        ObjectPath: /xyz/openbmc_project/software/HGX_FW_ERoT_BMC_$hmcid
+        Property: Version
+        Service: xyz.openbmc_project.PLDM
+      FetchFreqSecs: 3600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: RoT-FW-VER
+      ParamID: 1
+      StoreFreqSecs: 3600
+      StorePolicy: OnChange
+  - CompactionMethod: Average
+    ID: Sensor.Thermal
+    InfoList:
+    - DataType: Integer
+      DbusParams:
+        Interface: xyz.openbmc_project.Sensor.Value
+        ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_BMC_$hmcid_Temp_0
+        Property: Value
+        Service: xyz.openbmc_project.HwmonTempSensor
+      FetchFreqSecs: 10
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: TEMP-CURR
+      ParamID: 2
+      StoreFreqSecs: 10
+      StorePolicy: OnChange
+    RecordRetentionPolicy: Recreate
+  - ID: Status
+    InfoList:
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.State.Decorator.Health
+        ObjectPath: /xyz/openbmc_project/inventory/system/bmc/HGX_BMC_$hmcid
+        Property: Health
+        Service: xyz.openbmc_project.EntityManager
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: HEALTH
+      ParamID: 3
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Network.EthernetInterface
+        ObjectPath: /xyz/openbmc_project/network/usb0
+        Property: LinkUp
+        Service: xyz.openbmc_project.Network
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: BMC-USB-LINK-STATUS
+      ParamID: 4
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+    - DataType: Text
+      DbusParams:
+        Interface: xyz.openbmc_project.Network.EthernetInterface
+        ObjectPath: /xyz/openbmc_project/network/usb0
+        Property: NICEnabled
+        Service: xyz.openbmc_project.Network
+      FetchFreqSecs: 600
+      FetchMethod: DBUS
+      FetchType: Poll
+      ID: BMC-USB-STATE
+      ParamID: 5
+      StoreFreqSecs: 600
+      StorePolicy: OnChange
+  Params:
+  - name: hmcid
+    value: 1
 Preconditions:
   Checks:
   - CommandParams:
@@ -1066,6 +1515,445 @@ SMA:
     value: 1
 Sections:
 - Components:
+  - ID: HGX_HMC_0
+    InfoGroups:
+    - ID: Config
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Version
+          ObjectPath: /xyz/openbmc_project/software/HGX_FW_BMC_$hmcid
+          Property: Version
+          Service: xyz.openbmc_project.Software.BMC.Inventory
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: FW-VER
+        ParamID: 0
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Software.Version
+          ObjectPath: /xyz/openbmc_project/software/HGX_FW_ERoT_BMC_$hmcid
+          Property: Version
+          Service: xyz.openbmc_project.PLDM
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: RoT-FW-VER
+        ParamID: 1
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+    - CompactionMethod: Average
+      ID: Sensor.Thermal
+      InfoList:
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_BMC_$hmcid_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.HwmonTempSensor
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: TEMP-CURR
+        ParamID: 2
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      RecordRetentionPolicy: Recreate
+    - ID: Status
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Decorator.Health
+          ObjectPath: /xyz/openbmc_project/inventory/system/bmc/HGX_BMC_$hmcid
+          Property: Health
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HEALTH
+        ParamID: 3
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Network.EthernetInterface
+          ObjectPath: /xyz/openbmc_project/network/usb0
+          Property: LinkUp
+          Service: xyz.openbmc_project.Network
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: BMC-USB-LINK-STATUS
+        ParamID: 4
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Network.EthernetInterface
+          ObjectPath: /xyz/openbmc_project/network/usb0
+          Property: NICEnabled
+          Service: xyz.openbmc_project.Network
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: BMC-USB-STATE
+        ParamID: 5
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+    Params:
+    - name: hmcid
+      value: 0
+  ID: HMC
+- Components:
+  - ID: HGX_BASEBOARD_0
+    InfoGroups:
+    - ID: Inventory
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Item.Chassis
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+          Property: Type
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: CHAS-TYPE
+        ParamID: 6
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+          Property: BuildDate
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-MFG-DATE[0]
+        ParamID: 7
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+          Property: BuildDate
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-MFG-DATE[1]
+        ParamID: 8
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+          Property: Model
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-BRD-PRDCT-NAME[0]
+        ParamID: 9
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+          Property: Model
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-BRD-PRDCT-NAME[1]
+        ParamID: 10
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+          Property: SerialNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-SERIAL[0]
+        ParamID: 11
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+          Property: SerialNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-SERIAL[1]
+        ParamID: 12
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+          Property: PartNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PART-NUM[0]
+        ParamID: 13
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+          Property: PartNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PART-NUM[1]
+        ParamID: 14
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+          Property: Model
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PRDCT-NAME[0]
+        ParamID: 15
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+          Property: Model
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PRDCT-NAME[1]
+        ParamID: 16
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+          Property: PartNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PRDCT-PART-NUM[0]
+        ParamID: 17
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+          Property: PartNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PRDCT-PART-NUM[1]
+        ParamID: 18
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+          Property: SerialNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PRDCT-SERIAL[0]
+        ParamID: 19
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+          Property: SerialNumber
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-PRDCT-SERIAL[1]
+        ParamID: 20
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Board_FRU_Assembly0
+          Property: Manufacturer
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-VENDOR[0]
+        ParamID: 21
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Asset
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Board_FRU_Assembly0
+          Property: Manufacturer
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-VENDOR[1]
+        ParamID: 22
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Revision
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule0/ProcMod_0_Product_FRU_Assembly1
+          Property: Version
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-HW-REV[0]
+        ParamID: 23
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.Inventory.Decorator.Revision
+          ObjectPath: /xyz/openbmc_project/inventory/system/processormodule1/ProcMod_1_Product_FRU_Assembly1
+          Property: Version
+          Service: xyz.openbmc_project.EntityManager
+        FetchFreqSecs: 3600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PROCMOD-HW-REV[1]
+        ParamID: 24
+        StoreFreqSecs: 3600
+        StorePolicy: OnChange
+    - CompactionMethod: Average
+      ID: Sensor.Power
+      InfoList:
+      - DataType: Integer
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/power/HGX_Chassis_$baseboardid_TotalGPU_Power_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: PWR-TOTAL-CURR
+        ParamID: 25
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      RecordRetentionPolicy: Recreate
+    - ID: Status
+      InfoList:
+      - DataType: Text
+        DbusParams:
+          Interface: xyz.openbmc_project.State.Decorator.Health
+          ObjectPath: /xyz/openbmc_project/inventory/system/chassis/HGX_Chassis_$baseboardid
+          Property: Health
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 600
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HEALTH
+        ParamID: 26
+        StoreFreqSecs: 600
+        StorePolicy: OnChange
+    - CompactionMethod: Average
+      ID: Sensor.Thermal
+      InfoList:
+      - DataType: Float
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_0_HSC_0_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HSC-TEMP[0]
+        ParamID: 27
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      - DataType: Float
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_1_HSC_0_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HSC-TEMP[1]
+        ParamID: 28
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      - DataType: Float
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_0_HSCC_0_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HSCC-TEMP[0]
+        ParamID: 29
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      - DataType: Float
+        DbusParams:
+          Interface: xyz.openbmc_project.Sensor.Value
+          ObjectPath: /xyz/openbmc_project/sensors/temperature/HGX_ProcessorModule_1_HSCC_0_Temp_0
+          Property: Value
+          Service: xyz.openbmc_project.NSM
+        FetchFreqSecs: 10
+        FetchMethod: DBUS
+        FetchType: Poll
+        ID: HSCC-TEMP[1]
+        ParamID: 30
+        StoreFreqSecs: 10
+        StorePolicy: OnChange
+      RecordRetentionPolicy: Recreate
+    Params:
+    - name: baseboardid
+      value: 0
+    - name: baseboard_processormoduleid
+      value: 0
+  ID: BASEBOARD
+- Components:
   - ID: HGX_SMA_0
     InfoGroups:
     - ID: Config
@@ -1080,7 +1968,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-VER
-        ParamID: 0
+        ParamID: 31
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1093,7 +1981,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-MIN-SECURITY-VER
-        ParamID: 1
+        ParamID: 32
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1106,7 +1994,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SLOT-ID[1]
-        ParamID: 2
+        ParamID: 33
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1119,7 +2007,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SLOT-ID[2]
-        ParamID: 3
+        ParamID: 34
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1132,7 +2020,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-VERSION[1]
-        ParamID: 4
+        ParamID: 35
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1145,7 +2033,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-VERSION[2]
-        ParamID: 5
+        ParamID: 36
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1158,7 +2046,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-COMP[1]
-        ParamID: 6
+        ParamID: 37
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1171,7 +2059,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-COMP[2]
-        ParamID: 7
+        ParamID: 38
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1184,7 +2072,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-BUILD-TYPE[1]
-        ParamID: 8
+        ParamID: 39
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1197,7 +2085,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-BUILD-TYPE[2]
-        ParamID: 9
+        ParamID: 40
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1210,7 +2098,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-STATE[1]
-        ParamID: 10
+        ParamID: 41
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1223,7 +2111,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-STATE[2]
-        ParamID: 11
+        ParamID: 42
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1236,7 +2124,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-TYPE[1]
-        ParamID: 12
+        ParamID: 43
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1249,7 +2137,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-TYPE[2]
-        ParamID: 13
+        ParamID: 44
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1262,7 +2150,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-KEY[1]
-        ParamID: 14
+        ParamID: 45
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1275,7 +2163,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-KEY[2]
-        ParamID: 15
+        ParamID: 46
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1288,7 +2176,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SECURITY-VERSION[1]
-        ParamID: 16
+        ParamID: 47
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1301,7 +2189,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SECURITY-VERSION[2]
-        ParamID: 17
+        ParamID: 48
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1314,7 +2202,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-WP-STATUS[1]
-        ParamID: 18
+        ParamID: 49
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1327,7 +2215,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-WP-STATUS[2]
-        ParamID: 19
+        ParamID: 50
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Binary Blob
@@ -1340,7 +2228,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IRREVERSIBLE-CONFIG
-        ParamID: 20
+        ParamID: 51
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1353,7 +2241,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-AUTH-KEY-ALLOWED-IDX
-        ParamID: 21
+        ParamID: 52
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1366,7 +2254,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-AUTH-KEY-REVOKED-IDX
-        ParamID: 22
+        ParamID: 53
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1379,7 +2267,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
-        ParamID: 23
+        ParamID: 54
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1392,7 +2280,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
-        ParamID: 24
+        ParamID: 55
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1405,7 +2293,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
-        ParamID: 25
+        ParamID: 56
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1418,7 +2306,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
-        ParamID: 26
+        ParamID: 57
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1431,7 +2319,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-SVN[1]
-        ParamID: 27
+        ParamID: 58
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1444,7 +2332,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-SVN[2]
-        ParamID: 28
+        ParamID: 59
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1457,7 +2345,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-MIN-SVN
-        ParamID: 29
+        ParamID: 60
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1470,7 +2358,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-VER
-        ParamID: 30
+        ParamID: 61
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1483,7 +2371,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-MIN-SECURITY-VER
-        ParamID: 31
+        ParamID: 62
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1496,7 +2384,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SLOT-ID[1]
-        ParamID: 32
+        ParamID: 63
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1509,7 +2397,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SLOT-ID[2]
-        ParamID: 33
+        ParamID: 64
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1522,7 +2410,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-VERSION[1]
-        ParamID: 34
+        ParamID: 65
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1535,7 +2423,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-VERSION[2]
-        ParamID: 35
+        ParamID: 66
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1548,7 +2436,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-COMP[1]
-        ParamID: 36
+        ParamID: 67
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1561,7 +2449,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-COMP[2]
-        ParamID: 37
+        ParamID: 68
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1574,7 +2462,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[1]
-        ParamID: 38
+        ParamID: 69
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1587,7 +2475,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[2]
-        ParamID: 39
+        ParamID: 70
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1600,7 +2488,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-STATE[1]
-        ParamID: 40
+        ParamID: 71
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1613,7 +2501,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-STATE[2]
-        ParamID: 41
+        ParamID: 72
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1626,7 +2514,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-TYPE[1]
-        ParamID: 42
+        ParamID: 73
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1639,7 +2527,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-TYPE[2]
-        ParamID: 43
+        ParamID: 74
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1652,7 +2540,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-KEY[1]
-        ParamID: 44
+        ParamID: 75
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1665,7 +2553,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-KEY[2]
-        ParamID: 45
+        ParamID: 76
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1678,7 +2566,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SECURITY-VERSION[1]
-        ParamID: 46
+        ParamID: 77
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1691,7 +2579,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SECURITY-VERSION[2]
-        ParamID: 47
+        ParamID: 78
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1704,7 +2592,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-WP-STATUS[1]
-        ParamID: 48
+        ParamID: 79
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1717,7 +2605,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-WP-STATUS[2]
-        ParamID: 49
+        ParamID: 80
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Binary Blob
@@ -1730,7 +2618,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IRREVERSIBLE-CONFIG
-        ParamID: 50
+        ParamID: 81
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1743,7 +2631,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-AUTH-KEY-ALLOWED-IDX
-        ParamID: 51
+        ParamID: 82
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1756,7 +2644,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-AUTH-KEY-REVOKED-IDX
-        ParamID: 52
+        ParamID: 83
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1769,7 +2657,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
-        ParamID: 53
+        ParamID: 84
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1782,7 +2670,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
-        ParamID: 54
+        ParamID: 85
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1795,7 +2683,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
-        ParamID: 55
+        ParamID: 86
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -1808,7 +2696,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
-        ParamID: 56
+        ParamID: 87
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1821,7 +2709,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-SVN[1]
-        ParamID: 57
+        ParamID: 88
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1834,7 +2722,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-SVN[2]
-        ParamID: 58
+        ParamID: 89
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1847,7 +2735,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-MIN-SVN
-        ParamID: 59
+        ParamID: 90
         StoreFreqSecs: 3600
         StorePolicy: OnChange
     - ID: Inventory
@@ -1862,7 +2750,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-UUID
-        ParamID: 60
+        ParamID: 91
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1875,7 +2763,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-SKU
-        ParamID: 61
+        ParamID: 92
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1888,7 +2776,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-UUID
-        ParamID: 62
+        ParamID: 93
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -1901,7 +2789,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-SKU
-        ParamID: 63
+        ParamID: 94
         StoreFreqSecs: 3600
         StorePolicy: OnChange
     - CompactionMethod: Average
@@ -1917,7 +2805,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-TEMP-CURR
-        ParamID: 64
+        ParamID: 95
         StoreFreqSecs: 10
         StorePolicy: OnChange
       - DataType: Integer
@@ -1930,7 +2818,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-TEMP-CURR
-        ParamID: 65
+        ParamID: 96
         StoreFreqSecs: 10
         StorePolicy: OnChange
       RecordRetentionPolicy: Recreate
@@ -1946,7 +2834,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-ACTIVE-SLOT[1]
-        ParamID: 66
+        ParamID: 97
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1959,7 +2847,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-ACTIVE-SLOT[2]
-        ParamID: 67
+        ParamID: 98
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -1972,7 +2860,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-ACTIVE-KEY-SET-ID
-        ParamID: 68
+        ParamID: 99
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -1985,7 +2873,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-STATUS
-        ParamID: 69
+        ParamID: 100
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -1998,7 +2886,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-HEALTH
-        ParamID: 70
+        ParamID: 101
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: List[str]
@@ -2011,7 +2899,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-LAST-RST-RSN
-        ParamID: 71
+        ParamID: 102
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -2024,7 +2912,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-STATUS
-        ParamID: 72
+        ParamID: 103
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -2037,7 +2925,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-HEALTH
-        ParamID: 73
+        ParamID: 104
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: List[str]
@@ -2050,7 +2938,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-LAST-RST-RSN
-        ParamID: 74
+        ParamID: 105
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2063,7 +2951,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-ACTIVE-SLOT[1]
-        ParamID: 75
+        ParamID: 106
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2076,7 +2964,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-ACTIVE-SLOT[2]
-        ParamID: 76
+        ParamID: 107
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2089,7 +2977,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-ACTIVE-KEY-SET-ID
-        ParamID: 77
+        ParamID: 108
         StoreFreqSecs: 600
         StorePolicy: OnChange
     Params:
@@ -2111,7 +2999,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-VER
-        ParamID: 78
+        ParamID: 109
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2124,7 +3012,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-MIN-SECURITY-VER
-        ParamID: 79
+        ParamID: 110
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2137,7 +3025,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SLOT-ID[1]
-        ParamID: 80
+        ParamID: 111
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2150,7 +3038,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SLOT-ID[2]
-        ParamID: 81
+        ParamID: 112
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2163,7 +3051,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-VERSION[1]
-        ParamID: 82
+        ParamID: 113
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2176,7 +3064,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-VERSION[2]
-        ParamID: 83
+        ParamID: 114
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2189,7 +3077,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-COMP[1]
-        ParamID: 84
+        ParamID: 115
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2202,7 +3090,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-COMP[2]
-        ParamID: 85
+        ParamID: 116
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2215,7 +3103,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-BUILD-TYPE[1]
-        ParamID: 86
+        ParamID: 117
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2228,7 +3116,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-BUILD-TYPE[2]
-        ParamID: 87
+        ParamID: 118
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2241,7 +3129,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-STATE[1]
-        ParamID: 88
+        ParamID: 119
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2254,7 +3142,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-FW-STATE[2]
-        ParamID: 89
+        ParamID: 120
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2267,7 +3155,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-TYPE[1]
-        ParamID: 90
+        ParamID: 121
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2280,7 +3168,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-TYPE[2]
-        ParamID: 91
+        ParamID: 122
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2293,7 +3181,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-KEY[1]
-        ParamID: 92
+        ParamID: 123
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2306,7 +3194,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SIGN-KEY[2]
-        ParamID: 93
+        ParamID: 124
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2319,7 +3207,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SECURITY-VERSION[1]
-        ParamID: 94
+        ParamID: 125
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2332,7 +3220,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-SECURITY-VERSION[2]
-        ParamID: 95
+        ParamID: 126
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2345,7 +3233,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-WP-STATUS[1]
-        ParamID: 96
+        ParamID: 127
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2358,7 +3246,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-WP-STATUS[2]
-        ParamID: 97
+        ParamID: 128
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Binary Blob
@@ -2371,7 +3259,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IRREVERSIBLE-CONFIG
-        ParamID: 98
+        ParamID: 129
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2384,7 +3272,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-AUTH-KEY-ALLOWED-IDX
-        ParamID: 99
+        ParamID: 130
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2397,7 +3285,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-AUTH-KEY-REVOKED-IDX
-        ParamID: 100
+        ParamID: 131
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2410,7 +3298,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
-        ParamID: 101
+        ParamID: 132
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2423,7 +3311,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
-        ParamID: 102
+        ParamID: 133
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2436,7 +3324,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
-        ParamID: 103
+        ParamID: 134
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2449,7 +3337,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
-        ParamID: 104
+        ParamID: 135
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2462,7 +3350,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-SVN[1]
-        ParamID: 105
+        ParamID: 136
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2475,7 +3363,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-SVN[2]
-        ParamID: 106
+        ParamID: 137
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2488,7 +3376,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-FW-MIN-SVN
-        ParamID: 107
+        ParamID: 138
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2501,7 +3389,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-VER
-        ParamID: 108
+        ParamID: 139
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2514,7 +3402,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-MIN-SECURITY-VER
-        ParamID: 109
+        ParamID: 140
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2527,7 +3415,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SLOT-ID[1]
-        ParamID: 110
+        ParamID: 141
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2540,7 +3428,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SLOT-ID[2]
-        ParamID: 111
+        ParamID: 142
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2553,7 +3441,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-VERSION[1]
-        ParamID: 112
+        ParamID: 143
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2566,7 +3454,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-VERSION[2]
-        ParamID: 113
+        ParamID: 144
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2579,7 +3467,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-COMP[1]
-        ParamID: 114
+        ParamID: 145
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2592,7 +3480,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-COMP[2]
-        ParamID: 115
+        ParamID: 146
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2605,7 +3493,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[1]
-        ParamID: 116
+        ParamID: 147
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2618,7 +3506,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-IMAGE-BUILD-TYPE[2]
-        ParamID: 117
+        ParamID: 148
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2631,7 +3519,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-STATE[1]
-        ParamID: 118
+        ParamID: 149
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2644,7 +3532,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-FW-STATE[2]
-        ParamID: 119
+        ParamID: 150
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2657,7 +3545,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-TYPE[1]
-        ParamID: 120
+        ParamID: 151
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2670,7 +3558,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-TYPE[2]
-        ParamID: 121
+        ParamID: 152
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2683,7 +3571,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-KEY[1]
-        ParamID: 122
+        ParamID: 153
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2696,7 +3584,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SIGN-KEY[2]
-        ParamID: 123
+        ParamID: 154
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2709,7 +3597,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SECURITY-VERSION[1]
-        ParamID: 124
+        ParamID: 155
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2722,7 +3610,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-SECURITY-VERSION[2]
-        ParamID: 125
+        ParamID: 156
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2735,7 +3623,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-WP-STATUS[1]
-        ParamID: 126
+        ParamID: 157
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2748,7 +3636,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-WP-STATUS[2]
-        ParamID: 127
+        ParamID: 158
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Binary Blob
@@ -2761,7 +3649,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IRREVERSIBLE-CONFIG
-        ParamID: 128
+        ParamID: 159
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2774,7 +3662,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-AUTH-KEY-ALLOWED-IDX
-        ParamID: 129
+        ParamID: 160
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2787,7 +3675,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-AUTH-KEY-REVOKED-IDX
-        ParamID: 130
+        ParamID: 161
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2800,7 +3688,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[1]
-        ParamID: 131
+        ParamID: 162
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2813,7 +3701,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-ALLOWED-IDX[2]
-        ParamID: 132
+        ParamID: 163
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2826,7 +3714,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[1]
-        ParamID: 133
+        ParamID: 164
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: List[int]
@@ -2839,7 +3727,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-IMAGE-AUTH-KEY-REVOKED-IDX[2]
-        ParamID: 134
+        ParamID: 165
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2852,7 +3740,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-SVN[1]
-        ParamID: 135
+        ParamID: 166
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2865,7 +3753,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-SVN[2]
-        ParamID: 136
+        ParamID: 167
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2878,7 +3766,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-FW-MIN-SVN
-        ParamID: 137
+        ParamID: 168
         StoreFreqSecs: 3600
         StorePolicy: OnChange
     - ID: Inventory
@@ -2893,7 +3781,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-UUID
-        ParamID: 138
+        ParamID: 169
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2906,7 +3794,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-SKU
-        ParamID: 139
+        ParamID: 170
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2919,7 +3807,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-UUID
-        ParamID: 140
+        ParamID: 171
         StoreFreqSecs: 3600
         StorePolicy: OnChange
       - DataType: Text
@@ -2932,7 +3820,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-SKU
-        ParamID: 141
+        ParamID: 172
         StoreFreqSecs: 3600
         StorePolicy: OnChange
     - CompactionMethod: Average
@@ -2948,7 +3836,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-TEMP-CURR
-        ParamID: 142
+        ParamID: 173
         StoreFreqSecs: 10
         StorePolicy: OnChange
       - DataType: Integer
@@ -2961,7 +3849,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-TEMP-CURR
-        ParamID: 143
+        ParamID: 174
         StoreFreqSecs: 10
         StorePolicy: OnChange
       RecordRetentionPolicy: Recreate
@@ -2977,7 +3865,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-ACTIVE-SLOT[1]
-        ParamID: 144
+        ParamID: 175
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -2990,7 +3878,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-ACTIVE-SLOT[2]
-        ParamID: 145
+        ParamID: 176
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -3003,7 +3891,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-ROT-ACTIVE-KEY-SET-ID
-        ParamID: 146
+        ParamID: 177
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -3016,7 +3904,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-STATUS
-        ParamID: 147
+        ParamID: 178
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -3029,7 +3917,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-HEALTH
-        ParamID: 148
+        ParamID: 179
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: List[str]
@@ -3042,7 +3930,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: GPU-LAST-RST-RSN
-        ParamID: 149
+        ParamID: 180
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -3055,7 +3943,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-STATUS
-        ParamID: 150
+        ParamID: 181
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Text
@@ -3068,7 +3956,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-HEALTH
-        ParamID: 151
+        ParamID: 182
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: List[str]
@@ -3081,7 +3969,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-LAST-RST-RSN
-        ParamID: 152
+        ParamID: 183
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -3094,7 +3982,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-ACTIVE-SLOT[1]
-        ParamID: 153
+        ParamID: 184
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -3107,7 +3995,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-ACTIVE-SLOT[2]
-        ParamID: 154
+        ParamID: 185
         StoreFreqSecs: 600
         StorePolicy: OnChange
       - DataType: Integer
@@ -3120,7 +4008,7 @@ Sections:
         FetchMethod: DBUS
         FetchType: Poll
         ID: HPM-ROT-ACTIVE-KEY-SET-ID
-        ParamID: 155
+        ParamID: 186
         StoreFreqSecs: 600
         StorePolicy: OnChange
     Params:

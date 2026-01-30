@@ -1,0 +1,11 @@
+# List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
+# Platform: GB200NVL-hmc
+
+TGUID:
+  - BASEBOARD-REDFISH-EVENT-LOG
+  - BASEBOARD-HEALTH-ROLLUP
+  - BASEBOARD-PROCESSOR-COUNT
+  - HMC-LOGS
+
+ParamClass:
+  - Specs
