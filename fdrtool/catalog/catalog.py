@@ -215,8 +215,16 @@ class Catalog:
     return "xyz"
 
   def GetSerialNumber(self):
-    for item in ParamDescription['Baseboard'].get('Inventory', {}):
-        if(ParamDescription['Baseboard']['Inventory'][item].get('ParamName', '') == 'BRD-SERIAL') :
+    # Find the Baseboard key case-insensitively
+    baseboard_key = None
+    for key in ParamDescription:
+        if key.lower() == 'baseboard':
+            baseboard_key = key
+            break
+    if baseboard_key is None:
+        return None
+    for item in ParamDescription[baseboard_key].get('Inventory', {}):
+        if(ParamDescription[baseboard_key]['Inventory'][item].get('ParamName', '') == 'BRD-SERIAL') :
           return item
     return None
 
