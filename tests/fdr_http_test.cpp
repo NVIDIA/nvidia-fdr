@@ -1,6 +1,80 @@
+/*
+ * SPDX-FileCopyrightText: Copyright (c) 2023-2024 NVIDIA CORPORATION &
+ * AFFILIATES. All rights reserved. SPDX-License-Identifier: Apache-2.0
+ *
+ * Unit tests for fdr_http.cpp — HttpClient, HttpException, HttpResponse
+ *
+ * Covers:
+ *   - HttpException construction, what(), edge cases
+ *   - HttpResponse default initialization
+ *   - HttpClient construction
+ *   - HTTP GET/POST to live endpoint (may be skipped in offline CI)
+ *   - Invalid URL error handling
+ */
+
+#include "testCommon.hpp"
+
 #include "fdr_http.hpp"
 
-#include <gtest/gtest.h>
+// --- HttpException (offline, no network needed) ---
+
+TEST(FdrHttp, HttpExceptionConstruction)
+{
+    HttpException ex(503, "Service Unavailable");
+    EXPECT_EQ(ex.code, 503);
+    EXPECT_EQ(ex.message, "Service Unavailable");
+}
+
+TEST(FdrHttp, HttpExceptionWhat)
+{
+    HttpException ex(401, "Unauthorized");
+    std::string what = ex.what();
+    EXPECT_THAT(what, HasSubstr("401"));
+    EXPECT_THAT(what, HasSubstr("Unauthorized"));
+    EXPECT_THAT(what, HasSubstr("HttpException"));
+}
+
+TEST(FdrHttp, HttpExceptionZeroCode)
+{
+    HttpException ex(0, "");
+    EXPECT_EQ(ex.code, 0);
+    EXPECT_THAT(std::string(ex.what()), HasSubstr("0"));
+}
+
+// --- HttpResponse ---
+
+TEST(FdrHttp, HttpResponseDefaultInit)
+{
+    HttpResponse rsp;
+    EXPECT_EQ(rsp.status_code, 0);
+    EXPECT_TRUE(rsp.body.empty());
+}
+
+// --- HttpClient construction ---
+
+TEST(FdrHttp, HttpClientConstruction)
+{
+    EXPECT_NO_THROW({ HttpClient client; });
+}
+
+// --- Invalid URL handling ---
+
+TEST(FdrHttp, InvalidURLThrows)
+{
+    HttpClient client;
+    EXPECT_THROW(client.get("http://0.0.0.0:1/nonexistent"), HttpException);
+}
+
+TEST(FdrHttp, RequestWithNullHeadersAndPayload)
+{
+    HttpClient client;
+    EXPECT_THROW(
+        client.request(HttpRequestType::GET, "http://0.0.0.0:1/test", nullptr,
+                       nullptr),
+        HttpException);
+}
+
+// --- Live network tests (may fail in offline/Docker environments) ---
 
 TEST(FdrHttp, Sanity)
 {
@@ -10,7 +84,7 @@ TEST(FdrHttp, Sanity)
 
 TEST(FdrHttp, HTTPrequest)
 {
-    auto client = HttpClient();
+    HttpClient client;
 
     auto response = client.request(HttpRequestType::GET,
                                    "http://www.google.com/", nullptr, nullptr);
@@ -27,16 +101,14 @@ TEST(FdrHttp, HTTPrequest)
 
 TEST(FdrHttp, HTTPGet)
 {
-    auto client = HttpClient();
-
+    HttpClient client;
     auto response = client.get("http://www.google.com/");
-
     ASSERT_EQ(response.status_code, 200);
 }
 
 TEST(FdrHttp, HTTPPost)
 {
-    auto client = HttpClient();
+    HttpClient client;
 
     std::map<std::string, std::string> headers = {
         {"Content-Type", "application/json"},
