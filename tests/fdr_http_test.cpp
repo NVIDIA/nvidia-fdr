@@ -12,9 +12,10 @@
  *   - Invalid URL error handling
  */
 
+#include "fdr_http.hpp"
 #include "testCommon.hpp"
 
-#include "fdr_http.hpp"
+#include <cstdlib>
 
 // --- HttpException (offline, no network needed) ---
 
@@ -45,7 +46,7 @@ TEST(FdrHttp, HttpExceptionZeroCode)
 
 TEST(FdrHttp, HttpResponseDefaultInit)
 {
-    HttpResponse rsp;
+    HttpResponse rsp{};
     EXPECT_EQ(rsp.status_code, 0);
     EXPECT_TRUE(rsp.body.empty());
 }
@@ -68,22 +69,20 @@ TEST(FdrHttp, InvalidURLThrows)
 TEST(FdrHttp, RequestWithNullHeadersAndPayload)
 {
     HttpClient client;
-    EXPECT_THROW(
-        client.request(HttpRequestType::GET, "http://0.0.0.0:1/test", nullptr,
-                       nullptr),
-        HttpException);
+    EXPECT_THROW(client.request(HttpRequestType::GET, "http://0.0.0.0:1/test",
+                                nullptr, nullptr),
+                 HttpException);
 }
 
-// --- Live network tests (may fail in offline/Docker environments) ---
-
-TEST(FdrHttp, Sanity)
-{
-    ASSERT_EQ(1, 1);
-    ASSERT_NE(0, 1);
-}
+// --- Live network tests (skipped in offline/Docker environments) ---
 
 TEST(FdrHttp, HTTPrequest)
 {
+    if (std::getenv("OFFLINE_CI"))
+    {
+        GTEST_SKIP() << "Skipping live network test in offline CI";
+    }
+
     HttpClient client;
 
     auto response = client.request(HttpRequestType::GET,
@@ -101,6 +100,11 @@ TEST(FdrHttp, HTTPrequest)
 
 TEST(FdrHttp, HTTPGet)
 {
+    if (std::getenv("OFFLINE_CI"))
+    {
+        GTEST_SKIP() << "Skipping live network test in offline CI";
+    }
+
     HttpClient client;
     auto response = client.get("http://www.google.com/");
     ASSERT_EQ(response.status_code, 200);
@@ -108,6 +112,11 @@ TEST(FdrHttp, HTTPGet)
 
 TEST(FdrHttp, HTTPPost)
 {
+    if (std::getenv("OFFLINE_CI"))
+    {
+        GTEST_SKIP() << "Skipping live network test in offline CI";
+    }
+
     HttpClient client;
 
     std::map<std::string, std::string> headers = {

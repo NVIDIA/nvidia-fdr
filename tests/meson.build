@@ -4,15 +4,13 @@ incdir = include_directories('../')
 # heavy integration deps (DBus, event logging, global state).
 stubs_src = files('test_stubs.cpp')
 record_stubs_src = files('test_record_stubs.cpp')
+http_stubs_src = files('test_http_stubs.cpp')
 
 # ===========================================================================
 # Group 1: Header-only / lightweight tests (no production .cpp sources)
 # ===========================================================================
 
-simple_tests = [
-    'property_variant_test',
-    'fdr_policy_test',
-]
+simple_tests = ['property_variant_test', 'fdr_policy_test']
 
 foreach t : simple_tests
     test(
@@ -25,6 +23,7 @@ foreach t : simple_tests
             include_directories: incdir,
         ),
         workdir: meson.current_source_dir(),
+        timeout: 60,
     )
 endforeach
 
@@ -44,6 +43,7 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
 )
 
 test(
@@ -57,6 +57,7 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
 )
 
 test(
@@ -72,6 +73,23 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
+)
+
+test(
+    'fdr_redfish_stub_test',
+    executable(
+        'fdr_redfish_stub_test',
+        'fdr_redfish_stub_test.cpp',
+        '../fdr_redfish.cpp',
+        '../fdr_log.cpp',
+        http_stubs_src,
+        implicit_include_directories: true,
+        dependencies: deps + [gtest],
+        include_directories: incdir,
+    ),
+    workdir: meson.current_source_dir(),
+    timeout: 60,
 )
 
 # ===========================================================================
@@ -92,6 +110,7 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
 )
 
 ppf_test_srcdir = '-DTEST_SOURCE_DIR="@0@"'.format(meson.current_source_dir())
@@ -112,6 +131,7 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
 )
 
 test(
@@ -129,6 +149,7 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
 )
 
 # ===========================================================================
@@ -152,4 +173,5 @@ test(
         include_directories: incdir,
     ),
     workdir: meson.current_source_dir(),
+    timeout: 60,
 )

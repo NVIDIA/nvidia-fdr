@@ -10,9 +10,8 @@
  *   - InvalidMonoState as default
  */
 
-#include "testCommon.hpp"
-
 #include "property_variant.hpp"
+#include "testCommon.hpp"
 
 // --- isValidVariant / isInvalidVariant ---
 

@@ -18,17 +18,18 @@ cmake = import('cmake')
 
 # Generate src from proto file
 protoc = find_program('protoc', required: true)
-pbgen = generator(
-    protoc, \
-        output: ['@BASENAME@.pb.cc', '@BASENAME@.pb.h'],
-    arguments: [
+pbgenerated = custom_target(
+    'fdr_logs_schema_pb',
+    input: 'fdr_logs_schema.proto',
+    output: ['fdr_logs_schema.pb.cc', 'fdr_logs_schema.pb.h'],
+    command: [
+        protoc,
         '--experimental_allow_proto3_optional',
         '--proto_path=@CURRENT_SOURCE_DIR@',
-        '--cpp_out=@BUILD_DIR@',
+        '--cpp_out=@OUTDIR@',
         '@INPUT@',
     ],
 )
-pbgenerated = pbgen.process('fdr_logs_schema.proto')
 
 
 # Subprojects for dependencie

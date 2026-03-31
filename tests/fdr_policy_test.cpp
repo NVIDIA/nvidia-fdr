@@ -10,9 +10,8 @@
  *   Preconditions_t, GeneralConfig_t, Profile_t
  */
 
-#include "testCommon.hpp"
-
 #include "fdr_policy.hpp"
+#include "testCommon.hpp"
 
 // --- FingerPrint_t ---
 

@@ -26,7 +26,6 @@ void createLogEntry(const std::string& /*messageId*/,
                     const std::vector<std::string>& /*messageArgs*/,
                     const std::string& /*severity*/,
                     const std::string& /*resolution*/,
-                    const std::string& /*name*/,
-                    sdbusplus::bus_t* /*busPtr*/)
+                    const std::string& /*name*/, sdbusplus::bus_t* /*busPtr*/)
 {}
 } // namespace rfEvent

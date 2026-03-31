@@ -23,9 +23,9 @@
 
 #include "property_variant.hpp"
 
-#include <gmock/gmock.h>
-
 #include <string>
+
+#include <gmock/gmock.h>
 
 namespace fdrtest
 {
@@ -38,10 +38,11 @@ class IDbusAccessor
     virtual std::string getService(const std::string& objectPath,
                                    const std::string& interface) = 0;
 
-    virtual PropertyVariant
-        readDbusProperty(const std::string& service, const std::string& objPath,
-                         const std::string& interface,
-                         const std::string& property, Info_t& info) = 0;
+    virtual PropertyVariant readDbusProperty(const std::string& service,
+                                             const std::string& objPath,
+                                             const std::string& interface,
+                                             const std::string& property,
+                                             Info_t& info) = 0;
 
     virtual RetCoreApi readDbusDGDProperty(const std::string& service,
                                            const std::string& objPath,
@@ -49,12 +50,12 @@ class IDbusAccessor
                                            const std::string& property,
                                            const std::int64_t& devId) = 0;
 
-    virtual PassthroughFPGA
-        readDbusPTProperty(const std::string& service,
-                           const std::string& objPath,
-                           const std::string& interface,
-                           const uint8_t& opcode, const std::uint8_t& arg1,
-                           const std::uint8_t& arg2) = 0;
+    virtual PassthroughFPGA readDbusPTProperty(const std::string& service,
+                                               const std::string& objPath,
+                                               const std::string& interface,
+                                               const std::uint8_t& opcode,
+                                               const std::uint8_t& arg1,
+                                               const std::uint8_t& arg2) = 0;
 
     virtual bool setDbusProperty(const std::string& service,
                                  const std::string& objPath,
@@ -67,8 +68,7 @@ class MockDbusAccessor : public IDbusAccessor
 {
   public:
     MOCK_METHOD(std::string, getService,
-                (const std::string& objectPath,
-                 const std::string& interface),
+                (const std::string& objectPath, const std::string& interface),
                 (override));
 
     MOCK_METHOD(PropertyVariant, readDbusProperty,
@@ -85,7 +85,7 @@ class MockDbusAccessor : public IDbusAccessor
 
     MOCK_METHOD(PassthroughFPGA, readDbusPTProperty,
                 (const std::string& service, const std::string& objPath,
-                 const std::string& interface, const uint8_t& opcode,
+                 const std::string& interface, const std::uint8_t& opcode,
                  const std::uint8_t& arg1, const std::uint8_t& arg2),
                 (override));
 
