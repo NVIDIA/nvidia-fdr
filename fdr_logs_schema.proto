@@ -67,7 +67,77 @@ message fdr_event_details {
 
 message fdr_boot_event {
   uint64 EventTimeStamp = 1; // Time at which FDR booted
-  string BootId = 2;   // number of times HMC booted. Even though its a counter, data type is string purposefuly. 
+  string BootId = 2;   // number of times HMC booted. Even though its a counter, data type is string purposefully.
   string UpTime = 3;    // uptime of HMC [output of uptime -s]
   uint32 DataDirFormatVersion = 4;  // data/directory structure layout format followed in FDR
+}
+
+// Cross-boot record of terminal device-dump collection failures.
+// Written append-mode to Bookkeeper/DeviceDumpFailures.dat as
+// length-delimited protobuf, shared across all DumpProfiles and across
+// all boots (BootId field is the per-record boot key). Emitted alongside
+// a phosphor-logging Entry so operators see failures in the Redfish
+// EventLog while the on-disk record persists for HMC-lifetime queries
+// like "did this device ever fail to collect?" — outliving any
+// individual BootCount_* directory cleanup.
+message fdr_device_dump_failure {
+  uint64 EventTimeStamp = 1;  // When the failure was recorded
+  string ProfileName    = 2;  // PPF DumpProfile name (e.g. "GpuDump")
+  string DeviceId       = 3;  // Component ID; empty if pre-device stage
+  uint32 EventCode      = 4;  // Triggering XID/code (0 if not applicable)
+  string FailureStage   = 5;  // DiskSpaceCheck | GetDiagnostics | AsyncStatus | StoreWriteFailed
+  string ErrorDetail    = 6;  // Exception what() or free-form reason
+  uint32 AttemptCount   = 7;  // Retries exhausted (0 if not retry-driven)
+  string BootId         = 8;  // Matches fdr_boot_event.BootId
+}
+
+// Cross-boot index of every device-dump collection event (success and
+// failure). Written append-mode to Bookkeeper/DeviceDumpRecords.dat as
+// length-delimited protobuf, shared across all DumpProfiles and all
+// boots. BootId field is the per-record boot key. Lets an offline
+// analyst enumerate "all GpuDumps ever collected on this HMC, with
+// outcome" from a single file — no BootCount_* directory walk needed.
+// Sibling of BookOfErrors.dat: same Bookkeeper/ home, same lifetime
+// semantics (survives BootCount_* cleanup), same Compactor-eligible
+// shape. Coexists with DeviceDumpFailures.dat: failure records appear
+// in BOTH files (the dedicated failure file remains the canonical
+// operator-visible record paired with the Redfish EventLog Entry; this
+// file is the unified success+failure index).
+message fdr_device_dump_record {
+  enum Status {
+    UNKNOWN = 0;
+    SUCCESS = 1;
+    FAILED  = 2;
+  }
+  uint64 EventTimeStamp      = 1;   // Triggering XID Entry timestamp; matches fdr_book_of_errors.ErrorOccurTimeStamp
+  uint64 CompletionTimeStamp = 2;   // When the dump finished (SUCCESS) or terminal failure was recorded (FAILED)
+  string ProfileName         = 3;   // PPF DumpProfile name (e.g. "GpuDump")
+  string DeviceId            = 4;   // Component ID (e.g. "HGX_GPU_0")
+  uint32 EventCode           = 5;   // Triggering XID/code (e.g. 119)
+  Status status              = 6;   // SUCCESS or FAILED
+  string FilePath            = 7;   // Path relative to LogsBasePath, e.g. "BootCount_17_.../GPU.HGX_GPU_0.gpu_dump_<ts>.dat" (empty for FAILED)
+  uint64 SizeBytes           = 8;   // Stored payload size (0 for FAILED). uint64 to future-proof for larger dump types.
+  uint32 AttemptCount        = 9;   // 1-4 — attempt that succeeded (SUCCESS) or final attempt count (FAILED)
+  string FailureStage        = 10;  // Empty for SUCCESS; same vocabulary as fdr_device_dump_failure.FailureStage
+  string ErrorDetail         = 11;  // Empty for SUCCESS; same vocabulary as fdr_device_dump_failure.ErrorDetail
+  string BootId              = 12;  // Matches fdr_boot_event.BootId
+}
+
+// Generic wrapper for all device dump types (GpuDump, PmuDump, NVLinkDump, etc.)
+// ProfileName carries the PPF DumpProfile name and is the dump-type identifier.
+// RawDump is an opaque binary blob; decoding is owned by the device-firmware
+// team (e.g. OOBHUB for GPU dumps), not FDR.
+message fdr_device_dump {
+  reserved 2;                      // formerly `string DumpType` — dropped (always equal to ProfileName); see commit history
+  uint64 EventTimeStamp = 1;       // Timestamp when triggering event was detected
+  uint32 EventCode = 3;            // Event code that triggered collection (e.g., XID 119)
+  string EventMessage = 4;         // Event description string
+  string DeviceId = 5;             // Device identifier (e.g., "HGX_GPU_0")
+  string DeviceType = 6;           // Device type (e.g., "GPU", "NVSwitch", "FPGA")
+  string BootId = 7;               // Boot ID when dump was collected (matches fdr_boot_event.BootId type)
+  uint32 DumpVersion = 8;          // Dump format version (source-defined)
+  bytes RawDump = 9;               // Raw dump payload (opaque binary blob)
+  uint64 CollectionTimeStamp = 10; // When FDR stored the dump
+  string CollectionStatus = 11;    // Collection status (e.g., "SUCCESS", "EMPTY", "OVERSIZED")
+  string ProfileName = 12;         // DumpProfile name from PPF (e.g., "GpuDump") — IS the dump-type identifier
 }

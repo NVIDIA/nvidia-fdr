@@ -143,6 +143,8 @@ endif
 src = [
     'dbus_accessor.cpp',
     'fdr.cpp',
+    'fdr_device_dump.cpp',
+    'fdr_device_dump_store.cpp',
     'fdr_bookoferrors.cpp',
     'fdr_common.cpp',
     'fdr_compact.cpp',

@@ -29,7 +29,11 @@ class JSONCatalogEntry(CatalogEntry):
     
 
   def AddMessage(self, proto_msg, is_event_type = False):
-    proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg, including_default_value_fields=True))
+    try:
+      proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg, always_print_fields_with_no_presence=True))
+    except TypeError:
+      # older protobuf versions use including_default_value_fields
+      proto_msg_str = json.loads(protobuf_json_format.MessageToJson(proto_msg, including_default_value_fields=True))
     
     if (not is_event_type) and self.primary_key_name and self.msg_type != PROTO_MSG_TYPE.fdr_params \
       and self.msg_type != PROTO_MSG_TYPE.fdr_compactor_bookkeep and \

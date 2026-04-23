@@ -22,6 +22,8 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+#include <type_traits>
+#include <variant>
 
 /** @brief Helper to fetch device id from device name */
 std::string getDeviceId(const std::string& deviceName)
@@ -128,6 +130,8 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
     std::string deviceName;
     std::string errorMessage;
     std::string severity;
+    std::string redfishMessageId;
+    std::string errorMessageDetails;
     EventRecord record;
 
     for (const auto& eventProperty : eventProperties)
@@ -146,23 +150,53 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                         severity = *(severityPtr);
                     }
                 }
-                // Process additional data
+                // Process additional data — handle both old (as: "KEY=VALUE"
+                // string array) and new (a{ss}: dict) phosphor-logging formats
                 if (eventData.first == "AdditionalData")
                 {
-                    const std::vector<std::string>* msgStringsPtr =
-                        std::get_if<std::vector<std::string>>(
-                            &eventData.second);
-                    if (msgStringsPtr == nullptr)
+                    // Build unified KEY=VALUE string list from AdditionalData.
+                    // phosphor-logging uses a{ss} (unordered_map) on D-Bus.
+                    std::vector<std::string> msgStrings;
+
+                    // Type-safe variant access — independent of variant member
+                    // order, so a phosphor-logging variant reorder doesn't
+                    // silently drop AdditionalData parsing.
+                    using DictT = std::unordered_map<std::string, std::string>;
+                    using VecT = std::vector<std::string>;
+                    if (const auto* dict =
+                            std::get_if<DictT>(&eventData.second))
                     {
-                        fdrlog::warn("Got empty event AdditionalData info");
+                        for (const auto& [k, v] : *dict)
+                        {
+                            msgStrings.push_back(k + "=" + v);
+                        }
+                    }
+                    else if (const auto* vec =
+                                 std::get_if<VecT>(&eventData.second))
+                    {
+                        // Old format: vector<string> ("KEY=VALUE")
+                        msgStrings = *vec;
+                    }
+
+                    if (msgStrings.empty())
+                    {
                         return;
                     }
                     // Fetch device name and error message details
-                    std::string errorMessageDetails;
                     std::string errorOriginOfCondition;
                     std::string errorAdditionalInfo;
-                    for (const std::string& msgString : *msgStringsPtr)
+                    for (const std::string& msgString : msgStrings)
                     {
+                        // REDFISH_MESSAGE_ID - message type identifier
+                        if (msgString.find("REDFISH_MESSAGE_ID") !=
+                            std::string::npos)
+                        {
+                            std::size_t equalSignPos = msgString.find('=');
+                            redfishMessageId =
+                                (equalSignPos != std::string::npos)
+                                    ? msgString.substr(equalSignPos + 1)
+                                    : "";
+                        }
                         // Device name
                         if (msgString.find("DEVICE_NAME") != std::string::npos)
                         {
@@ -211,6 +245,68 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
                                 (equalSignPos != std::string::npos)
                                     ? msgString.substr(equalSignPos + 1)
                                     : "";
+                        }
+                    }
+
+                    // Device name resolution: DEVICE_NAME from AdditionalData
+                    // may be missing (vr-nvl-hmc) or generic without instance
+                    // number (hgxb/hgxb300/hgxr set ImpactedComponent="GPU").
+                    // If deviceName has no digit, it's not device-specific
+                    // enough — fall through to extraction from MessageArgs.
+                    //
+                    // Strategy 1: REDFISH_MESSAGE_ARGS first field.
+                    //   Entity-manager template: "GPU_$N Driver Event Message"
+                    //   E.g., "GPU_0 Driver Event Message,..." → "GPU_0"
+                    //         "GPU_SXM_1 Driver Event Message,..." →
+                    //         "GPU_SXM_1"
+                    //
+                    // Strategy 2: REDFISH_ORIGIN_OF_CONDITION last path
+                    // segment.
+                    //   E.g., "/redfish/v1/Chassis/HGX_GPU_0" → "GPU_0"
+                    //         "/redfish/v1/Chassis/HGX_GPU_SXM_1" → "GPU_SXM_1"
+                    bool hasInstanceNumber = !deviceName.empty() &&
+                                             std::any_of(deviceName.begin(),
+                                                         deviceName.end(),
+                                                         [](char c) {
+                        return std::isdigit(static_cast<unsigned char>(c));
+                    });
+                    if (!hasInstanceNumber && !errorMessageDetails.empty())
+                    {
+                        // Strategy 1: first word of first comma-separated arg
+                        auto commaPos = errorMessageDetails.find(',');
+                        std::string firstArg =
+                            (commaPos != std::string::npos)
+                                ? errorMessageDetails.substr(0, commaPos)
+                                : errorMessageDetails;
+                        auto spacePos = firstArg.find(' ');
+                        if (spacePos != std::string::npos)
+                        {
+                            deviceName = firstArg.substr(0, spacePos);
+                        }
+                    }
+
+                    // Re-check: Strategy 1 may have set deviceName
+                    hasInstanceNumber = !deviceName.empty() &&
+                                        std::any_of(deviceName.begin(),
+                                                    deviceName.end(),
+                                                    [](char c) {
+                        return std::isdigit(static_cast<unsigned char>(c));
+                    });
+                    if (!hasInstanceNumber && !errorOriginOfCondition.empty())
+                    {
+                        // Strategy 2: last segment of origin path
+                        auto lastSlash =
+                            errorOriginOfCondition.find_last_of('/');
+                        if (lastSlash != std::string::npos)
+                        {
+                            deviceName =
+                                errorOriginOfCondition.substr(lastSlash + 1);
+                            // Strip "HGX_" prefix if present
+                            // (e.g., "HGX_GPU_0" → "GPU_0")
+                            if (deviceName.substr(0, 4) == "HGX_")
+                            {
+                                deviceName = deviceName.substr(4);
+                            }
                         }
                     }
 
@@ -277,6 +373,13 @@ void EventSignalHandler::eventParser(eventPropertiesType& eventProperties)
         }
     }
 
+    // Forward event to DeviceDumpHandler for dump collection
+    if (fdr->deviceDumpHandler && !deviceName.empty())
+    {
+        fdr->deviceDumpHandler->onEvent(deviceName, redfishMessageId,
+                                        errorMessageDetails, severity);
+    }
+
     if (!deviceName.empty() && !errorMessage.empty() &&
         (severity == "xyz.openbmc_project.Logging.Entry.Level.Critical" ||
          severity == "xyz.openbmc_project.Logging.Entry.Level.Warning"))
@@ -310,10 +413,31 @@ void EventSignalHandler::registerEventsSignal()
         sdbusplus::message::object_path objPath;
         eventPropertiesType eventProperties;
 
+        fdrlog::debug("InterfacesAdded signal callback entered");
         try
         {
             m.read(objPath, eventProperties);
+            fdrlog::debug("Event signal received: path={}, interfaces={}",
+                          objPath.str, eventProperties.size());
+
+            // Log each interface and its properties for debugging
+            for (const auto& iface : eventProperties)
+            {
+                fdrlog::info("  Interface: {}, properties: {}", iface.first,
+                             iface.second.size());
+                for (const auto& prop : iface.second)
+                {
+                    fdrlog::info("    Property: {}, variant index={}",
+                                 prop.first, prop.second.index());
+                }
+            }
+
             this->eventParser(eventProperties);
+        }
+        catch (const sdbusplus::exception_t& e)
+        {
+            fdrlog::error("D-Bus exception on event message read: {} (name={})",
+                          e.what(), e.name());
         }
         catch (const std::exception& e)
         {

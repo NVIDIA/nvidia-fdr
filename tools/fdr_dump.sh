@@ -296,6 +296,50 @@ function main()
     # Sort the required directory names. From recent to old.
     readarray -t required_files < <(printf '%s\n' "${required_files[@]}" | sort -r)
 
+    # Parse DataFilter from extended source for selective dump collection.
+    # Use bash parameter expansion — portable on BusyBox where `grep -oP` is
+    # unavailable (PCRE support is a GNU-grep build option).
+    local data_filter=""
+    if [[ "$ARG_EXTENDED_SOURCE" == *"DataFilter="* ]]; then
+        data_filter="${ARG_EXTENDED_SOURCE#*DataFilter=}"   # strip prefix up to "DataFilter="
+        data_filter="${data_filter%%;*}"                    # strip first ";" and everything after
+        echo "[INFO] DataFilter: $data_filter"
+    fi
+
+    # If DataFilter is set, collect only matching files instead of full BootCount dirs
+    if [[ -n "$data_filter" ]]; then
+        echo "[INFO] Selective dump collection with DataFilter=$data_filter"
+        local filter_name=""
+        case "$data_filter" in
+            GpuDump)       filter_name='*.gpu_dump_*.dat' ;;
+            *)
+                echo "[WARNING] Unknown DataFilter '$data_filter', collecting all"
+                data_filter=""
+                ;;
+        esac
+
+        if [[ -n "$data_filter" ]]; then
+            for timestamp in "${required_files[@]}" ; do
+                file_name=${timestamp_file_map[$timestamp]}
+                echo "[INFO] Processing $file_name (filtered: $data_filter)"
+                # -name + -print0 | xargs -0 keeps filenames with spaces intact
+                # and decouples the match from directory depth.
+                local matched_files=()
+                while IFS= read -r -d '' f; do
+                    matched_files+=("$f")
+                done < <(find "$FDR_LOG_DIR_BASE_NAME/${file_name}" \
+                             -type f -name "$filter_name" -print0 2>/dev/null)
+                if [[ ${#matched_files[@]} -gt 0 ]]; then
+                    for mf in "${matched_files[@]}"; do
+                        check_size_and_add "$mf" || break 2
+                    done
+                fi
+            done
+        fi
+    fi
+
+    # Standard full collection (when no DataFilter or unknown filter)
+    if [[ -z "$data_filter" ]]; then
     # Add BootCount directories data
     # final_files will contain all the BootCount directories after checking the dump size limit.
     # final_files=() # Declared on the top
@@ -309,7 +353,7 @@ function main()
             bootcount_addStatus_map[$bootcount]="ADDED"
             timestamp_other=${bootcount_oldestTimestamp_map[$bootcount]}
             file_name_other=${timestamp_file_map[$timestamp_other]}
-            
+
             # Use find instead of ls for better performance
             if find "$FDR_LOG_DIR_BASE_NAME/$file_name_other" -name "*others.dat" -print -quit | grep -q .; then
                 check_size_and_add "$FDR_LOG_DIR_BASE_NAME/$file_name_other/*others.dat" || break
@@ -322,6 +366,7 @@ function main()
         check_size_and_add "$(find "$FDR_LOG_DIR_BASE_NAME/${file_name}" -type f ! -name "*.others.dat")" || break
         echo
     done
+    fi # end of standard full collection
     
     echo "[INFO] Estimated tar size: $current_dump_size"
     echo 

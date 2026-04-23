@@ -40,7 +40,10 @@ FDR_TABLE_SCHEMA = {
                     "BookOfErrors": {"BootId":"INTEGER","DeviceType":"TEXT","DeviceInstance":"TEXT","ErrorType":"TEXT","ErrorOccurTimeStamp":"INTEGER","ParamID":"INTEGER"},\
                     "BookKeeper": {"CompactDirectory":"TEXT","compactStatus":"TEXT"},\
                     "BootEvent" : {"EventTimeStamp":"INTEGER", "HMCBootCount":"TEXT", "UpTime":"TEXT" , "CurrentDate":"TEXT", "DataDirFormatVersion":"INTEGER"},
-                    "EventDetails" : {"EventTimeStamp":"INTEGER", "EventName":"TEXT", "EventDeviceName":"TEXT" , "EventMessage":"TEXT", "EventOriginOfCondition":"TEXT", "EventAdditionalInfo":"TEXT"}
+                    "EventDetails" : {"EventTimeStamp":"INTEGER", "EventName":"TEXT", "EventDeviceName":"TEXT" , "EventMessage":"TEXT", "EventOriginOfCondition":"TEXT", "EventAdditionalInfo":"TEXT"},
+                    "DeviceDump" : {"EventTimeStamp":"INTEGER", "EventCode":"INTEGER", "EventMessage":"TEXT", "DeviceId":"TEXT", "DeviceType":"TEXT", "BootId":"TEXT", "DumpVersion":"INTEGER", "CollectionTimeStamp":"INTEGER", "CollectionStatus":"TEXT", "ProfileName":"TEXT", "RawDumpSize":"INTEGER", "RawDumpPath":"TEXT"},
+                    "DeviceDumpFailures" : {"EventTimeStamp":"INTEGER", "ProfileName":"TEXT", "DeviceId":"TEXT", "EventCode":"INTEGER", "FailureStage":"TEXT", "ErrorDetail":"TEXT", "AttemptCount":"INTEGER", "BootId":"TEXT"},
+                    "DeviceDumpRecords" : {"EventTimeStamp":"INTEGER", "CompletionTimeStamp":"INTEGER", "ProfileName":"TEXT", "DeviceId":"TEXT", "EventCode":"INTEGER", "Status":"TEXT", "FilePath":"TEXT", "SizeBytes":"INTEGER", "AttemptCount":"INTEGER", "FailureStage":"TEXT", "ErrorDetail":"TEXT", "BootId":"TEXT"}
                     }
 
 FDR_TABLE_TYPE = Enum('FDR_TABLE_TYPE', FDR_TABLE_SCHEMA) # All the keys of FDR_TABLE_SCHEMA dictionary
@@ -57,6 +60,9 @@ compactor_filename = 'Compactor.dat'
 Boot_event_filename = 'BootEvent.dat'
 other_file_extention = 'others.dat'
 event_file_contains = '.Event_'
+device_dump_contains = '.gpu_dump_'  # dot-separated convention: {Section}.{ComponentID}.{FilePrefix}_{ts}.dat
+device_dump_failures_filename = 'DeviceDumpFailures.dat'
+device_dump_records_filename = 'DeviceDumpRecords.dat'
 
 '''
 Class for holding ALL the messages in form of CatalogEntry
@@ -157,7 +163,14 @@ class Catalog:
 
     # Convert the binary log into json log.
     # Note that any exception thrown here will be caught by the caller (CreateCatalog method)
-    if self.length_delimited_binary:
+    if entry.msg_type == PROTO_MSG_TYPE.fdr_device_dump:
+      entry.decode_device_dump(buf)
+    elif entry.msg_type == PROTO_MSG_TYPE.fdr_device_dump_failure or \
+         entry.msg_type == PROTO_MSG_TYPE.fdr_device_dump_record:
+      # Always length-delimited regardless of global flag — FDR writes
+      # failure and record entries with a varint32 length prefix per SADD.
+      entry.decode_length_delimited_binary(buf)
+    elif self.length_delimited_binary:
       entry.decode_length_delimited_binary(buf)
     else: # default
       entry.decode_zero_delimited_binary(buf)
@@ -233,7 +246,7 @@ class Catalog:
     from datetime import datetime
     start_time = datetime.now()
     kwargs = {'influxClient': self.influxClient, 'sqliteClient': self.sqliteClient}
-    table_creation_order = ['fdr_params', 'fdr_sample', 'fdr_book_of_errors', 'fdr_compactor_bookkeep', 'fdr_stat', 'fdr_boot_event', 'fdr_event_details']
+    table_creation_order = ['fdr_params', 'fdr_sample', 'fdr_book_of_errors', 'fdr_compactor_bookkeep', 'fdr_stat', 'fdr_boot_event', 'fdr_event_details', 'fdr_device_dump', 'fdr_device_dump_failure', 'fdr_device_dump_record']
     for entry_type in table_creation_order:
       #print(f"Writing {entry_type} table(s)....", end = " ")
       success = 0
@@ -309,6 +322,7 @@ Parent class for holding a single data entry/message
 class CatalogEntry:
   def __init__(self, filepath, ParamIDClassDict = None, ParamIDNameDict= None):
     self.messages = []
+    self.filepath = filepath
     self.ParamIDClassDict = ParamIDClassDict
     self.ParamIDNameDict = ParamIDNameDict
     file_name = os.path.split(filepath)[1]
@@ -331,8 +345,14 @@ class CatalogEntry:
       self.msg_type = PROTO_MSG_TYPE.fdr_compactor_bookkeep
     elif filepath.endswith(Boot_event_filename):
       self.msg_type = PROTO_MSG_TYPE.fdr_boot_event
+    elif filepath.endswith(device_dump_failures_filename):
+      self.msg_type = PROTO_MSG_TYPE.fdr_device_dump_failure
+    elif filepath.endswith(device_dump_records_filename):
+      self.msg_type = PROTO_MSG_TYPE.fdr_device_dump_record
     elif event_file_contains in filepath: # Both for log and hifilog
       self.msg_type = PROTO_MSG_TYPE.fdr_event_details
+    elif device_dump_contains in os.path.basename(filepath):
+      self.msg_type = PROTO_MSG_TYPE.fdr_device_dump
     else: # Both for log and hifilog
       self.msg_type = PROTO_MSG_TYPE.fdr_sample
 
@@ -359,9 +379,39 @@ class CatalogEntry:
       tablename = 'BootEvent'
     elif self.msg_type == PROTO_MSG_TYPE.fdr_event_details:
       tablename = 'EventDetails'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_device_dump:
+      tablename = 'DeviceDump'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_device_dump_failure:
+      tablename = 'DeviceDumpFailures'
+    elif self.msg_type == PROTO_MSG_TYPE.fdr_device_dump_record:
+      tablename = 'DeviceDumpRecords'
     else:
       tablename = 'Unknown'
     return tablename
+
+  def decode_device_dump(self, buf):
+    # fdr_device_dump is a single plain protobuf message — no COBS-R, no length delimiter
+    proto_msg = fdr_schema.fdr_device_dump()
+    proto_msg.ParseFromString(buf)
+
+    # Extract RawDump bytes to a .bin file alongside the .dat
+    raw_bin_path = self.filepath.replace('.dat', '_raw.bin')
+    if proto_msg.RawDump:
+      with open(raw_bin_path, 'wb') as f:
+        f.write(proto_msg.RawDump)
+      logging.info(f"Extracted RawDump ({len(proto_msg.RawDump)} bytes) to {raw_bin_path}")
+
+    # Build a JSON-serialisable summary (exclude raw bytes field)
+    import google.protobuf.json_format as protobuf_json_format
+    import json
+    try:
+      msg_dict = protobuf_json_format.MessageToDict(proto_msg, always_print_fields_with_no_presence=False)
+    except TypeError:
+      msg_dict = protobuf_json_format.MessageToDict(proto_msg, including_default_value_fields=False)
+    msg_dict.pop('rawDump', None)  # remove binary blob from JSON output
+    msg_dict['RawDumpSize'] = len(proto_msg.RawDump)
+    msg_dict['RawDumpPath'] = raw_bin_path
+    self.messages.append(json.dumps(msg_dict) + '\n')
 
   def decode_length_delimited_binary(self, buf):
     # Since each log file can have multiple messages, we need to separate the messages from each other
