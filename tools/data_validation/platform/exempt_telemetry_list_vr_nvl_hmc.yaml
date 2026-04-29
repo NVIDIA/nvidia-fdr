@@ -1,15 +1,89 @@
-# List of all the TGUID/ParamClass in the catalog to be excluded from the coverage check.
-# Platform: GB200NVL-hmc
+# List of all the Metrics in the catalog to be excluded from the coverage check
+#
 
 TGUID:
-  - BASEBOARD-REDFISH-EVENT-LOG
+  # ─── Aggregate/Health Rollups (10) ───
+  # Redfish-layer computed values, not exposed as individual D-Bus properties.
   - BASEBOARD-HEALTH-ROLLUP
   - BASEBOARD-PROCESSOR-COUNT
-  - HMC-LOGS
-  - GPU-XID-LOGS
-  - GPU-HEALTH-ROLLUP
+  - CAMM-HEALTH
+  - CAMM-HEALTH-ROLLUP
   - CPLD-CHASSIS-HEALTH
   - CPLD-CHASSIS-HEALTH-ROLLUP
+  - CPU-CHASSIS-HEALTH
+  - CPU-CHASSIS-HEALTH-ROLLUP
+  - CPU-HEALTH
+  - GPU-HEALTH-ROLLUP
+
+  # ─── Events/Logs (4) ───
+  # Event-driven or log collections, not pollable D-Bus properties.
+  - BASEBOARD-REDFISH-EVENT-LOG
+  - CPU-BIOS-POST-CODE
+  - GPU-XID-LOGS
+  - HMC-LOGS
+
+  # ─── In-band Only — NVML/NSM (42) ───
+  # Marked as "NA" for Redfish OOB (38) or Empty Redfish (4) in catalog
+  - GPU-COMPUTE-MODE
+  - GPU-COUNT
+  - GPU-DEF-CLK-GFX
+  - GPU-DEF-CLK-MEM
+  - GPU-ERR-INFO-THERMAL
+  - GPU-FEC-HIST-0
+  - GPU-FEC-HIST-1
+  - GPU-FEC-HIST-2
+  - GPU-FEC-HIST-3
+  - GPU-FEC-HIST-4
+  - GPU-FEC-HIST-5
+  - GPU-FEC-HIST-6
+  - GPU-FEC-HIST-7
+  - GPU-FEC-HIST-8
+  - GPU-FEC-HIST-9
+  - GPU-FEC-HIST-10
+  - GPU-FEC-HIST-11
+  - GPU-FEC-HIST-12
+  - GPU-FEC-HIST-13
+  - GPU-FEC-HIST-14
+  - GPU-FEC-HIST-15
+  - GPU-LICENSE-STATUS
+  - GPU-LOCAL-LINK-INTEGRITY-ERRORS
+  - GPU-NVLINK-VER
+  - GPU-PCI-BUS-NUM
+  - GPU-PCI-DEV-NUM
+  - GPU-PCI-DOMAIN-NUM
+  - GPU-PHY-SYMBOL-ERRORS
+  - GPU-PWR-MODE
+  - GPU-ROW-REMAPPED-CTR
+  - GPU-RQ-GENERAL-ERROR
+  - GPU-RST-RECOMMENDED-STATE
+  - GPU-SYMBOL-BER     # Empty Redfish
+  - GPU-RAW-BER        # Empty Redfish
+  - GPU-RAW-BER-LANE0  # Empty Redfish
+  - GPU-RAW-BER-LANE1  # Empty Redfish
+  - GPU-UTIL-FB-FREE
+  - GPU-VIRT-MODE
+  - GPU-ZERO-HIST
+  - GPU-PORT-BUFFER-OVERRUN-ERRORS
+  - GPU-PORT-INACTIVE-DISCARDS
+  - GPU-PORT-RCV-REMOTE-PHYSICAL-ERRORS
+
+  # ─── Future (2) ───
+  # Redfish URI explicitly marked "Future" in catalog.
+  - GPU-CORE-PERF-STATE
+  - GPU-ERR-INFO-POWER
+
+  # ─── Pending Investigation (6) ───
+  # CAMM (5)
+  # Fields below are present in mockup but missing in live FW.
+  - CAMM-CLK-CURR
+  - CAMM-FW-VER
+  - CAMM-PART-NUM
+  - CAMM-SERIAL-NUM
+  - CAMM-VENDOR
+  #
+  # GPU (1)
+  # WriteProtected field exists in Redfish mockup but NOT in live HMC response.
+  - GPU-FW-WP-MODE
 
 ParamClass:
   - Specs
