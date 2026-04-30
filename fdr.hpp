@@ -13,6 +13,7 @@
 
 #include "dbus_accessor.hpp"
 #include "fdr_common.hpp"
+#include "fdr_device_dump.hpp"
 #include "fdr_events.hpp"
 #include "fdr_policy.hpp"
 #include "fdr_record.hpp"
@@ -169,6 +170,10 @@ class FlightDataRecorder_c
     void CleanupPlatformFiles(void);
     int CheckAvailableFdrPartitionDiskSize(void);
     void CheckFdrPartitionDiskUsageAndExit(void);
+
+    // Device Dump Collection Framework
+    std::unique_ptr<DeviceDumpHandler> deviceDumpHandler;
+    void initDeviceDumpHandler();
 
     /**
      * @brief This is the callback which handles DBUS properties changes

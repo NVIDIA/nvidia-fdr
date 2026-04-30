@@ -11952,6 +11952,32 @@ GeneralConfig:
   - /var/emmc/fdr/
   LogsFormat: BINARY
   PartitionThresoldCheckMB: 1024
+  DeviceDumpProfiles:
+    - ProfileName: GpuDump
+      Section: GPU
+      EventSource:
+        MessageIdPattern: "ResourceEvent.1.0.ResourceErrorsDetected"
+        CodeParseField: "REDFISH_MESSAGE_ARGS"
+        CodeParsePrefix: "XID "
+        TriggerCodes:
+          - 119
+          - 120
+          - 175
+      Retrieval:
+        Service: xyz.openbmc_project.NSM
+        Interface: com.nvidia.Dump.DebugInfo
+        Method: GetDiagnostics
+        ObjectPathTemplate: "/xyz/openbmc_project/inventory/system/accelerator/Diagnostics/Dump/GPU_$gpuid"
+        TimeoutSecs: 60
+        MaxRetries: 3
+        RetryDelayMs: 2000
+      Debounce:
+        WindowSecs: 0
+      Storage:
+        FilePrefix: gpu_dump
+        BudgetMB: 200
+      Download:
+        DataFilterName: GpuDump
 HMC:
   InfoGroups:
   - ID: Config

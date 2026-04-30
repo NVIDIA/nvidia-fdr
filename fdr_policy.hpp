@@ -22,6 +22,7 @@ struct Section_t;
 struct Component_t;
 struct InfoGroup_t;
 struct Info_t;
+struct DeviceDumpProfile_t;
 
 struct FingerPrint_t
 {
@@ -60,6 +61,9 @@ struct GeneralConfig_t
     double ExceptionAllowRate;
 
     Events_t eventParams; // Events params defined under GeneralConfig
+
+    std::vector<DeviceDumpProfile_t>
+        DeviceDumpProfiles; // Device dump collection profiles
 };
 
 struct CommandParams_t
@@ -172,6 +176,68 @@ struct Preconditions_t
         Checks;       // Platform preconditions list of checks
 };
 
+// Device Dump Collection Framework - DumpProfile configuration structs
+
+struct DeviceDumpEventSource_t
+{
+    std::string MessageIdPattern;       // Redfish message ID to match
+    std::string CodeParseField;         // AdditionalData field for event code
+    std::string CodeParsePrefix;        // Prefix to strip when parsing code
+    std::vector<uint32_t> TriggerCodes; // Event codes that trigger collection
+};
+
+struct DeviceDumpRetrieval_t
+{
+    std::string Service;            // D-Bus service name
+    std::string Interface;          // D-Bus interface name
+    std::string Method;             // D-Bus method name
+    std::string ObjectPathTemplate; // Object path with $param placeholders
+    int TimeoutSecs = 60;           // D-Bus call timeout
+    int MaxRetries =
+        3; // Retry count on Unavailable error (startup rejects values > 10)
+    int RetryDelayMs = 2000; // Base delay between retries (waitSecs =
+                             // RetryDelayMs × 2^(attempt-1))
+};
+
+struct DeviceDumpDebounce_t
+{
+    int WindowSecs = 0; // Debounce window per device (0 = disabled)
+};
+
+struct DeviceDumpStorage_t
+{
+    // Per-profile eMMC quota (MB) covering all devices in the profile.
+    // FIFO eviction runs after every successful store: the globally-oldest
+    // dump in the profile (across all devices) is removed until the total
+    // on-disk size in the profile is <= BudgetMB * 1 MiB.
+    // Startup validation enforces Σ BudgetMB <= partition_size −
+    // PartitionThresoldCheckMB.
+    size_t BudgetMB = 200;
+    std::string FilePrefix; // Filename prefix:
+                            // {Section}.{ComponentID}.{FilePrefix}_{ts}.dat
+};
+
+struct DeviceDumpDownload_t
+{
+    std::string DataFilterName; // DataFilter value for selective download
+};
+
+struct DeviceDumpProfile_t
+{
+    // Profile is enabled by the presence of this block in the PPF.
+    // A decoder keyed on profile name (e.g. "GpuDump") can derive the
+    // dump type identifier from ProfileName — no separate DumpType needed.
+    // Decoding of the RawDump binary blob is out of FDR scope — it is
+    // owned by the device-firmware team (e.g. OOBHUB for GPU dumps).
+    std::string ProfileName; // Unique profile name
+    std::string Section;     // Must match a Section_t.ID
+    DeviceDumpEventSource_t EventSource;
+    DeviceDumpRetrieval_t Retrieval;
+    DeviceDumpDebounce_t Debounce;
+    DeviceDumpStorage_t Storage;
+    DeviceDumpDownload_t Download;
+};
+
 struct Profile_t
 {
     FingerPrint_t FingerPrint;
@@ -257,6 +323,149 @@ struct convert<Events_t>
 };
 
 template <>
+struct convert<DeviceDumpEventSource_t>
+{
+    static bool decode(const Node& node, DeviceDumpEventSource_t& rhs)
+    {
+        if (node["MessageIdPattern"])
+        {
+            rhs.MessageIdPattern = node["MessageIdPattern"].as<std::string>();
+        }
+        if (node["CodeParseField"])
+        {
+            rhs.CodeParseField = node["CodeParseField"].as<std::string>();
+        }
+        if (node["CodeParsePrefix"])
+        {
+            rhs.CodeParsePrefix = node["CodeParsePrefix"].as<std::string>();
+        }
+        if (node["TriggerCodes"])
+        {
+            rhs.TriggerCodes = node["TriggerCodes"].as<std::vector<uint32_t>>();
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<DeviceDumpRetrieval_t>
+{
+    static bool decode(const Node& node, DeviceDumpRetrieval_t& rhs)
+    {
+        if (node["Service"])
+        {
+            rhs.Service = node["Service"].as<std::string>();
+        }
+        if (node["Interface"])
+        {
+            rhs.Interface = node["Interface"].as<std::string>();
+        }
+        if (node["Method"])
+        {
+            rhs.Method = node["Method"].as<std::string>();
+        }
+        if (node["ObjectPathTemplate"])
+        {
+            rhs.ObjectPathTemplate =
+                node["ObjectPathTemplate"].as<std::string>();
+        }
+        if (node["TimeoutSecs"])
+        {
+            rhs.TimeoutSecs = node["TimeoutSecs"].as<int>();
+        }
+        if (node["MaxRetries"])
+        {
+            rhs.MaxRetries = node["MaxRetries"].as<int>();
+        }
+        if (node["RetryDelayMs"])
+        {
+            rhs.RetryDelayMs = node["RetryDelayMs"].as<int>();
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<DeviceDumpDebounce_t>
+{
+    static bool decode(const Node& node, DeviceDumpDebounce_t& rhs)
+    {
+        if (node["WindowSecs"])
+        {
+            rhs.WindowSecs = node["WindowSecs"].as<int>();
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<DeviceDumpStorage_t>
+{
+    static bool decode(const Node& node, DeviceDumpStorage_t& rhs)
+    {
+        if (node["BudgetMB"])
+        {
+            rhs.BudgetMB = node["BudgetMB"].as<size_t>();
+        }
+        if (node["FilePrefix"])
+        {
+            rhs.FilePrefix = node["FilePrefix"].as<std::string>();
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<DeviceDumpDownload_t>
+{
+    static bool decode(const Node& node, DeviceDumpDownload_t& rhs)
+    {
+        if (node["DataFilterName"])
+        {
+            rhs.DataFilterName = node["DataFilterName"].as<std::string>();
+        }
+        return true;
+    }
+};
+
+template <>
+struct convert<DeviceDumpProfile_t>
+{
+    static bool decode(const Node& node, DeviceDumpProfile_t& rhs)
+    {
+        if (node["ProfileName"])
+        {
+            rhs.ProfileName = node["ProfileName"].as<std::string>();
+        }
+        if (node["Section"])
+        {
+            rhs.Section = node["Section"].as<std::string>();
+        }
+        if (node["EventSource"])
+        {
+            rhs.EventSource = node["EventSource"].as<DeviceDumpEventSource_t>();
+        }
+        if (node["Retrieval"])
+        {
+            rhs.Retrieval = node["Retrieval"].as<DeviceDumpRetrieval_t>();
+        }
+        if (node["Debounce"])
+        {
+            rhs.Debounce = node["Debounce"].as<DeviceDumpDebounce_t>();
+        }
+        if (node["Storage"])
+        {
+            rhs.Storage = node["Storage"].as<DeviceDumpStorage_t>();
+        }
+        if (node["Download"])
+        {
+            rhs.Download = node["Download"].as<DeviceDumpDownload_t>();
+        }
+        return true;
+    }
+};
+
+template <>
 struct convert<GeneralConfig_t>
 {
 #if 0
@@ -324,6 +533,14 @@ struct convert<GeneralConfig_t>
         if (node["Events"])
         {
             rhs.eventParams = node["Events"].as<Events_t>();
+        }
+
+        // Device dump collection profiles
+        if (node["DeviceDumpProfiles"])
+        {
+            rhs.DeviceDumpProfiles =
+                node["DeviceDumpProfiles"]
+                    .as<std::vector<DeviceDumpProfile_t>>();
         }
 
         return true;

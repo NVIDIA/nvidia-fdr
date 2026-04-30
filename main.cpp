@@ -61,6 +61,9 @@ int main(int argc, char* argv[])
     // Register AML events signal
     fdr->initEventsSignalRegistration();
 
+    // Initialize device dump collection handler
+    fdr->initDeviceDumpHandler();
+
     // Register property changed DBUS signal
     fdr->initRecordsSignalRegistration();
 

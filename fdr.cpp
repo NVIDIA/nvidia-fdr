@@ -1364,6 +1364,88 @@ void FlightDataRecorder_c::initEventsSignalRegistration()
     }
 }
 
+void FlightDataRecorder_c::initDeviceDumpHandler()
+{
+    if (profile.GeneralConfig.DeviceDumpProfiles.empty())
+    {
+        fdrlog::info("No DeviceDumpProfiles configured, skipping handler init");
+        return;
+    }
+
+    // Startup MaxRetries validation:
+    //   MaxRetries bounds the retry loop for Unavailable responses and the
+    //   per-retry wait grows exponentially (base × 2^(attempt-1)). A value
+    //   above 10 leads to nonsensical total collection windows (e.g.,
+    //   base=2s with MaxRetries=10 already yields waits up to ~17 minutes
+    //   on the 10th attempt). Cap at 10 to prevent a PPF typo / operator
+    //   mistake from holding a DumpContext for hours.
+    constexpr int kMaxRetriesCeiling = 10;
+    for (const auto& p : profile.GeneralConfig.DeviceDumpProfiles)
+    {
+        if (p.Retrieval.MaxRetries > kMaxRetriesCeiling)
+        {
+            fdrlog::error(
+                "DeviceDumpHandler: Profile '{}' has MaxRetries={} which "
+                "exceeds the supported ceiling of {}. Fix the PPF.",
+                p.ProfileName, p.Retrieval.MaxRetries, kMaxRetriesCeiling);
+            std::exit(EXIT_FAILURE);
+        }
+    }
+
+    // Startup budget validation:
+    //   Σ BudgetMB across all DeviceDumpProfiles must fit within the
+    //   partition, leaving PartitionThresoldCheckMB headroom for FDR
+    //   telemetry + Redfish tar staging. Hard-fail on violation so
+    //   misconfigured PPFs are caught at boot rather than silently
+    //   over-committing eMMC under burst traffic.
+    size_t totalBudgetMB = 0;
+    for (const auto& p : profile.GeneralConfig.DeviceDumpProfiles)
+    {
+        totalBudgetMB += p.Storage.BudgetMB;
+    }
+
+    try
+    {
+        auto spaceInfo =
+            std::filesystem::space(profile.GeneralConfig.LogsBasePath);
+        size_t partitionMB = spaceInfo.capacity / (1024UL * 1024UL);
+        size_t thresholdMB = profile.GeneralConfig.PartitionThresoldCheckMB;
+        size_t allotmentMB =
+            (partitionMB > thresholdMB) ? partitionMB - thresholdMB : 0;
+
+        if (totalBudgetMB > allotmentMB)
+        {
+            fdrlog::error(
+                "DeviceDumpHandler: Σ BudgetMB ({} MB) exceeds partition "
+                "allotment ({} MB = {} MB capacity − {} MB threshold). "
+                "Fix PPF BudgetMB values:",
+                totalBudgetMB, allotmentMB, partitionMB, thresholdMB);
+            for (const auto& p : profile.GeneralConfig.DeviceDumpProfiles)
+            {
+                fdrlog::error("  Profile: {} BudgetMB: {}", p.ProfileName,
+                              p.Storage.BudgetMB);
+            }
+            std::exit(EXIT_FAILURE);
+        }
+
+        fdrlog::info(
+            "DeviceDumpHandler: Σ BudgetMB {} MB fits within {} MB allotment "
+            "({} MB capacity − {} MB threshold)",
+            totalBudgetMB, allotmentMB, partitionMB, thresholdMB);
+    }
+    catch (const std::filesystem::filesystem_error& e)
+    {
+        fdrlog::error(
+            "DeviceDumpHandler: unable to stat partition at '{}' for budget "
+            "validation: {}",
+            profile.GeneralConfig.LogsBasePath, e.what());
+        std::exit(EXIT_FAILURE);
+    }
+
+    deviceDumpHandler = std::make_unique<DeviceDumpHandler>(profile, FdrEvents);
+    deviceDumpHandler->startupRecoveryScan();
+}
+
 void FlightDataRecorder_c::CleanupPlatformFiles(void)
 {
     const char* platforms_path = getenv("PLATFORMS_PATH");

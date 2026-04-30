@@ -21,6 +21,8 @@
 #include <sdbusplus/bus/match.hpp>
 #include <xyz/openbmc_project/Logging/Entry/server.hpp>
 
+#include <unordered_map>
+
 // Store section.ID, component.ID and infogroup.ID for book_of_errors
 struct EventRecord
 {
@@ -42,11 +44,17 @@ class EventSignalHandler
     std::map<std::string, std::pair<std::shared_ptr<FDRStore>, EventRecord>>
         fdrDeviceEventsWriter;
 
+    // D-Bus InterfacesAdded signal property variant.
+    // sdbusplus deserializes D-Bus a{ss} as std::unordered_map (not std::map).
+    // Includes both std::vector<std::string> (old phosphor-logging format)
+    // and std::unordered_map<std::string, std::string> (current format).
     using eventPropertiesType = std::vector<std::pair<
         std::string,
-        std::vector<std::pair<std::string,
-                              std::variant<uint64_t, uint32_t, std::string,
-                                           bool, std::vector<std::string>>>>>>;
+        std::vector<std::pair<
+            std::string,
+            std::variant<uint64_t, uint32_t, std::string, bool,
+                         std::vector<std::string>,
+                         std::unordered_map<std::string, std::string>>>>>>;
 
     void eventParser(eventPropertiesType&);
     std::string getFDRDeviceName(std::string&);
