@@ -420,18 +420,6 @@ void EventSignalHandler::registerEventsSignal()
             fdrlog::debug("Event signal received: path={}, interfaces={}",
                           objPath.str, eventProperties.size());
 
-            // Log each interface and its properties for debugging
-            for (const auto& iface : eventProperties)
-            {
-                fdrlog::info("  Interface: {}, properties: {}", iface.first,
-                             iface.second.size());
-                for (const auto& prop : iface.second)
-                {
-                    fdrlog::info("    Property: {}, variant index={}",
-                                 prop.first, prop.second.index());
-                }
-            }
-
             this->eventParser(eventProperties);
         }
         catch (const sdbusplus::exception_t& e)
